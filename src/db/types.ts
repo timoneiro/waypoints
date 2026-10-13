@@ -228,8 +228,37 @@ export interface Attachment extends TripRecord {
   private?: boolean
 }
 
-/** What trip links carry: every table of LINK_VERSION 1. Attachments travel only through the sync server. */
-export const LINK_TABLES = ['travellers', 'stays', 'transports', 'activities', 'places', 'expenses', 'exchanges'] as const
+/** Items people can review. */
+export const REVIEWABLE_TABLES = ['activities', 'places', 'stays', 'transports'] as const
+export type ReviewableTable = (typeof REVIEWABLE_TABLES)[number]
+
+/** The most stars a review can give (and the fewest is 1). */
+export const MAX_STARS = 5
+
+/**
+ * One traveller's review of an activity, place, stay or journey: stars and a note, or that they
+ * didn't go. Everyone's is a record of its own, so reviews written on different phones merge without
+ * overwriting each other. Its id comes from the trip, the item and the traveller (see reviewId in
+ * src/domain/reviews.ts), so someone reviewing on two phones still has one review.
+ */
+export interface Review extends TripRecord {
+  /** The item's table: one of REVIEWABLE_TABLES, stored as a plain string. */
+  itemTable: string
+  itemId: string
+  /** Traveller whose review it is. */
+  by: string
+  /** 1 to MAX_STARS. None when they didn't go, or only wrote a note. */
+  stars?: number
+  note?: string
+  /** They didn't go, so it's not theirs to rate. */
+  missed?: boolean
+}
+
+/**
+ * What trip links carry, all in LINK_VERSION 1. Reviews came in 0.8.0: older versions of the app
+ * open links that have them, leaving the reviews out. Attachments travel only through the sync server.
+ */
+export const LINK_TABLES = ['travellers', 'stays', 'transports', 'activities', 'places', 'expenses', 'exchanges', 'reviews'] as const
 export type LinkTable = (typeof LINK_TABLES)[number]
 export const TRIP_TABLES = [...LINK_TABLES, 'attachments'] as const
 export type TripTable = (typeof TRIP_TABLES)[number]
@@ -245,6 +274,7 @@ export interface TableRecords {
   places: Place
   expenses: Expense
   exchanges: Exchange
+  reviews: Review
   attachments: Attachment
 }
 
@@ -260,6 +290,7 @@ export const emptyTables = (): Tables => ({
   places: [],
   expenses: [],
   exchanges: [],
+  reviews: [],
   attachments: [],
 })
 

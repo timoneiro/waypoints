@@ -1,7 +1,19 @@
+import { reviewId } from '../domain/reviews'
 import { canonicalJSON } from '../domain/sync'
 import { db, isLive, newId, nowISO, recordTable, setSetting, SETTINGS } from './db'
 import { takeSnapshot } from './snapshots'
-import { RECORD_TABLES, TRIP_TABLES, type LinkTable, type RecordTable, type SyncMeta, type TableRecords, type Traveller, type Trip } from './types'
+import {
+  RECORD_TABLES,
+  TRIP_TABLES,
+  type LinkTable,
+  type RecordTable,
+  type Review,
+  type ReviewableTable,
+  type SyncMeta,
+  type TableRecords,
+  type Traveller,
+  type Trip,
+} from './types'
 
 /*
  * All writes to trip records go through here (or backupIO, or attachments.ts for photos and
@@ -69,6 +81,38 @@ export async function deleteRecord(table: LinkTable, id: string) {
     const now = nowISO()
     await store.put({ ...existing, deletedAt: now, updatedAt: now })
     await markChanged(table, [id], existing.tripId)
+  })
+}
+
+export interface ReviewInput {
+  stars?: number
+  note?: string
+  missed?: boolean
+}
+
+/**
+ * Saves `by`'s review of an item, replacing theirs if they have one. Didn't go means no stars. A
+ * review left empty (no stars, no note, went) is deleted, so the item is theirs to review again.
+ */
+export async function saveReview(tripId: string, item: { table: ReviewableTable; id: string }, by: string, input: ReviewInput) {
+  const id = await reviewId(tripId, item.id, by)
+  await db.transaction('rw', db.reviews, db.unsent, db.outbox, async () => {
+    const existing = await db.reviews.get(id)
+    const now = nowISO()
+    const note = input.note?.trim() || undefined
+    const missed = input.missed || undefined
+    const stars = missed ? undefined : input.stars
+    if (!stars && !note && !missed) {
+      if (!existing || existing.deletedAt) return
+      await db.reviews.put({ ...existing, deletedAt: now, updatedAt: now })
+    } else {
+      const live: Partial<Review> = { ...existing }
+      delete live.deletedAt
+      const next = compact({ ...live, id, tripId, itemTable: item.table, itemId: item.id, by, stars, note, missed, createdAt: existing?.createdAt ?? now, updatedAt: now })
+      if (existing && sameContent(next, existing)) return
+      await db.reviews.put(next)
+    }
+    await markChanged('reviews', [id], tripId)
   })
 }
 

@@ -23,7 +23,7 @@ import { codesMatch, hashCode, hashSecret, newCode, newId, newToken } from './se
 import type { Device, Member, Store } from './store.ts'
 import { applySync, BadRequest, memberList, memberSummary, parseSyncRequest, tripMembers } from './sync.ts'
 
-export const VERSION = '0.2.0'
+export const VERSION = '0.3.0'
 const MAX_BODY = 10 * 1024 * 1024 // a first sync uploads whole trips
 const INVITE_DAYS = 7
 const MAX_CODE_FAILURES = 20 // per 10 minutes, across all clients

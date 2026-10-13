@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Tables } from '../../src/db/types.ts'
 import type { SyncRequest } from '../../src/domain/serverProtocol.ts'
-import { ANA, attachment, BO, CY, place, stay, T0, T1, T2, traveller, trip } from '../../src/test/fixtures.ts'
+import { ANA, attachment, BO, CY, place, review, stay, T0, T1, T2, traveller, trip } from '../../src/test/fixtures.ts'
 import { emptyData, type Member, type StoreData } from './store.ts'
 import { applySync, BadRequest, parseSyncRequest } from './sync.ts'
 
@@ -195,5 +195,26 @@ describe('photos and documents on the server', () => {
     const { removedFiles } = sync(data, BO_M, send({ attachments: [attachment({ deletedAt: T2, updatedAt: T2 })] }, 5))
     expect(removedFiles).toEqual([{ tripId: TRIP, id: 'file0001' }])
     expect(sync(data, ANA_M, send({ stays: [stay({ name: 'Casa Verde', updatedAt: T1 })] }, 5)).removedFiles).toEqual([])
+  })
+})
+
+describe('reviews on the server', () => {
+  it("reach everyone on the trip, each traveller's their own", () => {
+    const data = server()
+    sync(data, ANA_M, send(lisbon()))
+    const anas = review({ itemTable: 'stays', itemId: 'stay0001', stars: 5, updatedAt: T1 })
+    const bos = review({ id: 'rate0002', itemTable: 'stays', itemId: 'stay0001', by: BO, stars: undefined, missed: true, updatedAt: T1 })
+    sync(data, ANA_M, send({ reviews: [anas] }, 5))
+    const { response } = sync(data, BO_M, send({ reviews: [bos] }, 5))
+    expect(response.rejected).toEqual([])
+    expect(response.trips[0].records.reviews).toEqual([anas])
+    expect(Object.keys(data.trips[TRIP].records.reviews ?? {}).sort()).toEqual(['rate0001', 'rate0002'])
+  })
+
+  it('are checked like any other record', () => {
+    const data = server()
+    sync(data, ANA_M, send(lisbon()))
+    const { response } = sync(data, ANA_M, send({ reviews: [review({ stars: 9 })] }, 5))
+    expect(response.rejected).toMatchObject([{ table: 'reviews', id: 'rate0001', reason: 'It contains an invalid review.' }])
   })
 })

@@ -1,8 +1,10 @@
 import type { Transport } from '../db/types'
 import type { PlanEntry } from '../domain/itinerary'
+import type { ReviewTarget } from '../domain/reviews'
 import { timeZoneName, zonedInstant } from '../domain/time'
-import { fmtDay, fmtDuration, fmtTime } from './format'
-import { labelOf, STAY_KINDS, TRANSPORT_MODES } from './labels'
+import { fmtDay, fmtDayTime, fmtDuration, fmtTime } from './format'
+import { SEGMENT } from './items/save'
+import { labelOf, PLACE_CATEGORIES, STAY_KINDS, TRANSPORT_MODES } from './labels'
 import { tripPath, type TripData } from './tripData'
 
 export interface EntryView {
@@ -74,6 +76,36 @@ export function describeEntry(e: PlanEntry, t: TripData): EntryView {
         detail: join(r.endTime && `until ${fmtTime(r.endTime)}`, r.city),
         to: tripPath(t.trip.id, 'activities', r.id),
         zone,
+      }
+    }
+  }
+}
+
+/** How something to review reads in a list. */
+export function describeTarget(target: ReviewTarget, t: TripData): EntryView {
+  const join = (...parts: (string | false | undefined)[]) => parts.filter(Boolean).join(' · ') || undefined
+  const to = tripPath(t.trip.id, SEGMENT[target.table], target.record.id)
+  switch (target.table) {
+    case 'activities': {
+      const r = target.record
+      return { emoji: '🎟️', title: r.title, detail: join(fmtDayTime(r.date, r.startTime), r.city), to }
+    }
+    case 'places': {
+      const r = target.record
+      const category = labelOf(PLACE_CATEGORIES, r.category)
+      return { emoji: category.emoji, title: r.name, detail: join(category.label, r.city), to }
+    }
+    case 'stays': {
+      const r = target.record
+      return { emoji: labelOf(STAY_KINDS, r.kind).emoji, title: r.name, detail: join(`${fmtDay(r.checkInDate)} → ${fmtDay(r.checkOutDate)}`, r.city), to }
+    }
+    case 'transports': {
+      const r = target.record
+      return {
+        emoji: labelOf(TRANSPORT_MODES, r.mode).emoji,
+        title: `${r.from} → ${r.to}`,
+        detail: join(fmtDayTime(r.departDate, r.departTime), [r.carrier, r.number].filter(Boolean).join(' ')),
+        to,
       }
     }
   }

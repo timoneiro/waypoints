@@ -18,7 +18,8 @@ non-destructive for existing data:
   storage, permissions and eviction, so clearing or uninstalling one with its data would wipe the other.
   Never host it, or another app, on the same origin as fronds (`timoneiro.github.io`).
 - **Trip links live forever in group chats** (`src/domain/sync.ts`, `src/lib/tripLink.ts`): every
-  `LINK_VERSION` ever shipped must keep decoding. Add a version instead of changing one.
+  `LINK_VERSION` ever shipped must keep decoding. Add a version instead of changing one. A new table can
+  join version 1 (as `reviews` did in 0.8.0): older apps read only the tables they know, and still open it.
 - **Sync protocol** (`src/domain/serverProtocol.ts`): backward compatible both ways (old apps with new
   servers and vice versa). **Server store** (`server/src/store.ts`): upgrade old formats in `migrate()`;
   never regenerate the server code. Who may see a server trip follows from its travellers' `memberId`,
@@ -43,8 +44,13 @@ non-destructive for existing data:
   bytes matching the record's `size` and `sha256`, and phones check what they download. One added
   to a journey can be for its whole booking (`wholeBooking`): it shows on every journey with the same
   booking ref (`src/domain/bookings.ts`), and stays with them if its own journey is deleted.
-- **A new table the server syncs**: its Dexie version resets `serverTrips` cursors to 0 (see v3 in
-  `src/db/db.ts`), because older app versions skipped those records while moving past them.
+- **A new table the server syncs**: its Dexie version resets `serverTrips` cursors to 0 (see v3 and v4 in
+  `src/db/db.ts`), because older app versions skipped those records while moving past them. The server
+  takes its tables from `RECORD_TABLES`, so it needs a new image too: older servers refuse the records
+  ("update the server"), and phones keep them in the outbox until it's updated.
+- **Reviews** (`src/domain/reviews.ts`, `saveReview` in `src/db/actions.ts`): one record per traveller and
+  item, with an id made from both (`reviewId`), so the same person on two phones ends up with one review.
+  A review left empty becomes a tombstone (the item is theirs to review again).
 - Take a snapshot (`takeSnapshot`) before any operation that removes or overwrites local data.
 - Ship through a PR (CI runs lint, types, tests, build); merging to `main` deploys to users immediately.
 

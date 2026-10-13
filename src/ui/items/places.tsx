@@ -11,6 +11,7 @@ import { fmtDayTime, plural } from '../format'
 import { labelOf, PLACE_CATEGORIES } from '../labels'
 import { tripPath, useTrip } from '../tripData'
 import { AttachmentsCard } from '../components/Attachments'
+import { ReviewsCard } from '../components/Reviews'
 import { ItemFooter, ItemForm, ItemGone } from './common'
 import { opt, useSave } from './save'
 
@@ -240,6 +241,7 @@ export function PlacePage() {
           <p className="prewrap">{place.notes}</p>
         </section>
       )}
+      <ReviewsCard target={{ table: 'places', record: place }} />
       <section className="card">
         <h3>Plan a visit</h3>
         {visits.length > 0 && (

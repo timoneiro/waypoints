@@ -74,7 +74,7 @@ export function TripInfoPage() {
                 </option>
               ))}
             </select>
-            <small className="muted">Only on this phone: who “paid by” starts as, and your part of the spending.</small>
+            <small className="muted">Only on this phone: who “paid by” starts as, your part of the spending, and whose reviews you write.</small>
           </label>
         )}
       </section>

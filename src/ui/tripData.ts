@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react'
 import { db, getSetting, isLive, recordTable, SETTINGS } from '../db/db'
 import { getServerConfig } from '../db/serverState'
-import type { Activity, Attachment, Exchange, Expense, Place, ServerTrip, Stay, Transport, Traveller, Trip, TripTable } from '../db/types'
+import type { Activity, Attachment, Exchange, Expense, Place, Review, ServerTrip, Stay, Transport, Traveller, Trip, TripTable } from '../db/types'
 import { bookingKey } from '../domain/bookings'
 import { rateFinder, type RateOf } from '../domain/expenses'
 import { fold } from '../domain/places'
@@ -27,6 +27,8 @@ export interface TripData {
   places: Place[]
   expenses: Expense[]
   exchanges: Exchange[]
+  /** Everyone's reviews of the trip's activities, places, stays and journeys. */
+  reviews: Review[]
   /** Photos and documents (their records: the files are in db.files). */
   attachments: Attachment[]
   /**
@@ -73,7 +75,7 @@ export async function loadTrip(tripId: string): Promise<TripData | null> {
   const trip = await db.trips.get(tripId)
   if (!trip || trip.deletedAt) return null
   const ofTrip = <T extends TripTable>(table: T) => recordTable(table).where('tripId').equals(tripId).toArray()
-  const [allTravellers, stays, transports, activities, places, expenses, exchanges, attachments, meId, unsent, server, waiting, config, serverGone] = await Promise.all([
+  const [allTravellers, stays, transports, activities, places, expenses, exchanges, reviews, attachments, meId, unsent, server, waiting, config, serverGone] = await Promise.all([
     ofTrip('travellers'),
     ofTrip('stays'),
     ofTrip('transports'),
@@ -81,6 +83,7 @@ export async function loadTrip(tripId: string): Promise<TripData | null> {
     ofTrip('places'),
     ofTrip('expenses'),
     ofTrip('exchanges'),
+    ofTrip('reviews'),
     ofTrip('attachments'),
     getSetting<string>(SETTINGS.me(tripId)),
     db.unsent.where('tripId').equals(tripId).count(),
@@ -101,6 +104,7 @@ export async function loadTrip(tripId: string): Promise<TripData | null> {
     places: places.filter(isLive),
     expenses: expenses.filter(isLive),
     exchanges: exchanges.filter(isLive),
+    reviews: reviews.filter(isLive),
     attachments: attachments.filter(isLive),
   }
   const bookings = new Map(

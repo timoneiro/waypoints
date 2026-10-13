@@ -14,6 +14,7 @@ import { labelOf, PLACE_CATEGORIES } from '../labels'
 import { useToday } from '../hooks'
 import { tripPath, useTrip } from '../tripData'
 import { AttachmentsCard } from '../components/Attachments'
+import { ReviewsCard } from '../components/Reviews'
 import { ItemFooter, ItemForm, ItemGone } from './common'
 import { opt, useSave } from './save'
 import { useItemZone } from './zone'
@@ -150,6 +151,7 @@ export function ActivityPage() {
           <p className="prewrap">{a.notes}</p>
         </section>
       )}
+      <ReviewsCard target={{ table: 'activities', record: a }} />
       <AttachmentsCard table="activities" id={a.id} />
       <section className="card">
         <h3>Calendar</h3>

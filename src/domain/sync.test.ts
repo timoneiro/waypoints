@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { RECORD_TABLES, type RecordTable, type Tables } from '../db/types'
-import { ANA, attachment, BO, exchange, expense, place, stay, T0, T1, T2, tables, traveller, trip } from '../test/fixtures'
+import { ANA, attachment, BO, exchange, expense, place, review, stay, T0, T1, T2, tables, traveller, trip } from '../test/fixtures'
 import { DataError } from './records'
 import { buildBackup, decodeLink, encodeLink, forSending, parseBackup, planMerge } from './sync'
 
@@ -43,6 +43,16 @@ describe('backup files', () => {
     expect(() => parseBackup(JSON.stringify({ ...buildBackup(lisbon), expenses: [{ ...expense(), split: { kind: 'equal', among: ['x'] } }] }), NOW)).toThrow(
       'invalid expense',
     )
+  })
+
+  it('keep reviews, with 1 to 5 stars', () => {
+    const file = (r: object) => JSON.stringify({ ...buildBackup(lisbon), reviews: [r] })
+    expect(parseBackup(file(review()), NOW).reviews).toEqual([review()])
+    expect(parseBackup(file(review({ stars: undefined, missed: true, note: 'Ill that night' })), NOW).reviews).toHaveLength(1)
+    expect(parseBackup(file(review({ stars: 4.5 })), NOW).reviews).toHaveLength(1)
+    expect(() => parseBackup(file(review({ stars: 0 })), NOW)).toThrow('invalid review')
+    expect(() => parseBackup(file(review({ stars: 6 })), NOW)).toThrow('invalid review')
+    expect(() => parseBackup(file({ ...review(), by: undefined }), NOW)).toThrow('invalid review')
   })
 
   it('keep fields and kinds from newer versions of the app', () => {
@@ -103,6 +113,18 @@ describe('trip links', () => {
     // A crafted link with some is read as if it had none.
     const crafted = { ...json(payload) as object, attachments: [attachment()] }
     expect(decodeLink(crafted, NOW).tables).toEqual(lisbon)
+  })
+
+  it('carry reviews, in the version older apps read too', () => {
+    const reviewed = tables({ ...lisbon, reviews: [review()] })
+    const payload = encodeLink(reviewed, undefined, new Date(NOW))
+    expect(payload.v).toBe(1)
+    expect(decodeLink(json(payload), NOW).tables).toEqual(reviewed)
+    expect(forSending(reviewed).reviews).toEqual([review()])
+    // Links from 0.7.0 and before have none.
+    const older = json(payload) as Record<string, unknown>
+    delete older.reviews
+    expect(decodeLink(older, NOW).tables).toEqual(lisbon)
   })
 
   it('refuse links from a newer version, and broken ones', () => {

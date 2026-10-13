@@ -1,4 +1,4 @@
-import type { RecordTable, TableRecords } from '../db/types.ts'
+import { MAX_STARS, type RecordTable, type TableRecords } from '../db/types.ts'
 import { isDay, isTime } from './time.ts'
 
 /*
@@ -28,6 +28,8 @@ const positive: Check = (v) => money(v) && (v as number) > 0
 const count = (max: number): Check => (v) => Number.isSafeInteger(v) && (v as number) > 0 && (v as number) <= max
 const mediaType: Check = (v) => typeof v === 'string' && /^[\w.+-]{1,40}\/[\w.+-]{1,120}$/.test(v)
 const sha256: Check = (v) => typeof v === 'string' && /^[0-9a-f]{64}$/.test(v)
+/** 1 to MAX_STARS. Not only whole ones, so half stars from a newer version of the app don't break a link here. */
+const stars: Check = (v) => typeof v === 'number' && v >= 1 && v <= MAX_STARS
 /** A wall-clock time, "YYYY-MM-DDTHH:MM". */
 const wallClock: Check = (v) => typeof v === 'string' && v.length === 16 && v[10] === 'T' && isDay(v.slice(0, 10)) && isTime(v.slice(11))
 
@@ -145,6 +147,15 @@ const SPECS: { [T in RecordTable]: Record<string, { check: Check; required: bool
     costCurrency: required(currency),
     by: optional(isId),
     notes: optional(LONG),
+  },
+  reviews: {
+    tripId: required(isId),
+    itemTable: required(WORD),
+    itemId: required(isId),
+    by: required(isId),
+    stars: optional(stars),
+    note: optional(LONG),
+    missed: optional(bool),
   },
   attachments: {
     tripId: required(isId),
