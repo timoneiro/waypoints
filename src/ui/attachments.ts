@@ -2,7 +2,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState } from 'react'
 import type { AttachedTo } from '../db/attachments'
 import { db } from '../db/db'
-import { ATTACHABLE_TABLES, type AttachableTable, type Attachment, type StoredFile } from '../db/types'
+import { ATTACHABLE_TABLES, type AttachableTable, type Attachment, type AttachmentKind, type StoredFile } from '../db/types'
+import { bookingLegs, legNoun, route } from '../domain/bookings'
 import { toDay } from '../domain/time'
 import { SEGMENT } from './items/save'
 import { EXPENSE_CATEGORIES, labelOf, PLACE_CATEGORIES, STAY_KINDS, TRANSPORT_MODES } from './labels'
@@ -49,6 +50,20 @@ export interface ItemRef {
   title: string
   day?: string
   path: string
+  /** For a photo or document of a whole booking: its journeys. The rest is the first one's, with the route as title. */
+  booking?: Booking
+}
+
+/** Journeys bought together, on one booking ref. */
+export interface Booking {
+  /** The booking ref, as the first journey has it. */
+  ref: string
+  /** "flight" when they're all flights, else "journey". */
+  noun: string
+  /** "LIS → FRA → NRT". */
+  route: string
+  /** In the order they leave. */
+  legs: ItemRef[]
 }
 
 export const ITEM_GROUPS: Record<AttachableTable, string> = {
@@ -82,8 +97,42 @@ export function parseTarget(target: string): AttachedTo {
   return (ATTACHABLE_TABLES as readonly string[]).includes(table) && id ? { itemTable: table as AttachableTable, itemId: id } : {}
 }
 
-/** The item it belongs to, if it's still in the trip. Otherwise it shows with the whole trip. */
-export const itemOf = (items: Map<string, ItemRef>, a: Attachment) => items.get(targetOf(a))
+/** The booking a journey is on, when other journeys in the trip are on it too. */
+export function bookingOf(t: TripData, journeyId: string | undefined, items = attachableItems(t)): Booking | undefined {
+  const legs = bookingLegs(t.transports, journeyId && t.bookings.get(journeyId))
+  if (legs.length < 2) return undefined
+  return { ref: legs[0].confirmation!.trim(), noun: legNoun(legs), route: route(legs), legs: legs.map((r) => items.get(`transports:${r.id}`)!) }
+}
+
+/** The booking of the journey a target (`table:id`) is, when that journey is on one with others. */
+export function targetBooking(t: TripData, target: string): Booking | undefined {
+  const to = parseTarget(target)
+  return to.itemTable === 'transports' ? bookingOf(t, to.itemId) : undefined
+}
+
+/**
+ * What each photo or document belongs to, if it's still in the trip (otherwise it shows with the
+ * whole trip): its item, or for one of a whole booking, the booking's journeys.
+ */
+export function ownerFinder(t: TripData): (a: Attachment) => ItemRef | undefined {
+  const items = attachableItems(t)
+  return (a) => {
+    const own = items.get(targetOf(a))
+    if (!a.wholeBooking || a.itemTable !== 'transports' || !a.itemId) return own
+    // The journey it was added to may have been deleted since: the booking's other journeys keep it.
+    const booking = bookingOf(t, a.itemId, items)
+    if (booking) return { ...booking.legs[0], title: booking.route, booking }
+    const [only] = bookingLegs(t.transports, t.bookings.get(a.itemId))
+    return own ?? (only && items.get(`transports:${only.id}`))
+  }
+}
+
+/** A document starts out on its journey's whole booking (tickets and receipts usually are), a photo on its own journey. */
+export const wholeByDefault = (kind: AttachmentKind) => kind === 'document'
+
+/** Whether it shows on an item's page: its own, or one of its booking's journeys. */
+export const showsOn = (owner: ItemRef | undefined, table: AttachableTable, id: string) =>
+  (owner?.booking?.legs ?? (owner ? [owner] : [])).some((i) => i.table === table && i.id === id)
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
 
@@ -101,9 +150,9 @@ export const byTimeTaken = (a: Attachment, b: Attachment) =>
 export const tripPhotos = (t: TripData) => t.attachments.filter(isPhoto).sort(byTimeTaken)
 
 /** Documents: those of the whole trip first, then by their item's day, then by name. */
-export function sortDocuments(docs: Attachment[], items: Map<string, ItemRef>): Attachment[] {
+export function sortDocuments(docs: Attachment[], ownerOf: (a: Attachment) => ItemRef | undefined): Attachment[] {
   const day = (a: Attachment) => {
-    const item = itemOf(items, a)
+    const item = ownerOf(a)
     return item ? `1${item.day ?? '9'}` : '0'
   }
   return docs.slice().sort((a, b) => day(a).localeCompare(day(b)) || a.name.localeCompare(b.name) || a.id.localeCompare(b.id))

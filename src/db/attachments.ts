@@ -28,7 +28,15 @@ export interface NewFile {
 export interface AttachedTo {
   itemTable?: AttachableTable
   itemId?: string
+  /** For a journey: also for the other journeys on its booking. */
+  wholeBooking?: boolean
 }
+
+/** Where an attachment goes, as its record's fields: all three, so a move clears what no longer applies. */
+const placed = (to: AttachedTo | undefined) =>
+  to?.itemTable && to.itemId
+    ? { itemTable: to.itemTable, itemId: to.itemId, wholeBooking: (to.itemTable === 'transports' && to.wholeBooking) || undefined }
+    : { itemTable: undefined, itemId: undefined, wholeBooking: undefined }
 
 /** The outbox entry an attachment needs: none if it stays on this phone. */
 const outboxFor = (a: Attachment): OutboxEntry[] => (a.private ? [] : [{ table: 'attachments', id: a.id, tripId: a.tripId }])
@@ -54,8 +62,7 @@ export async function addAttachments(
       width: f.width,
       height: f.height,
       takenAt: f.takenAt,
-      itemTable: options.to?.itemId ? options.to.itemTable : undefined,
-      itemId: options.to?.itemTable ? options.to.itemId : undefined,
+      ...placed(options.to),
       addedBy: options.addedBy,
       private: options.private || undefined,
     }),
@@ -68,13 +75,12 @@ export async function addAttachments(
   return records.map((r) => r.id)
 }
 
-/** Renames it, changes its caption, or moves it to another item (or to the whole trip). */
+/** Renames it, changes its caption, or moves it to another item (or to the whole trip, or a whole booking). */
 export async function updateAttachment(id: string, changes: { name: string; caption?: string } & AttachedTo) {
   await db.transaction('rw', db.attachments, db.outbox, async () => {
     const existing = await db.attachments.get(id)
     if (!existing || existing.deletedAt) return
-    const to = changes.itemTable && changes.itemId ? { itemTable: changes.itemTable, itemId: changes.itemId } : { itemTable: undefined, itemId: undefined }
-    const next = compact<Attachment>({ ...existing, name: changes.name, caption: changes.caption, ...to, updatedAt: nowISO() })
+    const next = compact<Attachment>({ ...existing, name: changes.name, caption: changes.caption, ...placed(changes), updatedAt: nowISO() })
     if (sameContent(next, existing)) return
     await db.attachments.put(next)
     await db.outbox.bulkPut(outboxFor(next))

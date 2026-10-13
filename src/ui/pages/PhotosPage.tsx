@@ -1,4 +1,4 @@
-import { attachableItems, isPhoto, itemOf, photoTime, sortDocuments, stateFinder, tripPhotos, useTripFiles } from '../attachments'
+import { isPhoto, ownerFinder, photoTime, sortDocuments, stateFinder, tripPhotos, useTripFiles } from '../attachments'
 import { Notice } from '../components/bits'
 import { AddAttachments, DocumentRow, PhotoTile } from '../components/Attachments'
 import { fmtBytes, fmtDay, plural } from '../format'
@@ -8,9 +8,9 @@ import { useTrip } from '../tripData'
 export function PhotosPage() {
   const t = useTrip()
   const files = useTripFiles(t.trip.id)
-  const items = attachableItems(t)
+  const ownerOf = ownerFinder(t)
   const stateOf = stateFinder(t)
-  const docs = sortDocuments(t.attachments.filter((a) => !isPhoto(a)), items)
+  const docs = sortDocuments(t.attachments.filter((a) => !isPhoto(a)), ownerOf)
   const photos = tripPhotos(t)
   const days = new Map<string, typeof photos>()
   for (const a of photos) {
@@ -48,7 +48,7 @@ export function PhotosPage() {
           <ul className="list">
             {docs.map((a) => (
               <li key={a.id}>
-                <DocumentRow a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} item={itemOf(items, a)} />
+                <DocumentRow a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} item={ownerOf(a)} />
               </li>
             ))}
           </ul>

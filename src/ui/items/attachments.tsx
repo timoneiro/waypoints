@@ -6,8 +6,8 @@ import { db } from '../../db/db'
 import type { Attachment } from '../../db/types'
 import { openFile, shareFile } from '../../lib/shareSheet'
 import { fetchFull, retryUpload } from '../../sync/files'
-import { attachableItems, isPhoto, itemOf, parseTarget, photoTime, stateFinder, stateText, targetOf, tripPhotos, useObjectUrl } from '../attachments'
-import { BelongsToField } from '../components/Attachments'
+import { attachableItems, isPhoto, ownerFinder, parseTarget, photoTime, stateFinder, stateText, targetBooking, targetOf, tripPhotos, useObjectUrl } from '../attachments'
+import { BelongsToField, WholeBookingField } from '../components/Attachments'
 import { BackLink, DetailHead, Notice } from '../components/bits'
 import { NotesField, TextField } from '../components/fields'
 import { fmtBytes, fmtDayTime, fmtTimestamp } from '../format'
@@ -45,7 +45,7 @@ function AttachmentView({ a }: { a: Attachment }) {
   const loaded = useLiveQuery(async () => ({ file: await db.files.get(a.id) }), [a.id])
   const file = loaded?.file
   const state = stateFinder(t)(a, file)
-  const item = itemOf(attachableItems(t), a)
+  const item = ownerFinder(t)(a)
   const image = a.type.startsWith('image/')
   const full = useObjectUrl(image ? file?.blob : undefined, `${a.id}:full`)
   const preview = useObjectUrl(image ? file?.thumb : undefined, `${a.id}:thumb`)
@@ -75,7 +75,8 @@ function AttachmentView({ a }: { a: Attachment }) {
 
   const onDelete = async () => {
     const forEveryone = t.server && !a.private ? ' It will be deleted for everyone on the trip.' : ''
-    if (!confirm(`Delete this ${what(a)}?${forEveryone}`)) return
+    const everyLeg = item?.booking ? ` It goes from every ${item.booking.noun} on booking ${item.booking.ref}.` : ''
+    if (!confirm(`Delete this ${what(a)}?${everyLeg}${forEveryone}`)) return
     await deleteAttachment(a.id)
     navigate(back, { replace: true })
   }
@@ -144,7 +145,16 @@ function AttachmentView({ a }: { a: Attachment }) {
         <dl className="facts">
           <dt>For</dt>
           <dd>
-            {item ? (
+            {item?.booking ? (
+              <>
+                Every {item.booking.noun} on booking {item.booking.ref}:
+                {item.booking.legs.map((leg) => (
+                  <Link key={leg.id} className="link" style={{ display: 'block' }} to={leg.path}>
+                    {leg.emoji} {leg.title}
+                  </Link>
+                ))}
+              </>
+            ) : item ? (
               <Link className="link" to={item.path}>
                 {item.emoji} {item.title}
               </Link>
@@ -247,10 +257,13 @@ function AttachmentForm({ a }: { a: Attachment }) {
   const t = useTrip()
   const navigate = useNavigate()
   const items = attachableItems(t)
+  const owner = ownerFinder(t)(a)
   const [name, setName] = useState(a.name)
   const [caption, setCaption] = useState(a.caption ?? '')
-  // An item deleted since shows as the whole trip.
-  const [target, setTarget] = useState(items.has(targetOf(a)) ? targetOf(a) : '')
+  // An item deleted since shows as the whole trip; a journey deleted since, as the rest of its booking.
+  const [target, setTarget] = useState(items.has(targetOf(a)) ? targetOf(a) : owner ? targetOf({ itemTable: owner.table, itemId: owner.id }) : '')
+  const [wholeBooking, setWholeBooking] = useState(Boolean(a.wholeBooking))
+  const booking = targetBooking(t, target)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
 
@@ -258,7 +271,9 @@ function AttachmentForm({ a }: { a: Attachment }) {
     if (!name.trim()) return setError('It needs a name.')
     setBusy(true)
     try {
-      await updateAttachment(a.id, { name: name.trim(), caption: opt(caption), ...parseTarget(target) })
+      // Kept as it was when there's no choice to make: its journey's booking may get others again.
+      const whole = booking ? wholeBooking : target === targetOf(a) && a.wholeBooking
+      await updateAttachment(a.id, { name: name.trim(), caption: opt(caption), ...parseTarget(target), wholeBooking: whole })
       navigate(-1)
     } catch {
       setError("Couldn't save. Try again.")
@@ -272,6 +287,7 @@ function AttachmentForm({ a }: { a: Attachment }) {
       {!isPhoto(a) && <TextField label="Name" value={name} onChange={setName} maxLength={200} />}
       <NotesField label="Caption" value={caption} onChange={setCaption} />
       <BelongsToField value={target} onChange={setTarget} />
+      <WholeBookingField target={target} booking={booking} kind={a.kind} value={wholeBooking} onChange={setWholeBooking} />
     </ItemForm>
   )
 }

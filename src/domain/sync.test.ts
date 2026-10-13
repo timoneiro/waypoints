@@ -56,7 +56,14 @@ describe('backup files', () => {
   })
 
   it("keep photos and documents' records, checked like any other", () => {
-    const withFiles = tables({ ...lisbon, attachments: [attachment(), attachment({ id: 'file0002', kind: 'document', type: 'application/pdf', private: true })] })
+    const withFiles = tables({
+      ...lisbon,
+      attachments: [
+        attachment(),
+        attachment({ id: 'file0002', kind: 'document', type: 'application/pdf', private: true }),
+        attachment({ id: 'file0003', kind: 'document', type: 'application/pdf', itemTable: 'transports', itemId: 'move0001', wholeBooking: true }),
+      ],
+    })
     expect(parseBackup(JSON.stringify(buildBackup(withFiles)), NOW).attachments).toEqual(withFiles.attachments)
     const broken = (patch: object) => JSON.stringify({ ...buildBackup(lisbon), attachments: [{ ...attachment(), ...patch }] })
     expect(() => parseBackup(broken({ sha256: 'abc' }), NOW)).toThrow('invalid attachment')
@@ -65,6 +72,7 @@ describe('backup files', () => {
     expect(() => parseBackup(broken({ type: 'not a type' }), NOW)).toThrow('invalid attachment')
     expect(() => parseBackup(broken({ takenAt: '2027-03-11 21:04' }), NOW)).toThrow('invalid attachment')
     expect(() => parseBackup(broken({ takenAt: '2027-02-30T21:04' }), NOW)).toThrow('invalid attachment')
+    expect(() => parseBackup(broken({ wholeBooking: 'yes' }), NOW)).toThrow('invalid attachment')
   })
 
   it('leave photos and documents out of a trip sent as a file', () => {
