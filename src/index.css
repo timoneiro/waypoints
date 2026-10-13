@@ -242,8 +242,45 @@ textarea.input { resize: vertical; }
 .select-overlay { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
 .form { display: flex; flex-direction: column; gap: 18px; }
 .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.field > span { font-weight: 600; font-size: 0.9rem; }
+.field > span, .field > label { font-weight: 600; font-size: 0.9rem; }
 .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Text fields with suggestions (city, airport, address) */
+.combo { position: relative; }
+.combo .input { scroll-margin-top: calc(env(safe-area-inset-top) + 76px); }
+.combo-pop {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 4;
+  max-height: min(40vh, 340px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.16);
+}
+/* Side by side (From / To), the suggestions take the width of both. */
+.field-pair { position: relative; }
+.field-pair .combo { position: static; }
+.combo-group { padding: 8px 12px 2px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.combo-option {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 44px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.combo-option small { color: var(--muted); font-size: 0.8rem; }
+.combo-option[aria-selected='true'] { background: var(--accent-soft); }
+@media (hover: hover) {
+  .combo-option:hover { background: var(--accent-soft); }
+}
+.combo-note { padding: 8px 12px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.8rem; }
+.combo-pop > [role='listbox']:empty + .combo-note { border-top: 0; }
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; }
 .traveller { display: flex; flex-direction: column; gap: 4px; }
 .traveller-row { display: flex; align-items: center; gap: 6px; }

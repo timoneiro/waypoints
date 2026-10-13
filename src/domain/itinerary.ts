@@ -61,6 +61,25 @@ export function planEntries(stays: Stay[], transports: Transport[], activities: 
   return entries.sort((a, b) => a.day.localeCompare(b.day) || a.at - b.at)
 }
 
+/**
+ * The time zone the plan has you in on `day`, for something new on that day: where the last journey
+ * arriving by then took you, or the last stay checked into by then, whichever was later. Before any
+ * of those, where the first journey leaves from (or the first stay is). Undefined without either.
+ */
+export function zoneOnDay(day: Day, stays: Stay[], transports: Transport[]): string | undefined {
+  type Mark = { day: Day; at: number; zone: string }
+  const checkIns: Mark[] = stays.map((s) => ({ day: s.checkInDate, at: at('checkin', s.checkInDate, s.checkInTime, s.timeZone), zone: s.timeZone }))
+  const arrivals: Mark[] = transports.map((t) => {
+    const arrives = t.arriveDate ?? t.departDate
+    const zone = t.arriveTimeZone ?? t.departTimeZone
+    return { day: arrives, at: at('arrival', arrives, t.arriveTime, zone), zone }
+  })
+  const departures: Mark[] = transports.map((t) => ({ day: t.departDate, at: at('transport', t.departDate, t.departTime, t.departTimeZone), zone: t.departTimeZone }))
+  const before = [...arrivals, ...checkIns].filter((m) => m.day <= day)
+  if (before.length) return before.sort((a, b) => b.day.localeCompare(a.day) || b.at - a.at)[0].zone
+  return [...departures, ...checkIns].sort((a, b) => a.day.localeCompare(b.day) || a.at - b.at)[0]?.zone
+}
+
 /** Every day of the trip, plus any day outside it that has something planned. */
 export function buildPlan(trip: Pick<Trip, 'startDate' | 'endDate'>, stays: Stay[], transports: Transport[], activities: Activity[]): PlanDay[] {
   const entries = planEntries(stays, transports, activities)

@@ -68,3 +68,18 @@ export const useServer = (): ServerConfig | null | undefined => useLiveQuery(() 
 
 /** Connected, and not disconnected by the server since. */
 export const usable = (server: ServerConfig | null | undefined) => (server && server.lastErrorStatus !== 401 ? server : undefined)
+
+/** Something loaded once on first use (the built-in city and airport lists): undefined until it's there. */
+export function useLoaded<T>(load: () => Promise<T>): T | undefined {
+  const [value, setValue] = useState<{ loaded: T }>()
+  useEffect(() => {
+    let live = true
+    load()
+      .then((loaded) => live && setValue({ loaded }))
+      .catch(() => undefined)
+    return () => {
+      live = false
+    }
+  }, [load])
+  return value?.loaded
+}

@@ -231,7 +231,7 @@ function TripForm(props: { existing?: TripData; myName?: string; lastCurrency?: 
         </p>
       )}
 
-      <Field label="Time zone" hint="Where the trip happens. Each booking can have its own (for flights, say).">
+      <Field label="Time zone" hint="Where the trip happens. New bookings follow your journeys: after a flight to Tokyo, they're in Tokyo time.">
         <ZoneSelect value={timeZone} onChange={setTimeZone} suggestions={[...new Set([timeZone, deviceTimeZone(), ...(existing?.zones ?? [])])]} label="Time zone" />
       </Field>
 

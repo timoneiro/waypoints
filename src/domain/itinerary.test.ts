@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { activity, stay, transport, trip } from '../test/fixtures'
-import { buildPlan, nextUp, planEntries, tripPhase } from './itinerary'
+import { buildPlan, nextUp, planEntries, tripPhase, zoneOnDay } from './itinerary'
 import { zonedInstant } from './time'
 
 const lisbon = stay({ id: 'stay0001', name: 'Casa Azul', checkInDate: '2027-03-10', checkInTime: '15:00', checkOutDate: '2027-03-12', checkOutTime: '11:00' })
@@ -69,5 +69,51 @@ describe('nextUp', () => {
     expect(nextUp(entries, '2027-03-11', noonInLisbon)?.record.id).toBe('todo0001')
     const lateEvening = zonedInstant('2027-03-11', '21:00', 'Europe/Lisbon')
     expect(nextUp(entries, '2027-03-11', lateEvening)?.record.id).toBe('move0002')
+  })
+})
+
+describe('zoneOnDay', () => {
+  // Lisbon, then a flight to Tokyo (arriving the next day), a stay in Kyoto, and a flight home.
+  const toTokyo = transport({
+    id: 'move0010',
+    mode: 'flight',
+    departDate: '2027-04-01',
+    departTime: '13:00',
+    departTimeZone: 'Europe/Lisbon',
+    arriveDate: '2027-04-02',
+    arriveTime: '09:00',
+    arriveTimeZone: 'Asia/Tokyo',
+  })
+  const kyoto = stay({ id: 'stay0010', checkInDate: '2027-04-05', checkOutDate: '2027-04-09', timeZone: 'Asia/Tokyo' })
+  const home = transport({ id: 'move0011', mode: 'flight', departDate: '2027-04-09', departTimeZone: 'Asia/Tokyo', arriveTimeZone: 'Europe/Lisbon' })
+  const zone = (day: string) => zoneOnDay(day, [kyoto], [toTokyo, home])
+
+  it('follows the journeys: the day after flying to Japan is in Japan', () => {
+    expect(zone('2027-04-02')).toBe('Asia/Tokyo')
+    expect(zone('2027-04-03')).toBe('Asia/Tokyo')
+    expect(zone('2027-04-06')).toBe('Asia/Tokyo')
+    // Arriving home the same day: that day is home's.
+    expect(zone('2027-04-09')).toBe('Europe/Lisbon')
+    expect(zone('2027-04-20')).toBe('Europe/Lisbon')
+  })
+
+  it('before anything arrives, is where the first journey leaves from', () => {
+    expect(zone('2027-04-01')).toBe('Europe/Lisbon')
+    expect(zone('2027-03-20')).toBe('Europe/Lisbon')
+  })
+
+  it('counts stays too, so a trip without journeys still moves with its stays', () => {
+    const tokyo = stay({ id: 'stay0011', checkInDate: '2027-04-02', checkOutDate: '2027-04-05', timeZone: 'Asia/Tokyo' })
+    const seoul = stay({ id: 'stay0012', checkInDate: '2027-04-05', checkOutDate: '2027-04-08', timeZone: 'Asia/Seoul' })
+    expect(zoneOnDay('2027-04-01', [tokyo, seoul], [])).toBe('Asia/Tokyo')
+    expect(zoneOnDay('2027-04-04', [tokyo, seoul], [])).toBe('Asia/Tokyo')
+    expect(zoneOnDay('2027-04-05', [tokyo, seoul], [])).toBe('Asia/Seoul')
+    // A later arrival on the same day wins over an earlier check-in.
+    const ferry = transport({ id: 'move0012', departDate: '2027-04-05', departTime: '18:00', arriveTime: '21:00', departTimeZone: 'Asia/Seoul', arriveTimeZone: 'Asia/Tokyo' })
+    expect(zoneOnDay('2027-04-05', [tokyo, seoul], [ferry])).toBe('Asia/Tokyo')
+  })
+
+  it('has nothing to say about an empty plan', () => {
+    expect(zoneOnDay('2027-04-01', [], [])).toBeUndefined()
   })
 })

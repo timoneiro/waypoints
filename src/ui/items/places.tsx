@@ -4,7 +4,8 @@ import { patchRecord } from '../../db/actions'
 import type { Place, PlaceCategory } from '../../db/types'
 import { mapQuery, safeHttpUrl } from '../../domain/links'
 import { BackLink, DetailHead, EmptyState } from '../components/bits'
-import { ChoiceChips, CityField, NotesField, TextField } from '../components/fields'
+import { ChoiceChips, NotesField, TextField } from '../components/fields'
+import { AddressField, CityField } from '../components/PlaceFields'
 import { MapLinks, WebLink } from '../components/ItemLinks'
 import { fmtDayTime, plural } from '../format'
 import { labelOf, PLACE_CATEGORIES } from '../labels'
@@ -146,7 +147,6 @@ export function PlaceFormPage() {
 }
 
 function PlaceForm({ existing }: { existing?: Place }) {
-  const t = useTrip()
   const [searchParams] = useSearchParams()
   const [name, setName] = useState(existing?.name ?? '')
   const [category, setCategory] = useState<string>(existing?.category ?? 'sight')
@@ -176,8 +176,15 @@ function PlaceForm({ existing }: { existing?: Place }) {
     <ItemForm title={existing ? 'Edit place' : 'New place'} error={error} busy={busy} onSubmit={onSubmit}>
       <TextField label="Name" value={name} onChange={setName} placeholder="Livraria Lello, Time Out Market…" maxLength={200} autoFocus={!existing} />
       <ChoiceChips label="Kind" options={PLACE_CATEGORIES} value={category} onChange={setCategory} />
-      <CityField value={city} onChange={setCity} cities={t.cities} />
-      <TextField label="Address" value={address} onChange={setAddress} maxLength={500} autoComplete="off" />
+      <CityField value={city} onChange={setCity} />
+      <AddressField
+        value={address}
+        onChange={setAddress}
+        city={city}
+        onPlace={(p) => {
+          if (!city.trim()) setCity(p.city)
+        }}
+      />
       <TextField
         label="Link"
         type="url"

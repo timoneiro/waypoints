@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { allTimeZones, zoneCity } from '../../domain/time'
 import { currencyName } from '../format'
 import type { Label } from '../labels'
@@ -70,21 +70,6 @@ export function ChoiceChips<K extends string>({ label, options, value, onChange 
         ))}
       </div>
     </div>
-  )
-}
-
-/** A city, with the trip's cities as suggestions. */
-export function CityField({ value, onChange, cities, label = 'City' }: { value: string; onChange: (v: string) => void; cities: string[]; label?: string }) {
-  const listId = useId()
-  return (
-    <Field label={label}>
-      <input className="input" value={value} list={listId} maxLength={200} autoComplete="off" onChange={(e) => onChange(e.target.value)} />
-      <datalist id={listId}>
-        {cities.map((c) => (
-          <option key={c} value={c} />
-        ))}
-      </datalist>
-    </Field>
   )
 }
 

@@ -8,6 +8,24 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.5.0 — 2026-10-13
+
+Cities, airports and time zones, filled in for you.
+
+- **Cities as you type**: start typing a city and pick it from a list of the world's towns (15,000
+  people or more), with the ones already in your trip on top. It works offline: the list comes with
+  the app. Picking a city also sets its time zone.
+- **Airports for flights**: type a city, an airport's name or its code ("nrt", "heathrow") and pick
+  it. It reads "Tokyo (NRT)", and the departure and arrival times switch to each airport's time zone.
+  Trains, buses and ferries get the city list.
+- **Time zones that follow your trip**: something new is in the time zone of wherever your journeys
+  have taken you by that day. The day after a flight to Japan, new activities are in Japan time.
+- **Addresses**: address fields suggest the ones already in the trip, such as your hotel's for an
+  activity there, and fill in the city too.
+- **Online address search**, if you want it: turn it on in Settings → **Address search** to look up
+  any address as you type. It uses OpenStreetMap (through Photon), needs internet, and sends what you
+  type in the address field to it. It's off unless you turn it on.
+
 ## 0.4.0 — 2026-10-09
 
 Photos and documents: for the whole trip, or for any stay, journey, activity, place or expense.

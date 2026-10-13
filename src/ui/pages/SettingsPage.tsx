@@ -15,6 +15,9 @@ const stamp = () => new Date().toLocaleDateString('en-CA')
 
 export function SettingsPage() {
   const myName = useSetting<string>(SETTINGS.myName)
+  const addressSearch = useSetting<boolean>(SETTINGS.addressSearch)
+  // Ticks at once, rather than when the setting is saved.
+  const [searchOnline, setSearchOnline] = useState<boolean>()
   const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string }>()
   const [persisted, setPersisted] = useState<boolean>()
   const snapshots = useLiveQuery(() => db.snapshots.orderBy('createdAt').reverse().toArray(), [])
@@ -59,6 +62,33 @@ export function SettingsPage() {
           />
         )}
         <p className="muted small">Suggested as the first traveller on new trips. It stays on this phone.</p>
+      </section>
+
+      <section className="card">
+        <h3>Address search</h3>
+        <p className="muted small">
+          Cities and airports come with the app, so searching for them works offline. Addresses don't: there are far too many.
+          Address fields suggest the ones already in the trip, such as your stay's for an activity there.
+        </p>
+        {addressSearch && (
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={searchOnline ?? addressSearch.value === true}
+              onChange={(e) => {
+                setSearchOnline(e.target.checked)
+                void setSetting(SETTINGS.addressSearch, e.target.checked || undefined)
+              }}
+            />
+            <span>
+              Also search for addresses online
+              <small>
+                What you type in an address field goes to Photon, a free OpenStreetMap search run by komoot (Germany), with no
+                account. It needs internet. Only for this phone.
+              </small>
+            </span>
+          </label>
+        )}
       </section>
 
       <section className="card">
@@ -166,7 +196,22 @@ export function SettingsPage() {
         <p className="muted small">
           No account, no tracking, no ads. Your trips stay on this phone and only leave it in the links and files you choose to
           send, and for the trips you put on a sync server, if you connect to one. Maps and calendars open in their own apps;
-          without a server, waypoints itself never connects to anything.
+          without a server, waypoints itself never connects to anything, unless you turn on online address search.
+        </p>
+        <p className="muted small">
+          City and time zone data from{' '}
+          <a className="link" href="https://www.geonames.org" target="_blank" rel="noreferrer">
+            GeoNames
+          </a>{' '}
+          (CC BY 4.0); airports from{' '}
+          <a className="link" href="https://ourairports.com" target="_blank" rel="noreferrer">
+            OurAirports
+          </a>{' '}
+          and{' '}
+          <a className="link" href="https://github.com/mwgg/Airports" target="_blank" rel="noreferrer">
+            mwgg/Airports
+          </a>
+          .
         </p>
       </section>
     </>

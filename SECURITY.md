@@ -27,7 +27,9 @@ Nothing that arrives from outside the phone. Trip links and files can be crafted
 validated and size-limited before anything is shown or stored, and only `http(s)` addresses ever become
 clickable links. Records from a sync server go through the same checks. The Content-Security-Policy
 allows only the app's own scripts and styles, and network requests only to HTTPS addresses (the sync
-server's, which people type in). Without a server, the app makes none.
+server's, which people type in). Without a server, the app makes none, unless someone turns on online
+address search in Settings: then address fields send what's typed to Photon (photon.komoot.io), and only
+plain-text fields of its answers are used.
 
 ## The optional sync server
 

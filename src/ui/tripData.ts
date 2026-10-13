@@ -3,7 +3,18 @@ import { db, getSetting, isLive, recordTable, SETTINGS } from '../db/db'
 import { getServerConfig } from '../db/serverState'
 import type { Activity, Attachment, Exchange, Expense, Place, ServerTrip, Stay, Transport, Traveller, Trip, TripTable } from '../db/types'
 import { rateFinder, type RateOf } from '../domain/expenses'
+import { fold } from '../domain/places'
 import type { MemberSummary } from '../domain/serverProtocol'
+import { labelOf, PLACE_CATEGORIES, STAY_KINDS } from './labels'
+
+/** An address already in the trip, to suggest for another item there (an activity at the hotel). */
+export interface KnownAddress {
+  address: string
+  /** What's there: "🏨 Hotel Sol". */
+  what: string
+  city?: string
+  timeZone?: string
+}
 
 /** Everything in one trip that's still live, loaded once for all the trip's pages. */
 export interface TripData {
@@ -41,6 +52,10 @@ export interface TripData {
   names: Map<string, string>
   /** Cities used anywhere in the trip, for suggestions. */
   cities: string[]
+  /** The time zone of each city the trip's stays and activities are in, by folded name. */
+  cityZones: Map<string, string>
+  /** Addresses of the trip's stays, places and activities, for suggestions. */
+  addresses: KnownAddress[]
   /** Time zones used in the trip, the trip's own first. */
   zones: string[]
 }
@@ -83,6 +98,20 @@ export async function loadTrip(tripId: string): Promise<TripData | null> {
     attachments: attachments.filter(isLive),
   }
   const cities = [...data.stays, ...data.activities, ...data.places].map((r) => r.city?.trim()).filter((c): c is string => Boolean(c))
+  // Newest last, so a city's latest time zone wins.
+  const cityZones = new Map(
+    [...data.stays, ...data.activities]
+      .filter((r) => r.city?.trim())
+      .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt))
+      .map((r) => [fold(r.city!), r.timeZone]),
+  )
+  const addresses: KnownAddress[] = [
+    ...data.stays.map((s) => ({ address: s.address, what: `${labelOf(STAY_KINDS, s.kind).emoji} ${s.name}`, city: s.city, timeZone: s.timeZone })),
+    ...data.places.map((p) => ({ address: p.address, what: `${labelOf(PLACE_CATEGORIES, p.category).emoji} ${p.name}`, city: p.city })),
+    ...data.activities.map((a) => ({ address: a.address, what: `🎟️ ${a.title}`, city: a.city, timeZone: a.timeZone })),
+  ]
+    .map((a) => ({ ...a, address: a.address?.trim() ?? '', city: a.city?.trim() || undefined }))
+    .filter((a, i, all) => a.address && all.findIndex((b) => b.address === a.address) === i)
   const zones = [
     trip.timeZone,
     ...data.stays.map((s) => s.timeZone),
@@ -105,6 +134,8 @@ export async function loadTrip(tripId: string): Promise<TripData | null> {
     viaLinks: server ? travellers.filter((t) => !isLinked(t)) : travellers,
     names: new Map(allTravellers.map((t) => [t.id, t.name])),
     cities: [...new Set(cities)].sort((a, b) => a.localeCompare(b)),
+    cityZones,
+    addresses,
     zones: [...new Set(zones)],
   }
 }
