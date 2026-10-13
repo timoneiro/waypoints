@@ -10,6 +10,7 @@ import { createApp } from '../../server/src/app.ts'
 import { loadConfig, type Config } from '../../server/src/config.ts'
 import { Store } from '../../server/src/store.ts'
 import { emptyTables } from '../db/types.ts'
+import { reviewId } from '../domain/reviews.ts'
 import type { Credentials, SyncResponse, TripChanges } from '../domain/serverProtocol.ts'
 import { attachment, FILE, FILE_SHA256 } from '../test/fixtures.ts'
 
@@ -56,7 +57,7 @@ const later = (seconds = 1) => new Date(Date.now() + seconds * 1000).toISOString
 
 describe('sync client ↔ server', async () => {
   const { db, getSetting, SETTINGS } = await import('../db/db')
-  const { createTrip, moveTripToServer, saveRecord, updateTrip } = await import('../db/actions')
+  const { createTrip, moveTripToServer, saveRecord, saveReview, updateTrip } = await import('../db/actions')
   const { applyMerge, readTables } = await import('../db/backupIO')
   const { getServerConfig, setServerConfig } = await import('../db/serverState')
   const { runSync, SyncError } = await import('./client')
@@ -131,6 +132,28 @@ describe('sync client ↔ server', async () => {
     expect((await db.stays.get(stay.id))!.name).toBe('Casa Verde')
     expect(await db.outbox.where('tripId').equals(onServer).count()).toBe(0)
     expect(await db.unsent.count()).toBe(0)
+  })
+
+  it("sends this phone's reviews, and brings in Ana's next to them", async () => {
+    const [stay] = (await readTables(onServer)).stays
+    const travellers = await db.travellers.where('tripId').equals(onServer).toArray()
+    const max = travellers.find((t) => t.name === 'Max')!
+    const anaT = travellers.find((t) => t.name === 'Ana')!
+    await saveReview(onServer, { table: 'stays', id: stay.id }, max.id, { stars: 4, note: 'Good beds' })
+    await runSync()
+    expect(Object.values(serverTrip(onServer).records.reviews ?? {}).map((s) => s.rec)).toMatchObject([{ by: max.id, stars: 4, note: 'Good beds' }])
+
+    const anas = { id: await reviewId(onServer, stay.id, anaT.id), tripId: onServer, itemTable: 'stays', itemId: stay.id, by: anaT.id, missed: true, createdAt: later(), updatedAt: later() }
+    const res = await anaSync([{ id: onServer, cursor: anaCursor, records: { reviews: [anas] } }])
+    expect(res.rejected).toEqual([])
+    expect(res.trips[0].records.reviews).toMatchObject([{ by: max.id, stars: 4 }])
+    anaCursor = res.trips[0].cursor
+
+    await runSync()
+    const here = await db.reviews.where('tripId').equals(onServer).toArray()
+    expect(here.map((r) => r.by).sort()).toEqual([anaT.id, max.id].sort())
+    expect(here.find((r) => r.by === anaT.id)).toMatchObject({ missed: true })
+    expect(await db.outbox.where('tripId').equals(onServer).count()).toBe(0)
   })
 
   it('sends photos and documents with their files, apart from those kept on the phone', async () => {

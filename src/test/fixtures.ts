@@ -5,6 +5,7 @@ import {
   type Exchange,
   type Expense,
   type Place,
+  type Review,
   type Stay,
   type Tables,
   type Transport,
@@ -122,3 +123,14 @@ export const attachment = (over: Partial<Attachment> = {}): Attachment => ({
 })
 
 export const tables = (over: Partial<Tables> = {}): Tables => ({ ...emptyTables(), ...over })
+
+/** Ana's four stars for the fado night. */
+export const review = (over: Partial<Review> = {}): Review => ({
+  ...meta('rate0001'),
+  tripId: TRIP,
+  itemTable: 'activities',
+  itemId: 'todo0001',
+  by: ANA,
+  stars: 4,
+  ...over,
+})

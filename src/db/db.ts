@@ -7,6 +7,7 @@ import type {
   OutboxEntry,
   Place,
   RecordTable,
+  Review,
   ServerTrip,
   SettingEntry,
   Snapshot,
@@ -28,6 +29,7 @@ export const db = new Dexie('waypoints') as Dexie & {
   places: EntityTable<Place, 'id'>
   expenses: EntityTable<Expense, 'id'>
   exchanges: EntityTable<Exchange, 'id'>
+  reviews: EntityTable<Review, 'id'>
   attachments: EntityTable<Attachment, 'id'>
   files: EntityTable<StoredFile, 'id'>
   unsent: Dexie.Table<UnsentEntry, [string, string]>
@@ -74,6 +76,21 @@ db.version(3)
     attachments: 'id, tripId',
     files: 'id, tripId',
   })
+  .upgrade((tx) =>
+    tx
+      .table('serverTrips')
+      .toCollection()
+      .modify((state: { cursor: number }) => {
+        state.cursor = 0
+      }),
+  )
+
+/**
+ * 0.8.0: reviews of activities, places, stays and journeys. Phones on 0.7.0 skipped the reviews the
+ * sync server sent them, so every trip on the server is pulled again in full, once (as in v3).
+ */
+db.version(4)
+  .stores({ reviews: 'id, tripId' })
   .upgrade((tx) =>
     tx
       .table('serverTrips')

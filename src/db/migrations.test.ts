@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import Dexie from 'dexie'
 import { expect, it } from 'vitest'
-import { exchange, expense, stay, traveller, trip } from '../test/fixtures'
+import { activity, attachment, exchange, expense, stay, traveller, trip } from '../test/fixtures'
 
 /*
  * Guards existing users' data: open a database exactly as v0.1 of the app created it, then open it
@@ -85,5 +85,45 @@ it('opening a 0.3.0 database pulls every trip on the server again, once', async 
   expect(await db.serverTrips.toArray()).toEqual([{ tripId: 'trip0001', cursor: 0, uploaded: true }])
   expect(await db.outbox.count()).toBe(1)
   expect(await db.trips.toArray()).toEqual([trip()])
+  db.close()
+})
+
+it('opening a 0.7.0 database pulls every trip on the server again, once', async () => {
+  await Dexie.delete('waypoints')
+  const v3 = new Dexie('waypoints')
+  v3.version(1).stores({
+    trips: 'id',
+    travellers: 'id, tripId',
+    stays: 'id, tripId',
+    transports: 'id, tripId',
+    activities: 'id, tripId',
+    places: 'id, tripId',
+    expenses: 'id, tripId',
+    exchanges: 'id, tripId',
+    unsent: '[table+id], tripId',
+    settings: 'key',
+    snapshots: '++id, createdAt',
+  })
+  v3.version(2).stores({ outbox: '[table+id], tripId', serverTrips: 'tripId' })
+  v3.version(3).stores({ attachments: 'id, tripId', files: 'id, tripId' })
+  await v3.open()
+  await v3.table('trips').add(trip())
+  await v3.table('activities').add(activity())
+  await v3.table('attachments').add(attachment())
+  await v3.table('serverTrips').add({ tripId: 'trip0001', cursor: 12, uploaded: true, files: [{ id: 'file0001', thumb: true }] })
+  await v3.table('outbox').add({ table: 'activities', id: 'todo0001', tripId: 'trip0001' })
+  v3.close()
+
+  const { db } = await import('./db')
+  await db.open()
+
+  // v4 (0.8.0): reviews start empty. 0.7.0 skipped the ones the server sent, so the trip is pulled
+  // again from the start; what's waiting to go up stays waiting, and nothing else changes.
+  expect(await db.reviews.count()).toBe(0)
+  expect(await db.serverTrips.toArray()).toEqual([{ tripId: 'trip0001', cursor: 0, uploaded: true, files: [{ id: 'file0001', thumb: true }] }])
+  expect(await db.outbox.count()).toBe(1)
+  expect(await db.trips.toArray()).toEqual([trip()])
+  expect(await db.activities.toArray()).toEqual([activity()])
+  expect(await db.attachments.toArray()).toEqual([attachment()])
   db.close()
 })

@@ -12,6 +12,7 @@ import { fmtDay, fmtDayRange, fmtDayTime, fmtTime, plural } from '../format'
 import { useNow, useToday } from '../hooks'
 import { labelOf, STAY_KINDS, TRANSPORT_MODES } from '../labels'
 import { tripPath, useTrip } from '../tripData'
+import { ReviewsLink } from './ReviewsPage'
 
 export function PlanPage() {
   const t = useTrip()
@@ -26,6 +27,7 @@ export function PlanPage() {
   return (
     <>
       <StatusCard plan={plan} entries={entries} today={today} now={now} />
+      <ReviewsLink now={now} />
       <UnsentNotice />
       <div className="segmented" role="tablist" aria-label="View">
         <button role="tab" aria-selected={view === 'days'} className={view === 'days' ? 'active' : ''} onClick={() => setParams({}, { replace: true })}>

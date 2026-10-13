@@ -16,6 +16,7 @@ import { labelOf, TRANSPORT_MODES } from '../labels'
 import { useToday } from '../hooks'
 import { tripPath, useTrip } from '../tripData'
 import { AttachmentsCard } from '../components/Attachments'
+import { ReviewsCard } from '../components/Reviews'
 import { ItemFooter, ItemForm, ItemGone } from './common'
 import { opt, useSave } from './save'
 import { useItemZone } from './zone'
@@ -179,6 +180,7 @@ export function TransportPage() {
           <p className="prewrap">{r.notes}</p>
         </section>
       )}
+      <ReviewsCard target={{ table: 'transports', record: r }} />
       <AttachmentsCard table="transports" id={r.id} />
       <section className="card">
         <h3>Calendar</h3>

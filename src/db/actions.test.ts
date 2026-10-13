@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { emptyTables } from './types'
-import { addTraveller, clearUnsent, createTrip, deleteRecord, moveTripToServer, patchRecord, removeTripFromPhone, saveRecord, updateTrip } from './actions'
+import { addTraveller, clearUnsent, createTrip, deleteRecord, moveTripToServer, patchRecord, removeTripFromPhone, saveRecord, saveReview, updateTrip } from './actions'
 import { applyMerge, previewMerge, readTables } from './backupIO'
 import { db, getSetting, setSetting, SETTINGS } from './db'
 
@@ -108,6 +108,80 @@ describe('records', () => {
     const id = await addTraveller(tripId, 'Bo')
     expect((await db.travellers.get(id))!.name).toBe('Bo')
     expect(await unsentIds(tripId)).toContain(id)
+  })
+})
+
+describe('reviews', () => {
+  const setup = async () => {
+    const tripId = await createTrip(tripInput, people('Ana', 'Bo'))
+    const [ana, bo] = (await db.travellers.toArray()).sort((a, b) => a.name.localeCompare(b.name))
+    const stayId = await saveRecord('stays', tripId, stayInput)
+    await clearUnsent(tripId)
+    await db.outbox.clear()
+    return { tripId, ana: ana.id, bo: bo.id, item: { table: 'stays' as const, id: stayId } }
+  }
+  const live = async () => (await db.reviews.toArray()).filter((r) => !r.deletedAt)
+
+  it('are one per traveller and item, whichever phone writes them', async () => {
+    const { tripId, ana, bo, item } = await setup()
+    await saveReview(tripId, item, ana, { stars: 4 })
+    await saveReview(tripId, item, ana, { stars: 5, note: '  Great view  ' })
+    await saveReview(tripId, item, bo, { stars: 2 })
+    const reviews = await live()
+    expect(reviews).toHaveLength(2)
+    expect(reviews.find((r) => r.by === ana)).toMatchObject({ tripId, itemTable: 'stays', itemId: item.id, stars: 5, note: 'Great view' })
+    expect(await unsentIds(tripId)).toEqual(reviews.map((r) => r.id).sort())
+    expect(await outboxIds(tripId)).toEqual(reviews.map((r) => r.id).sort())
+
+    // Ana's other phone, with a copy of the trip from before her reviews, reviews it too: the same record.
+    const sent = await readTables(tripId)
+    await db.delete()
+    await db.open()
+    await applyMerge({ ...sent, reviews: [] }, 'test')
+    await saveReview(tripId, item, ana, { stars: 3 })
+    expect((await db.reviews.toArray()).map((r) => r.id)).toEqual([sent.reviews.find((r) => r.by === ana)!.id])
+  })
+
+  it("don't change when saved as they are", async () => {
+    const { tripId, ana, item } = await setup()
+    await saveReview(tripId, item, ana, { stars: 4, note: 'Quiet' })
+    const before = await db.reviews.toArray()
+    await clearUnsent(tripId)
+    await saveReview(tripId, item, ana, { stars: 4, note: 'Quiet ' })
+    expect(await db.reviews.toArray()).toEqual(before)
+    expect(await unsentIds(tripId)).toEqual([])
+  })
+
+  it("have no stars when the traveller didn't go, and keep a note", async () => {
+    const { tripId, ana, item } = await setup()
+    await saveReview(tripId, item, ana, { stars: 4, note: 'Ill that night', missed: true })
+    const [review] = await live()
+    expect(review.missed).toBe(true)
+    expect(review.note).toBe('Ill that night')
+    expect('stars' in review).toBe(false)
+  })
+
+  it('are deleted when left empty, and can be written again', async () => {
+    const { tripId, ana, item } = await setup()
+    await saveReview(tripId, item, ana, { missed: true })
+    await saveReview(tripId, item, ana, { missed: false })
+    expect(await live()).toEqual([])
+    expect((await db.reviews.toArray())[0].deletedAt).toBeDefined()
+
+    await saveReview(tripId, item, ana, { stars: 3 })
+    const [review] = await live()
+    expect(review.stars).toBe(3)
+    expect('deletedAt' in review).toBe(false)
+    expect(await db.reviews.count()).toBe(1)
+  })
+
+  it('keep fields from newer versions of the app', async () => {
+    const { tripId, ana, item } = await setup()
+    await saveReview(tripId, item, ana, { stars: 4 })
+    const [review] = await db.reviews.toArray()
+    await db.reviews.put({ ...review, photoId: 'file0001' } as typeof review)
+    await saveReview(tripId, item, ana, { stars: 5 })
+    expect(await db.reviews.get(review.id)).toMatchObject({ stars: 5, photoId: 'file0001' })
   })
 })
 

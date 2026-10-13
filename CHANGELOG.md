@@ -8,6 +8,20 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.8.0 — 2026-10-13
+
+Reviews: remember what was worth it.
+
+- **Rate what you did**: activities, places, stays and journeys get a **Reviews** card once they've
+  started (places once they're ticked **Been there**). Give 1 to 5 stars, add a note, or tap
+  **Didn't go**. Everyone in the group writes their own, and they show side by side.
+- **Your list to review**: once things are over, the Plan tab shows how many are waiting for you. Tap
+  it to rate them one after another, then see everyone's reviews, the latest or the top rated first.
+- A place that's in the plan is reviewed through its activities, and its page shows their reviews.
+- Reviews are yours: if the app doesn't know which traveller you are on this phone, it asks first.
+- They travel in links and on the sync server like everything else. Phones on an older version of the
+  app don't show them, and a sync server needs updating to keep them.
+
 ## 0.7.0 — 2026-10-13
 
 Cash or card, for every expense.

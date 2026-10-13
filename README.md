@@ -22,6 +22,9 @@ search).
   reservation with its reference.
 - **Places to see**, grouped by city: must-sees, a visited tick, and one tap to put a place in the plan.
   Paste a Google or Apple Maps link to open it again later.
+- **Reviews**: everyone rates the activities, places, stays and journeys they did, with 1 to 5 stars and a
+  note, or says they didn't go. Things show up on your list to review once they're over, and everyone's
+  reviews sit side by side.
 - **Shared expenses**, Splitwise-style: any currency, split equally or by exact amounts, with balances
   and the fewest payments to settle up, paid back in full or in part. Each expense says whether it was
   paid in cash or by card.

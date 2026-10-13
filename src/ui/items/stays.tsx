@@ -13,6 +13,7 @@ import { fmtDayTime, plural } from '../format'
 import { labelOf, STAY_KINDS } from '../labels'
 import { tripPath, useTrip, type TripData } from '../tripData'
 import { AttachmentsCard } from '../components/Attachments'
+import { ReviewsCard } from '../components/Reviews'
 import { ItemFooter, ItemForm, ItemGone } from './common'
 import { opt, useSave } from './save'
 import { useItemZone } from './zone'
@@ -170,6 +171,7 @@ export function StayPage() {
           <p className="prewrap">{stay.notes}</p>
         </section>
       )}
+      <ReviewsCard target={{ table: 'stays', record: stay }} />
       <AttachmentsCard table="stays" id={stay.id} />
       <section className="card">
         <h3>Calendar</h3>
