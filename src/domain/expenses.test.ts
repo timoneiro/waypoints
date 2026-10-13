@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ANA, BO, CY, exchange, expense, T1 } from '../test/fixtures'
-import { awaitingCost, balances, exchangeRates, parseAmount, rateFinder, settleUp, sharesOf, totals, unconverted } from './expenses'
+import type { Expense, PaidWith } from '../db/types'
+import { awaitingCost, balances, exchangeRates, likelyPaidWith, paidWithOf, parseAmount, rateFinder, settleUp, sharesOf, totals, unconverted } from './expenses'
 
 /** A trip in EUR, without exchanges unless given. */
 const inEuros = (exchanges = [exchange({ deletedAt: '2026-10-02T10:00:00.000Z' })]) => rateFinder('EUR', exchanges)
@@ -65,12 +66,55 @@ describe('exchange rates', () => {
     expect(awaitingCost(expense({ currency: 'JPY', paidWith: 'card', deletedAt: T1 }), 'EUR')).toBe(false)
   })
 
+  it('say how older expenses in another currency were paid, from how they convert', () => {
+    expect(paidWithOf(expense({ currency: 'JPY' }), 'EUR')).toBe('cash')
+    expect(paidWithOf(expense({ currency: 'JPY', rate: 155 }), 'EUR')).toBe('card')
+    expect(paidWithOf(expense({ currency: 'JPY', paidWith: 'card' }), 'EUR')).toBe('card')
+  })
+
+  it("leave older expenses in the trip's currency unsaid", () => {
+    expect(paidWithOf(expense({ currency: 'EUR' }), 'EUR')).toBeUndefined()
+    expect(paidWithOf(expense({ currency: 'EUR', paidWith: 'cash' }), 'EUR')).toBe('cash')
+    expect(paidWithOf(expense({ currency: 'EUR', paidWith: 'card' }), 'EUR')).toBe('card')
+    // A newer app's way of paying isn't one this one knows.
+    expect(paidWithOf(expense({ currency: 'EUR', paidWith: 'voucher' as PaidWith }), 'EUR')).toBeUndefined()
+  })
+
   it('apply to expenses added before the exchange, too', () => {
     const ramen = expense({ amount: 1_600, currency: 'JPY', split: { kind: 'equal', among: [ANA] } })
     expect(unconverted([ramen], inEuros())).toEqual([ramen])
     expect(totals([ramen], inEuros()).total).toBe(0)
     expect(unconverted([ramen], rateFinder('EUR', [exchange()]))).toEqual([])
     expect(totals([ramen], rateFinder('EUR', [exchange()])).total).toBe(10)
+  })
+})
+
+describe('likelyPaidWith', () => {
+  const at = (id: string, minute: number, over: Partial<Expense>) => expense({ id, createdAt: `2027-03-10T10:${String(minute).padStart(2, '0')}:00.000Z`, ...over })
+  const inEur = { tripCurrency: 'EUR', exchanged: false }
+
+  it('follows the last expense in that currency that says', () => {
+    const list = [at('cost0001', 1, { paidWith: 'cash' }), at('cost0002', 2, {}), at('cost0003', 3, { currency: 'JPY', paidWith: 'card' })]
+    expect(likelyPaidWith(list, 'EUR', inEur)).toBe('cash')
+    expect(likelyPaidWith([...list, at('cost0004', 4, { paidWith: 'card' })], 'EUR', inEur)).toBe('card')
+  })
+
+  it('skips payments between travellers and deleted expenses', () => {
+    const list = [at('cost0001', 1, { paidWith: 'cash' }), at('cost0002', 2, { paidWith: 'card', transfer: true }), at('cost0003', 3, { paidWith: 'card', deletedAt: T1 })]
+    expect(likelyPaidWith(list, 'EUR', inEur)).toBe('cash')
+  })
+
+  it('is cash once money was changed for the currency, else card', () => {
+    expect(likelyPaidWith([], 'JPY', { tripCurrency: 'EUR', exchanged: true })).toBe('cash')
+    expect(likelyPaidWith([], 'JPY', inEur)).toBe('card')
+    // Older expenses in the trip's currency don't say, so they don't count.
+    expect(likelyPaidWith([at('cost0001', 1, {})], 'EUR', inEur)).toBe('card')
+  })
+
+  it('is cash for payments between travellers abroad, card or bank at home', () => {
+    const list = [at('cost0001', 1, { paidWith: 'cash' }), at('cost0002', 2, { currency: 'JPY', paidWith: 'card' })]
+    expect(likelyPaidWith(list, 'EUR', { ...inEur, transfer: true })).toBe('card')
+    expect(likelyPaidWith(list, 'JPY', { ...inEur, transfer: true })).toBe('cash')
   })
 })
 

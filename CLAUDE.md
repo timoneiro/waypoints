@@ -74,6 +74,8 @@ another host (an exchange-rate API, map tiles) needs adding there, and must stay
 - **Money**: cash expenses convert at the average rate the trip's exchanges actually got (fees included);
   card payments at what the bank charged (their own `rate`), estimated at the cash average and flagged
   "cost pending" until someone adds it (`paidWith`, `awaitingCost`). Rates are typed in, never fetched.
+  Expenses in the trip's own currency say cash or card too, which changes nothing in the sums; older
+  ones there don't say, and stay unsaid until someone picks (`paidWithOf`).
 - Target scale: a few trips per phone, up to a few hundred items each, groups of 2–10. English only.
 
 ## Layout

@@ -1,4 +1,4 @@
-import type { Day, Exchange, Expense } from '../db/types.ts'
+import type { Day, Exchange, Expense, PaidWith } from '../db/types.ts'
 
 /*
  * Shared expenses, Splitwise-style but offline. Expenses can be in any currency. Cash converts to the
@@ -50,6 +50,32 @@ export const unconverted = (expenses: Expense[], rateOf: RateOf) => expenses.fil
  */
 export const awaitingCost = (e: Pick<Expense, 'currency' | 'rate' | 'paidWith' | 'deletedAt'>, tripCurrency: string) =>
   !e.deletedAt && e.paidWith === 'card' && e.currency !== tripCurrency && !e.rate
+
+/**
+ * How an expense was paid, or undefined if it doesn't say. Older ones in another currency don't, but
+ * convert as if they did: a rate of their own came from a card statement, else they're cash. In the
+ * trip's own currency it changes nothing, so older ones there stay unsaid.
+ */
+export function paidWithOf(e: Pick<Expense, 'currency' | 'rate' | 'paidWith'>, tripCurrency: string): PaidWith | undefined {
+  if (e.paidWith === 'cash' || e.paidWith === 'card') return e.paidWith
+  if (e.currency === tripCurrency) return undefined
+  return e.rate ? 'card' : 'cash'
+}
+
+/**
+ * How a new expense in a currency was likely paid: like the last one in it that says, else cash once
+ * money was changed for it, else card. Payments between travellers: cash abroad, card or bank at home.
+ */
+export function likelyPaidWith(
+  expenses: Expense[],
+  currency: string,
+  { tripCurrency, exchanged, transfer }: { tripCurrency: string; exchanged: boolean; transfer?: boolean },
+): PaidWith {
+  if (transfer) return currency === tripCurrency ? 'card' : 'cash'
+  const said = expenses.filter((e) => !e.deletedAt && !e.transfer && e.currency === currency && paidWithOf(e, tripCurrency))
+  const last = said.sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]
+  return (last && paidWithOf(last, tripCurrency)) ?? (exchanged ? 'cash' : 'card')
+}
 
 /** Each traveller's part of an expense, in the expense's own currency. */
 export function sharesOf(expense: Pick<Expense, 'amount' | 'split'>): Map<string, number> {
