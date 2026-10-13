@@ -10,7 +10,8 @@ import { checkRecord, DataError } from './records.ts'
  *
  * Photos and documents (attachments) go in neither when a trip is sent to someone: their files can't
  * travel in a link, so trip links and trip files leave out their records too. Backups of this phone
- * keep the records (names, captions), without the files.
+ * keep the records (names, captions), without the files. Reports are kept on the sync server only
+ * (a trip that isn't on one makes its report afresh), so they're left out of both as well.
  *
  * Both are merged the same way: record by record, the newer `updatedAt` wins, and deletions are
  * records too. Merging is safe to repeat and in any order, so everyone in a group ends up with the
@@ -67,8 +68,8 @@ export function parseBackup(text: string, now = Date.now()): Backup {
   return { app: 'waypoints', schemaVersion: data.schemaVersion, exportedAt, ...readTables(data, now) }
 }
 
-/** A trip to send to someone as a file: what a link would carry, so no photos and documents. */
-export const forSending = (tables: Tables): Tables => ({ ...tables, attachments: [] })
+/** A trip to send to someone as a file: what a link would carry, so no photos and documents, and no report. */
+export const forSending = (tables: Tables): Tables => ({ ...tables, attachments: [], reports: [] })
 
 /** What a trip link holds once decoded. */
 export interface TripLink {

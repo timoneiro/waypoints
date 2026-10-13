@@ -255,12 +255,30 @@ export interface Review extends TripRecord {
 }
 
 /**
+ * The trip's report (spending, reviews, highlights), kept on the sync server once the trip is over,
+ * so it's made once and everyone opens the same one. One per trip: its id comes from the trip's (see
+ * reportId in src/domain/report.ts), so phones that make it at the same time still end up with one.
+ * It travels only through the sync server, like attachments: trips that aren't on one make their
+ * report afresh each time it's opened.
+ */
+export interface Report extends TripRecord {
+  /**
+   * The report as it was made: a TripReport (src/domain/report.ts), with its `format`. It comes from
+   * other phones, so it's only shown through readReport, which checks every part of it.
+   */
+  data: Record<string, unknown>
+  /** Traveller who made it. */
+  madeBy?: string
+}
+
+/**
  * What trip links carry, all in LINK_VERSION 1. Reviews came in 0.8.0: older versions of the app
- * open links that have them, leaving the reviews out. Attachments travel only through the sync server.
+ * open links that have them, leaving the reviews out. Attachments and reports travel only through
+ * the sync server.
  */
 export const LINK_TABLES = ['travellers', 'stays', 'transports', 'activities', 'places', 'expenses', 'exchanges', 'reviews'] as const
 export type LinkTable = (typeof LINK_TABLES)[number]
-export const TRIP_TABLES = [...LINK_TABLES, 'attachments'] as const
+export const TRIP_TABLES = [...LINK_TABLES, 'attachments', 'reports'] as const
 export type TripTable = (typeof TRIP_TABLES)[number]
 export type RecordTable = 'trips' | TripTable
 export const RECORD_TABLES: readonly RecordTable[] = ['trips', ...TRIP_TABLES]
@@ -276,6 +294,7 @@ export interface TableRecords {
   exchanges: Exchange
   reviews: Review
   attachments: Attachment
+  reports: Report
 }
 
 /** Records of any number of trips, by table. The shape of backups, trip files and merges. */
@@ -292,6 +311,7 @@ export const emptyTables = (): Tables => ({
   exchanges: [],
   reviews: [],
   attachments: [],
+  reports: [],
 })
 
 /** Local-only key/value settings (never shared or exported). */

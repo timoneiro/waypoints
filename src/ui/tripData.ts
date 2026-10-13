@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react'
 import { db, getSetting, isLive, recordTable, SETTINGS } from '../db/db'
 import { getServerConfig } from '../db/serverState'
-import type { Activity, Attachment, Exchange, Expense, Place, Review, ServerTrip, Stay, Transport, Traveller, Trip, TripTable } from '../db/types'
+import type { Activity, Attachment, Exchange, Expense, Place, Report, Review, ServerTrip, Stay, Transport, Traveller, Trip, TripTable } from '../db/types'
 import { bookingKey } from '../domain/bookings'
 import { rateFinder, type RateOf } from '../domain/expenses'
 import { fold } from '../domain/places'
@@ -31,6 +31,8 @@ export interface TripData {
   reviews: Review[]
   /** Photos and documents (their records: the files are in db.files). */
   attachments: Attachment[]
+  /** The trip's report, kept on the sync server once the trip is over, if someone has made it. */
+  report?: Report
   /**
    * The booking (see bookingKey) of each journey that has one, deleted ones too: a document for a
    * whole booking stays with the others when the journey it was added to is deleted.
@@ -75,7 +77,7 @@ export async function loadTrip(tripId: string): Promise<TripData | null> {
   const trip = await db.trips.get(tripId)
   if (!trip || trip.deletedAt) return null
   const ofTrip = <T extends TripTable>(table: T) => recordTable(table).where('tripId').equals(tripId).toArray()
-  const [allTravellers, stays, transports, activities, places, expenses, exchanges, reviews, attachments, meId, unsent, server, waiting, config, serverGone] = await Promise.all([
+  const [allTravellers, stays, transports, activities, places, expenses, exchanges, reviews, attachments, reports, meId, unsent, server, waiting, config, serverGone] = await Promise.all([
     ofTrip('travellers'),
     ofTrip('stays'),
     ofTrip('transports'),
@@ -85,6 +87,7 @@ export async function loadTrip(tripId: string): Promise<TripData | null> {
     ofTrip('exchanges'),
     ofTrip('reviews'),
     ofTrip('attachments'),
+    ofTrip('reports'),
     getSetting<string>(SETTINGS.me(tripId)),
     db.unsent.where('tripId').equals(tripId).count(),
     db.serverTrips.get(tripId),
@@ -138,6 +141,8 @@ export async function loadTrip(tripId: string): Promise<TripData | null> {
     trip,
     travellers,
     ...data,
+    // One per trip (see reportId); the newest, should a crafted one have slipped in beside it.
+    report: reports.filter(isLive).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0],
     bookings,
     rateOf: rateFinder(trip.currency, data.exchanges),
     me: travellers.find((t) => t.id === meId) ?? (server && member ? travellers.find((t) => t.memberId === member.id) : undefined),

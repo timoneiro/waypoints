@@ -25,6 +25,11 @@ search).
 - **Reviews**: everyone rates the activities, places, stays and journeys they did, with 1 to 5 stars and a
   note, or says they didn't go. Things show up on your list to review once they're over, and everyone's
   reviews sit side by side.
+- **Trip report** once the trip is over: what it cost (by category, by day, who paid what, who still owes
+  whom), the best and worst of the trip with everyone's notes, the stays and journeys, places saved but
+  never visited, a photo a day and a few numbers to remember it by. Print it, save it as a PDF or a file,
+  or send a shareable version without names, notes or photos. On a trip on the sync server, it's made
+  once and kept there, so everyone sees the same report.
 - **Shared expenses**, Splitwise-style: any currency, split equally or by exact amounts, with balances
   and the fewest payments to settle up, paid back in full or in part. Each expense says whether it was
   paid in cash or by card.

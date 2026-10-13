@@ -2,19 +2,21 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { removeTripFromPhone, setMe } from '../../db/actions'
 import { buildICS, tripEvents } from '../../domain/calendar'
+import { tripPhase } from '../../domain/itinerary'
 import { daysBetween, timeZoneName, zoneCity } from '../../domain/time'
 import { downloadBlob, fileSlug } from '../../lib/download'
 import { leaveTrip } from '../../sync/account'
 import { Notice } from '../components/bits'
 import { ServerStatus } from '../components/ServerStatus'
 import { currencyName, fmtDayRange, plural } from '../format'
-import { usable, useNow, useServer } from '../hooks'
+import { usable, useNow, useServer, useToday } from '../hooks'
 import { tripPath, useTrip, type TripData } from '../tripData'
 
 export function TripInfoPage() {
   const t = useTrip()
   const navigate = useNavigate()
   const now = useNow()
+  const today = useToday()
   const { trip } = t
   const group = t.travellers.length > 1
   const events = tripEvents(t.stays, t.transports, t.activities)
@@ -97,6 +99,16 @@ export function TripInfoPage() {
           {server && <ServerOffer t={t} />}
         </section>
       )}
+
+      <section className="card">
+        <h3>📊 Trip report</h3>
+        <p className="muted small">
+          What it cost, what was worth it, and the highlights. Print it, save it, or send a version without names, notes or photos.
+        </p>
+        <Link className="btn" to={tripPath(trip.id, 'report')}>
+          {tripPhase(trip, today).phase === 'past' ? 'See the report' : 'See the trip so far'}
+        </Link>
+      </section>
 
       <section className="card">
         <h3>Calendar</h3>

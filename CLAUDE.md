@@ -44,13 +44,24 @@ non-destructive for existing data:
   bytes matching the record's `size` and `sha256`, and phones check what they download. One added
   to a journey can be for its whole booking (`wholeBooking`): it shows on every journey with the same
   booking ref (`src/domain/bookings.ts`), and stays with them if its own journey is deleted.
-- **A new table the server syncs**: its Dexie version resets `serverTrips` cursors to 0 (see v3 and v4 in
+- **A new table the server syncs**: its Dexie version resets `serverTrips` cursors to 0 (see v3 to v5 in
   `src/db/db.ts`), because older app versions skipped those records while moving past them. The server
   takes its tables from `RECORD_TABLES`, so it needs a new image too: older servers refuse the records
   ("update the server"), and phones keep them in the outbox until it's updated.
 - **Reviews** (`src/domain/reviews.ts`, `saveReview` in `src/db/actions.ts`): one record per traveller and
   item, with an id made from both (`reviewId`), so the same person on two phones ends up with one review.
+  Such ids come from `derivedId` (`src/domain/ids.ts`), which must never change: records would split in two.
   A review left empty becomes a tombstone (the item is theirs to review again).
+- **Trip reports** (`src/domain/report.ts`, `saveReport` in `src/db/actions.ts`, `src/ui/pages/ReportPage.tsx`): built
+  from the trip's records on the phone (`buildReport`). On a trip on the server, once it's over and the
+  phone has synced, the first phone to open the report keeps it in the `reports` table: one record per trip
+  (`reportId`, derived from the trip id), synced only through the server like attachments (`forSending`
+  and links leave it out, it's never "unsent"), and everyone opens that one until someone makes it again.
+  Its `data` comes from other phones and versions, so it's only shown through `readReport`, which checks
+  every field; `records.ts` checks just its shape and size. `REPORT_FORMAT` goes up only when a field's
+  meaning changes (new fields can join the current one). The shareable version leaves names, notes,
+  photos and per-person money out of the page itself, as the exported file (`src/lib/reportFile.ts`) is
+  made from the page.
 - Take a snapshot (`takeSnapshot`) before any operation that removes or overwrites local data.
 - Ship through a PR (CI runs lint, types, tests, build); merging to `main` deploys to users immediately.
 

@@ -115,4 +115,9 @@ describe('reviews', () => {
     expect(await reviewId('trip0001', 'todo0001', BO)).not.toBe(id)
     expect(await reviewId('trip0001', 'todo0002', ANA)).not.toBe(id)
   })
+
+  it('keep the ids they have always had', async () => {
+    // Made by 0.8.0: a different id would give everyone who reviewed again a second review.
+    expect(await reviewId('trip0001', 'todo0001', ANA)).toBe('b7tL9HjvVdL_kgBn')
+  })
 })

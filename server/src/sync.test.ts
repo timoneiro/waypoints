@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Tables } from '../../src/db/types.ts'
 import type { SyncRequest } from '../../src/domain/serverProtocol.ts'
-import { ANA, attachment, BO, CY, place, review, stay, T0, T1, T2, traveller, trip } from '../../src/test/fixtures.ts'
+import { ANA, attachment, BO, CY, place, report, review, stay, T0, T1, T2, traveller, trip } from '../../src/test/fixtures.ts'
 import { emptyData, type Member, type StoreData } from './store.ts'
 import { applySync, BadRequest, parseSyncRequest } from './sync.ts'
 
@@ -216,5 +216,28 @@ describe('reviews on the server', () => {
     sync(data, ANA_M, send(lisbon()))
     const { response } = sync(data, ANA_M, send({ reviews: [review({ stars: 9 })] }, 5))
     expect(response.rejected).toMatchObject([{ table: 'reviews', id: 'rate0001', reason: 'It contains an invalid review.' }])
+  })
+})
+
+describe('the trip report on the server', () => {
+  it('is kept once for everyone on the trip, the newest one winning', () => {
+    const data = server()
+    sync(data, ANA_M, send(lisbon()))
+    const anas = report({ updatedAt: T1 })
+    expect(sync(data, ANA_M, send({ reports: [anas] }, 5)).response.rejected).toEqual([])
+    expect(sync(data, BO_M, send({}, 5)).response.trips[0].records.reports).toEqual([anas])
+    expect(sync(data, CY_M).response.trips).toEqual([])
+
+    // Bo makes it again, with the same id.
+    const bos = report({ madeBy: BO, updatedAt: T2, data: { ...anas.data, madeAt: T2 } })
+    sync(data, BO_M, send({ reports: [bos] }, 6))
+    expect(Object.values(data.trips[TRIP].records.reports ?? {}).map((s) => s.rec)).toEqual([bos])
+  })
+
+  it('is checked like any other record', () => {
+    const data = server()
+    sync(data, ANA_M, send(lisbon()))
+    const { response } = sync(data, ANA_M, send({ reports: [report({ data: { madeAt: T1 } })] }, 5))
+    expect(response.rejected).toMatchObject([{ table: 'reports', id: 'repo0001', reason: 'It contains an invalid report.' }])
   })
 })

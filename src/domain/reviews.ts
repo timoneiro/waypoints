@@ -1,4 +1,5 @@
 import type { Activity, Place, Review, Stay, Time, Transport } from '../db/types.ts'
+import { derivedId } from './ids.ts'
 import { zonedInstant } from './time.ts'
 
 /*
@@ -92,12 +93,7 @@ export function averageStars(reviews: Review[]): number | undefined {
 }
 
 /**
- * The id of `by`'s review of an item: the same on every phone (16 URL-safe characters, like any
- * other id), so reviewing on a second phone replaces the review instead of adding another.
+ * The id of `by`'s review of an item: the same on every phone, so reviewing on a second phone
+ * replaces the review instead of adding another.
  */
-export async function reviewId(tripId: string, itemId: string, by: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`review\n${tripId}\n${itemId}\n${by}`))
-  let text = ''
-  for (const b of new Uint8Array(digest).subarray(0, 12)) text += String.fromCharCode(b)
-  return btoa(text).replace(/\+/g, '-').replace(/\//g, '_')
-}
+export const reviewId = (tripId: string, itemId: string, by: string): Promise<string> => derivedId('review', tripId, itemId, by)

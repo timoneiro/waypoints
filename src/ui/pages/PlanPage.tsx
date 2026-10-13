@@ -79,7 +79,12 @@ function StatusCard({ plan, entries, today, now }: { plan: PlanDay[]; entries: P
   if (phase.phase === 'past') {
     return (
       <section className="card status">
-        <h3>Trip over</h3>
+        <div className="section-head">
+          <h3>Trip over</h3>
+          <Link className="btn btn-small btn-primary" to={tripPath(trip.id, 'report')}>
+            📊 Trip report
+          </Link>
+        </div>
         <p className="muted small">
           It ended {plural(phase.daysAgo, 'day')} ago.{' '}
           {t.travellers.length > 1 && (

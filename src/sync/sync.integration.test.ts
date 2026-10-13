@@ -10,6 +10,7 @@ import { createApp } from '../../server/src/app.ts'
 import { loadConfig, type Config } from '../../server/src/config.ts'
 import { Store } from '../../server/src/store.ts'
 import { emptyTables } from '../db/types.ts'
+import { buildReport, readReport, reportId } from '../domain/report.ts'
 import { reviewId } from '../domain/reviews.ts'
 import type { Credentials, SyncResponse, TripChanges } from '../domain/serverProtocol.ts'
 import { attachment, FILE, FILE_SHA256 } from '../test/fixtures.ts'
@@ -57,7 +58,7 @@ const later = (seconds = 1) => new Date(Date.now() + seconds * 1000).toISOString
 
 describe('sync client ↔ server', async () => {
   const { db, getSetting, SETTINGS } = await import('../db/db')
-  const { createTrip, moveTripToServer, saveRecord, saveReview, updateTrip } = await import('../db/actions')
+  const { createTrip, moveTripToServer, saveRecord, saveReport, saveReview, updateTrip } = await import('../db/actions')
   const { applyMerge, readTables } = await import('../db/backupIO')
   const { getServerConfig, setServerConfig } = await import('../db/serverState')
   const { runSync, SyncError } = await import('./client')
@@ -153,6 +154,31 @@ describe('sync client ↔ server', async () => {
     const here = await db.reviews.where('tripId').equals(onServer).toArray()
     expect(here.map((r) => r.by).sort()).toEqual([anaT.id, max.id].sort())
     expect(here.find((r) => r.by === anaT.id)).toMatchObject({ missed: true })
+    expect(await db.outbox.where('tripId').equals(onServer).count()).toBe(0)
+  })
+
+  it("keeps this phone's trip report for everyone, and brings in the one Ana makes again", async () => {
+    const tables = await readTables(onServer)
+    const max = tables.travellers.find((t) => t.name === 'Max')!
+    const anaT = tables.travellers.find((t) => t.name === 'Ana')!
+    const names = new Map(tables.travellers.map((t) => [t.id, t.name]))
+    const made = buildReport({ ...tables, trip: tables.trips[0], names, photos: [] }, Date.now())
+    await saveReport(onServer, made, max.id)
+    await runSync()
+    const id = await reportId(onServer)
+    expect(Object.values(serverTrip(onServer).records.reports ?? {}).map((s) => s.rec)).toMatchObject([{ id, madeBy: max.id }])
+
+    // Ana's phone makes it again: the same report, newer.
+    const again = { id, tripId: onServer, data: { ...made, madeAt: later() }, madeBy: anaT.id, createdAt: later(), updatedAt: later() }
+    const res = await anaSync([{ id: onServer, cursor: anaCursor, records: { reports: [again] } }])
+    expect(res.rejected).toEqual([])
+    anaCursor = res.trips[0].cursor
+
+    await runSync()
+    const here = await db.reports.where('tripId').equals(onServer).toArray()
+    expect(here).toHaveLength(1)
+    expect(here[0]).toMatchObject({ id, madeBy: anaT.id })
+    expect(readReport(here[0].data)?.trip.name).toBe('Lisbon & Porto')
     expect(await db.outbox.where('tripId').equals(onServer).count()).toBe(0)
   })
 

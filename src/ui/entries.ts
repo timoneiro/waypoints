@@ -1,7 +1,6 @@
-import type { Transport } from '../db/types'
-import type { PlanEntry } from '../domain/itinerary'
+import { transportDuration, type PlanEntry } from '../domain/itinerary'
 import type { ReviewTarget } from '../domain/reviews'
-import { timeZoneName, zonedInstant } from '../domain/time'
+import { timeZoneName } from '../domain/time'
 import { fmtDay, fmtDayTime, fmtDuration, fmtTime } from './format'
 import { SEGMENT } from './items/save'
 import { labelOf, PLACE_CATEGORIES, STAY_KINDS, TRANSPORT_MODES } from './labels'
@@ -14,13 +13,6 @@ export interface EntryView {
   to: string
   /** Short zone name when it isn't the trip's own, e.g. "GMT+9". */
   zone?: string
-}
-
-export function transportDuration(r: Transport): number | undefined {
-  if (!r.departTime || !r.arriveTime) return undefined
-  const start = zonedInstant(r.departDate, r.departTime, r.departTimeZone)
-  const end = zonedInstant(r.arriveDate ?? r.departDate, r.arriveTime, r.arriveTimeZone ?? r.departTimeZone)
-  return end > start ? end - start : undefined
 }
 
 function zoneOf(e: PlanEntry): string {

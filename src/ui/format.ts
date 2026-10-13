@@ -41,6 +41,16 @@ export function fmtMoney(amount: number, currency: string): string {
   return format.resolvedOptions().style === 'currency' ? text : `${text} ${currency}`
 }
 
+/** A money amount for a small space, rounded: "€1,217", or "¥250K" from 10,000 up. */
+export function fmtMoneyShort(amount: number, currency: string): string {
+  try {
+    const notation = amount >= 10_000 ? 'compact' : 'standard'
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency, notation, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount)
+  } catch {
+    return fmtMoney(amount, currency)
+  }
+}
+
 /** A number for an input box: up to `digits` decimals, no grouping ("1234.5"). */
 export const fmtPlain = (value: number, digits = 2) => String(Math.round(value * 10 ** digits) / 10 ** digits)
 
