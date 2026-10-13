@@ -33,6 +33,21 @@ const stars: Check = (v) => typeof v === 'number' && v >= 1 && v <= MAX_STARS
 /** A wall-clock time, "YYYY-MM-DDTHH:MM". */
 const wallClock: Check = (v) => typeof v === 'string' && v.length === 16 && v[10] === 'T' && isDay(v.slice(0, 10)) && isTime(v.slice(11))
 
+/** Way beyond any trip's report (a few hundred notes); stops a crafted one from weighing down every phone. */
+const MAX_REPORT_CHARS = 2_000_000
+/**
+ * A report's data: an object saying which format it's in. What's inside is checked by readReport
+ * (src/domain/report.ts) when it's shown, so a newer format still syncs through an older app.
+ */
+const reportData: Check = (v) => {
+  if (!isObject(v) || !Number.isSafeInteger(v.format) || (v.format as number) < 1) return false
+  try {
+    return JSON.stringify(v).length <= MAX_REPORT_CHARS
+  } catch {
+    return false
+  }
+}
+
 /** Largest file any attachment can have. Servers set their own, lower limit. */
 export const MAX_FILE_BYTES = 100 * 1024 * 1024
 
@@ -173,6 +188,11 @@ const SPECS: { [T in RecordTable]: Record<string, { check: Check; required: bool
     wholeBooking: optional(bool),
     addedBy: optional(isId),
     private: optional(bool),
+  },
+  reports: {
+    tripId: required(isId),
+    data: required(reportData),
+    madeBy: optional(isId),
   },
 }
 

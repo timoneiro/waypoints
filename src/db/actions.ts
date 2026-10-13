@@ -1,3 +1,4 @@
+import { reportId, type TripReport } from '../domain/report'
 import { reviewId } from '../domain/reviews'
 import { canonicalJSON } from '../domain/sync'
 import { db, isLive, newId, nowISO, recordTable, setSetting, SETTINGS } from './db'
@@ -113,6 +114,22 @@ export async function saveReview(tripId: string, item: { table: ReviewableTable;
       await db.reviews.put(next)
     }
     await markChanged('reviews', [id], tripId)
+  })
+}
+
+/**
+ * Keeps the trip's report for everyone on the sync server, replacing the one made before. It goes
+ * only to the server (links and trip files leave reports out), so it's never noted as unsent.
+ */
+export async function saveReport(tripId: string, report: TripReport, madeBy: string | undefined) {
+  const id = await reportId(tripId)
+  // Plain JSON, as the server and other phones will have it.
+  const data = JSON.parse(JSON.stringify(report)) as Record<string, unknown>
+  await db.transaction('rw', db.reports, db.outbox, async () => {
+    const existing = await db.reports.get(id)
+    const now = nowISO()
+    await db.reports.put(compact({ id, tripId, data, madeBy, createdAt: existing?.createdAt ?? now, updatedAt: now }))
+    await db.outbox.put({ table: 'reports', id, tripId })
   })
 }
 

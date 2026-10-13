@@ -8,6 +8,22 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.9.0 — 2026-10-13
+
+The trip report: the whole trip on one page, once it's over.
+
+- **Trip report**: what it cost (by category, by day, and who paid what), whether everyone has
+  settled up, the best and worst of the trip with everyone's stars and notes, the stays and
+  journeys, places you saved but never got to, a photo a day, and a few numbers to remember it by.
+  Open it from the Plan tab once the trip is over, or any time from the Trip tab to see it so far.
+- **Two versions**: the full report for the group, and a **shareable** one for anyone else, with the
+  trip and its reviews but no names, notes or photos. What it cost is left out unless you add it.
+- **Keep it or send it**: print it or save it as a PDF, or save it as a file that opens in any
+  browser, to keep or send in a chat.
+- **One report for everyone**: on a trip on a sync server, the report is kept on the server once the
+  trip is over, so everyone opens the same one. If the trip changes after that, anyone can make it
+  again. A sync server needs updating to keep reports: until then, each phone shows its own.
+
 ## 0.8.0 — 2026-10-13
 
 Reviews: remember what was worth it.

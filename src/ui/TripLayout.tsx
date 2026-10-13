@@ -2,9 +2,11 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect } from 'react'
 import { Link, Outlet, useLocation, useParams } from 'react-router'
 import { setSetting, SETTINGS } from '../db/db'
+import { tripPhase } from '../domain/itinerary'
 import { EmptyState } from './components/bits'
 import { ServerGoneNotice } from './components/ServerGoneNotice'
 import { fmtDayRange } from './format'
+import { useToday } from './hooks'
 import { loadTrip, needsLinks, TripContext, tripPath } from './tripData'
 
 const TABS = [
@@ -16,8 +18,10 @@ const TABS = [
 ] as const
 
 /** Which tab a page belongs to, from the part of the path after /trips/<id>/. */
-function tabOf(section: string | undefined): (typeof TABS)[number]['key'] {
+function tabOf(section: string | undefined, over: boolean): (typeof TABS)[number]['key'] {
   if (section === 'places') return 'places'
+  // The Plan tab leads to the report once the trip is over; before that, the Trip tab.
+  if (section === 'report') return over ? 'plan' : 'trip'
   if (section === 'money' || section === 'expenses' || section === 'exchanges') return 'money'
   if (section === 'photos' || section === 'files') return 'photos'
   if (section === 'trip' || section === 'edit' || section === 'share' || section === 'server') return 'trip'
@@ -28,6 +32,7 @@ export function TripLayout() {
   const { tripId = '' } = useParams()
   const data = useLiveQuery(() => loadTrip(tripId), [tripId])
   const { pathname } = useLocation()
+  const today = useToday()
   const found = Boolean(data)
 
   useEffect(() => {
@@ -50,7 +55,7 @@ export function TripLayout() {
   }
 
   const { trip } = data
-  const active = tabOf(pathname.split('/')[3])
+  const active = tabOf(pathname.split('/')[3], tripPhase(trip, today).phase === 'past')
   const showUnsent = needsLinks(data)
   return (
     <TripContext.Provider value={data}>

@@ -15,6 +15,9 @@ only use links.
 - **Photos and documents too.** A trip's photos and documents reach everyone on it: the files are
   kept in `FILES_DIR`, a folder per trip. The app makes photos smaller (about 1 MB) before adding them,
   and anything someone marks "only on this phone" never comes here.
+- **One trip report for everyone.** Once a trip is over, the first phone to open its report keeps it
+  here, and everyone on the trip opens that same report from then on (until someone makes it again).
+  It needs version 0.4.0 or later: an older server turns reports away, and they wait on the phone.
 - **Nothing from outside.** No third-party services or keys, and no dependencies besides Node.
 - **Your data stays with you.** The trips are in one JSON file, with a daily copy kept for 30 days,
   and the photos and documents are plain files. The copies and the files can live on another disk

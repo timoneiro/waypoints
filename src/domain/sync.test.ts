@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { RECORD_TABLES, type RecordTable, type Tables } from '../db/types'
-import { ANA, attachment, BO, exchange, expense, place, review, stay, T0, T1, T2, tables, traveller, trip } from '../test/fixtures'
+import { ANA, attachment, BO, exchange, expense, place, report, review, stay, T0, T1, T2, tables, traveller, trip } from '../test/fixtures'
 import { DataError } from './records'
 import { buildBackup, decodeLink, encodeLink, forSending, parseBackup, planMerge } from './sync'
 
@@ -53,6 +53,17 @@ describe('backup files', () => {
     expect(() => parseBackup(file(review({ stars: 0 })), NOW)).toThrow('invalid review')
     expect(() => parseBackup(file(review({ stars: 6 })), NOW)).toThrow('invalid review')
     expect(() => parseBackup(file({ ...review(), by: undefined }), NOW)).toThrow('invalid review')
+  })
+
+  it('keep the trip report, whatever format it is in', () => {
+    const file = (r: object) => JSON.stringify({ ...buildBackup(lisbon), reports: [r] })
+    expect(parseBackup(file(report()), NOW).reports).toEqual([report()])
+    expect(parseBackup(file(report({ data: { format: 7, from: 'the future' } })), NOW).reports).toHaveLength(1)
+    // Backups from before 0.9.0 have none.
+    expect(parseBackup(JSON.stringify(buildBackup(lisbon)), NOW).reports).toEqual([])
+    expect(() => parseBackup(file(report({ data: { madeAt: T1 } })), NOW)).toThrow('invalid report')
+    expect(() => parseBackup(file(report({ data: [] as unknown as Record<string, unknown> })), NOW)).toThrow('invalid report')
+    expect(() => parseBackup(file(report({ data: { format: 1, notes: 'x'.repeat(2_000_001) } })), NOW)).toThrow('invalid report')
   })
 
   it('keep fields and kinds from newer versions of the app', () => {
@@ -113,6 +124,14 @@ describe('trip links', () => {
     // A crafted link with some is read as if it had none.
     const crafted = { ...json(payload) as object, attachments: [attachment()] }
     expect(decodeLink(crafted, NOW).tables).toEqual(lisbon)
+  })
+
+  it("don't carry the trip report: it's kept on the sync server", () => {
+    const reported = tables({ ...lisbon, reports: [report()] })
+    const payload = encodeLink(reported, undefined, new Date(NOW))
+    expect(payload).not.toHaveProperty('reports')
+    expect(decodeLink({ ...(json(payload) as object), reports: [report()] }, NOW).tables).toEqual(lisbon)
+    expect(forSending(reported).reports).toEqual([])
   })
 
   it('carry reviews, in the version older apps read too', () => {

@@ -14,6 +14,7 @@ import { MoveToServerPage } from './ui/pages/MoveToServerPage'
 import { OpenPage } from './ui/pages/OpenPage'
 import { PhotosPage } from './ui/pages/PhotosPage'
 import { PlanPage } from './ui/pages/PlanPage'
+import { ReportPage } from './ui/pages/ReportPage'
 import { ReviewsPage } from './ui/pages/ReviewsPage'
 import { ServerPage } from './ui/pages/ServerPage'
 import { SettingsPage } from './ui/pages/SettingsPage'
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="money" element={<MoneyPage />} />
           <Route path="photos" element={<PhotosPage />} />
           <Route path="reviews" element={<ReviewsPage />} />
+          <Route path="report" element={<ReportPage />} />
           <Route path="trip" element={<TripInfoPage />} />
           <Route path="edit" element={<TripFormPage />} />
           <Route path="share" element={<SharePage />} />

@@ -5,6 +5,7 @@ import {
   type Exchange,
   type Expense,
   type Place,
+  type Report,
   type Review,
   type Stay,
   type Tables,
@@ -132,5 +133,14 @@ export const review = (over: Partial<Review> = {}): Review => ({
   itemId: 'todo0001',
   by: ANA,
   stars: 4,
+  ...over,
+})
+
+/** The trip's report, as Ana's phone kept it for everyone on the sync server. */
+export const report = (over: Partial<Report> = {}): Report => ({
+  ...meta('repo0001'),
+  tripId: TRIP,
+  data: { format: 1, madeAt: T1, trip: { name: 'Lisbon & Porto', startDate: '2027-03-10', endDate: '2027-03-13', currency: 'EUR' } },
+  madeBy: ANA,
   ...over,
 })

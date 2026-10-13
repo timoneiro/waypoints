@@ -80,6 +80,14 @@ export function zoneOnDay(day: Day, stays: Stay[], transports: Transport[]): str
   return [...departures, ...checkIns].sort((a, b) => a.day.localeCompare(b.day) || a.at - b.at)[0]?.zone
 }
 
+/** How long a journey takes (ms), when both its times are known. */
+export function transportDuration(r: Transport): number | undefined {
+  if (!r.departTime || !r.arriveTime) return undefined
+  const start = zonedInstant(r.departDate, r.departTime, r.departTimeZone)
+  const end = zonedInstant(r.arriveDate ?? r.departDate, r.arriveTime, r.arriveTimeZone ?? r.departTimeZone)
+  return end > start ? end - start : undefined
+}
+
 /** Every day of the trip, plus any day outside it that has something planned. */
 export function buildPlan(trip: Pick<Trip, 'startDate' | 'endDate'>, stays: Stay[], transports: Transport[], activities: Activity[]): PlanDay[] {
   const entries = planEntries(stays, transports, activities)

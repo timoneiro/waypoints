@@ -1,9 +1,10 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { emptyTables } from './types'
-import { addTraveller, clearUnsent, createTrip, deleteRecord, moveTripToServer, patchRecord, removeTripFromPhone, saveRecord, saveReview, updateTrip } from './actions'
+import { addTraveller, clearUnsent, createTrip, deleteRecord, moveTripToServer, patchRecord, removeTripFromPhone, saveRecord, saveReport, saveReview, updateTrip } from './actions'
 import { applyMerge, previewMerge, readTables } from './backupIO'
 import { db, getSetting, setSetting, SETTINGS } from './db'
+import { buildReport, readReport, reportId } from '../domain/report'
 
 const tripInput = { name: 'Lisbon & Porto', startDate: '2027-03-10', endDate: '2027-03-13', timeZone: 'Europe/Lisbon', currency: 'EUR' }
 const stayInput = { name: 'Casa Azul', kind: 'apartment' as const, checkInDate: '2027-03-10', checkOutDate: '2027-03-12', timeZone: 'Europe/Lisbon' }
@@ -257,5 +258,52 @@ describe('trips on the sync server', () => {
     expect((await db.travellers.where('tripId').equals(tripId).sortBy('createdAt')).map((t) => t.memberId)).toEqual(['member-ana', 'member-bo', undefined])
     expect(await outboxIds(tripId)).toEqual([ana.id, bo.id].sort())
     expect(await db.serverTrips.get(tripId)).toEqual({ tripId, cursor: 0, uploaded: false })
+  })
+})
+
+describe('the trip report', () => {
+  const make = async (tripId: string) => {
+    const trip = (await db.trips.get(tripId))!
+    const travellers = await db.travellers.where('tripId').equals(tripId).toArray()
+    const names = new Map(travellers.map((t) => [t.id, t.name]))
+    return buildReport({ trip, travellers, names, stays: [], transports: [], activities: [], places: [], expenses: [], exchanges: [], reviews: [], photos: [] }, Date.now())
+  }
+
+  it('is kept once per trip for the sync server, never for links', async () => {
+    const tripId = await createTrip(tripInput, people('Ana', 'Bo'))
+    const [ana, bo] = (await db.travellers.toArray()).sort((a, b) => a.name.localeCompare(b.name))
+    await clearUnsent(tripId)
+    await db.outbox.clear()
+
+    await saveReport(tripId, await make(tripId), ana.id)
+    const [first] = await db.reports.toArray()
+    expect(first).toMatchObject({ id: await reportId(tripId), tripId, madeBy: ana.id })
+    expect(readReport(first.data)?.travellers).toEqual(['Ana', 'Bo'])
+    expect(await outboxIds(tripId)).toEqual([first.id])
+    expect(await unsentIds(tripId)).toEqual([])
+
+    // Made again, by Bo: the same record, newer.
+    await new Promise((resolve) => setTimeout(resolve, 2))
+    await saveReport(tripId, await make(tripId), bo.id)
+    const [again] = await db.reports.toArray()
+    expect(await db.reports.count()).toBe(1)
+    expect(again).toMatchObject({ id: first.id, createdAt: first.createdAt, madeBy: bo.id })
+    expect(again.updatedAt > first.updatedAt).toBe(true)
+  })
+
+  it('is plain JSON, as other phones get it', async () => {
+    const tripId = await createTrip(tripInput, people('Ana'))
+    await saveReport(tripId, await make(tripId), undefined)
+    const [kept] = await db.reports.toArray()
+    expect(kept.data).toEqual(JSON.parse(JSON.stringify(kept.data)))
+    expect(Object.values(kept.data.money as object)).not.toContain(undefined)
+    expect('madeBy' in kept).toBe(false)
+  })
+
+  it('goes with the trip when it is removed from this phone', async () => {
+    const tripId = await createTrip(tripInput, people('Ana'))
+    await saveReport(tripId, await make(tripId), undefined)
+    await removeTripFromPhone((await db.trips.get(tripId))!)
+    expect(await db.reports.count()).toBe(0)
   })
 })
