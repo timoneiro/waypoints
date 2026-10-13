@@ -159,6 +159,7 @@ const SPECS: { [T in RecordTable]: Record<string, { check: Check; required: bool
     takenAt: optional(wallClock),
     itemTable: optional(WORD),
     itemId: optional(isId),
+    wholeBooking: optional(bool),
     addedBy: optional(isId),
     private: optional(bool),
   },

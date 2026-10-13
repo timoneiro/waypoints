@@ -40,7 +40,9 @@ non-destructive for existing data:
   file is deleted only with its attachment's tombstone or with its whole trip, and removing a trip
   warns about files that exist only on this phone. Private ones never leave the phone (the client
   leaves them out, the server refuses them). A file never changes once added: the server only takes
-  bytes matching the record's `size` and `sha256`, and phones check what they download.
+  bytes matching the record's `size` and `sha256`, and phones check what they download. One added
+  to a journey can be for its whole booking (`wholeBooking`): it shows on every journey with the same
+  booking ref (`src/domain/bookings.ts`), and stays with them if its own journey is deleted.
 - **A new table the server syncs**: its Dexie version resets `serverTrips` cursors to 0 (see v3 in
   `src/db/db.ts`), because older app versions skipped those records while moving past them.
 - Take a snapshot (`takeSnapshot`) before any operation that removes or overwrites local data.

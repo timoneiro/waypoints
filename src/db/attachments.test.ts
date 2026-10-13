@@ -60,6 +60,23 @@ describe('photos and documents', () => {
     expect(await db.outbox.count()).toBe(0)
   })
 
+  it("can be for a journey's whole booking, and stop being when they move off journeys", async () => {
+    const ticket = { ...photo(), kind: 'document' as const, name: 'E-ticket.pdf', type: 'application/pdf' }
+    const [id] = await addAttachments(tripId, [ticket], { to: { itemTable: 'transports', itemId: 'move0001', wholeBooking: true } })
+    expect(await db.attachments.get(id)).toMatchObject({ itemTable: 'transports', itemId: 'move0001', wholeBooking: true })
+
+    await updateAttachment(id, { name: 'E-ticket.pdf', itemTable: 'transports', itemId: 'move0001' }) // this journey only
+    expect(await db.attachments.get(id)).not.toHaveProperty('wholeBooking')
+    await updateAttachment(id, { name: 'E-ticket.pdf', itemTable: 'activities', itemId: 'todo0001', wholeBooking: true })
+    expect(await db.attachments.get(id)).not.toHaveProperty('wholeBooking')
+    await updateAttachment(id, { name: 'E-ticket.pdf', itemTable: 'transports', itemId: 'move0002', wholeBooking: true })
+    await updateAttachment(id, { name: 'E-ticket.pdf', wholeBooking: true }) // to the whole trip
+    expect(await db.attachments.get(id)).not.toHaveProperty('wholeBooking')
+
+    const [photoId] = await addAttachments(tripId, [photo()], { to: { wholeBooking: true } })
+    expect(await db.attachments.get(photoId)).not.toHaveProperty('wholeBooking')
+  })
+
   it('are deleted for everyone, and their file here', async () => {
     const [id] = await addAttachments(tripId, [photo()])
     await db.outbox.clear()

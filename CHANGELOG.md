@@ -8,6 +8,18 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.6.0 — 2026-10-13
+
+Documents for connecting flights.
+
+- **One booking, every flight**: flights bought together share a booking ref. Give each of them the
+  same one, and a document added to one of them (the e-ticket, the receipt) shows on all of them.
+- A document added to a flight on a booking with others is **for every flight on that booking**
+  unless you untick it, so a boarding pass for one flight can stay on that flight. Photos stay on
+  their own flight unless you tick it. Change it later from the document's **Edit** page.
+- It works for trains, buses and ferries on one booking too.
+- Phones on an older version of the app show these documents only on the flight they were added to.
+
 ## 0.5.0 — 2026-10-13
 
 Cities, airports and time zones, filled in for you.

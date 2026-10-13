@@ -8,15 +8,19 @@ import {
   byTimeTaken,
   isPhoto,
   ITEM_GROUPS,
-  itemOf,
+  ownerFinder,
   parseTarget,
+  showsOn,
   sortDocuments,
   stateBadge,
   stateFinder,
   stateText,
+  targetBooking,
   targetOf,
   useObjectUrl,
   useTripFiles,
+  wholeByDefault,
+  type Booking,
   type FileState,
   type ItemRef,
 } from '../attachments'
@@ -57,13 +61,13 @@ export function DocumentRow({ a, file, state, item }: { a: Attachment; file?: St
   )
 }
 
-/** Documents first, then a grid of photos, of one item or of the whole trip. */
+/** Documents first, then a grid of photos, of one item or of the whole trip. Those of a whole booking say so. */
 export function AttachmentList({ attachments, showItems }: { attachments: Attachment[]; showItems?: boolean }) {
   const t = useTrip()
   const files = useTripFiles(t.trip.id)
-  const items = attachableItems(t)
+  const ownerOf = ownerFinder(t)
   const stateOf = stateFinder(t)
-  const docs = sortDocuments(attachments.filter((a) => !isPhoto(a)), items)
+  const docs = sortDocuments(attachments.filter((a) => !isPhoto(a)), ownerOf)
   const photos = attachments.filter(isPhoto).sort(byTimeTaken)
   return (
     <>
@@ -71,7 +75,7 @@ export function AttachmentList({ attachments, showItems }: { attachments: Attach
         <ul className="list">
           {docs.map((a) => (
             <li key={a.id}>
-              <DocumentRow a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} item={showItems ? itemOf(items, a) : undefined} />
+              <DocumentRow a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} item={showItems || ownerOf(a)?.booking ? ownerOf(a) : undefined} />
             </li>
           ))}
         </ul>
@@ -114,6 +118,31 @@ export function BelongsToField({ value, onChange }: { value: string; onChange: (
   )
 }
 
+/**
+ * For a journey on one booking with others: whether it's for all of them (an e-ticket for connecting
+ * flights) or for this one only. For a journey on its own, how to put it on one booking with others.
+ */
+export function WholeBookingField(props: { target: string; booking?: Booking; kind: AttachmentKind; value: boolean; onChange: (whole: boolean) => void }) {
+  const t = useTrip()
+  const { itemTable, itemId } = parseTarget(props.target)
+  if (itemTable !== 'transports') return null
+  if (!props.booking) {
+    if (props.kind !== 'document') return null
+    const what = t.transports.find((r) => r.id === itemId)?.mode === 'flight' ? 'Connecting flights' : 'Bought with other journeys'
+    return <p className="muted small">{what}? Give them all the same booking ref, and a document can show on each of them.</p>
+  }
+  const others = props.booking.legs.filter((l) => l.id !== itemId)
+  return (
+    <label className="check">
+      <input type="checkbox" checked={props.value} onChange={(e) => props.onChange(e.target.checked)} />
+      <span>
+        For every {props.booking.noun} on booking {props.booking.ref}
+        <small>Also shows on {others.map((l) => l.title).join(', ')}.</small>
+      </span>
+    </label>
+  )
+}
+
 const PICK: Record<AttachmentKind, { label: string; accept?: string }> = {
   photo: { label: '📷 Add photos', accept: 'image/*' },
   // Any file: PDFs, screenshots, wallet passes…
@@ -131,17 +160,21 @@ export function AddAttachments({ to, choose = false }: { to?: AttachedTo; choose
   const [target, setTarget] = useState(to ? targetOf(to) : '')
   const [caption, setCaption] = useState('')
   const [onlyHere, setOnlyHere] = useState(false)
+  const [wholeBooking, setWholeBooking] = useState<boolean>()
   const [progress, setProgress] = useState<string>()
   const [result, setResult] = useState<{ added: string; problems: string[] }>()
   // Whether it goes to the server is a question only where there's a server.
   const askPrivacy = Boolean(t.server || server)
   const limit = t.server ? server?.fileLimit : undefined
+  const booking = targetBooking(t, target)
+  const whole = wholeBooking ?? (picked ? wholeByDefault(picked.kind) : false)
 
   const pick = (kind: AttachmentKind, list: FileList | null) => {
     if (!list?.length) return
     setPicked({ kind, files: [...list] })
     setCaption('')
     setOnlyHere(false)
+    setWholeBooking(undefined)
     setResult(undefined)
   }
 
@@ -158,7 +191,7 @@ export function AddAttachments({ to, choose = false }: { to?: AttachedTo; choose
         }
         // One at a time: what's added stays added, even if a later file fails.
         await addAttachments(t.trip.id, [ready], {
-          to: parseTarget(target),
+          to: { ...parseTarget(target), wholeBooking: Boolean(booking) && whole },
           private: onlyHere,
           addedBy: t.me?.id,
           caption: picked.files.length === 1 ? caption.trim() || undefined : undefined,
@@ -208,6 +241,7 @@ export function AddAttachments({ to, choose = false }: { to?: AttachedTo; choose
             {picked.files.length <= 3 && <span className="muted small"> · {picked.files.map((f) => f.name).join(', ')}</span>}
           </strong>
           {choose && <BelongsToField value={target} onChange={setTarget} />}
+          <WholeBookingField target={target} booking={booking} kind={picked.kind} value={whole} onChange={setWholeBooking} />
           {picked.files.length === 1 && (
             <Field label="Caption">
               <input className="input" value={caption} maxLength={10_000} placeholder="Optional" onChange={(e) => setCaption(e.target.value)} />
@@ -244,15 +278,17 @@ export function AddAttachments({ to, choose = false }: { to?: AttachedTo; choose
   )
 }
 
-/** On an item's page: its photos and documents, and adding more. */
+/** On an item's page: its photos and documents (a journey's include those of its whole booking), and adding more. */
 export function AttachmentsCard({ table, id }: { table: AttachableTable; id: string }) {
   const t = useTrip()
-  const mine = t.attachments.filter((a) => a.itemTable === table && a.itemId === id)
+  const ownerOf = ownerFinder(t)
+  const mine = t.attachments.filter((a) => showsOn(ownerOf(a), table, id))
   return (
     <section className="card">
       <h3>Photos & documents</h3>
       <AttachmentList attachments={mine} />
-      <AddAttachments to={{ itemTable: table, itemId: id }} />
+      {/* Afresh for each item: going from one item's page straight to another's keeps this card. */}
+      <AddAttachments key={`${table}:${id}`} to={{ itemTable: table, itemId: id }} />
     </section>
   )
 }

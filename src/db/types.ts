@@ -216,6 +216,12 @@ export interface Attachment extends TripRecord {
   /** The item it belongs to (one of ATTACHABLE_TABLES, stored as a plain string). None: the whole trip. */
   itemTable?: string
   itemId?: string
+  /**
+   * For one of a journey: it's for every journey on the same booking (the same booking ref, see
+   * src/domain/bookings.ts), such as an e-ticket for connecting flights. Versions before 0.6.0 show
+   * it on its own journey only.
+   */
+  wholeBooking?: boolean
   /** Traveller who added it. */
   addedBy?: string
   /** Kept only on the phone that added it: never sent to the sync server, so nobody else sees it. */

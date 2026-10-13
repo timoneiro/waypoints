@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react'
 import { db, getSetting, isLive, recordTable, SETTINGS } from '../db/db'
 import { getServerConfig } from '../db/serverState'
 import type { Activity, Attachment, Exchange, Expense, Place, ServerTrip, Stay, Transport, Traveller, Trip, TripTable } from '../db/types'
+import { bookingKey } from '../domain/bookings'
 import { rateFinder, type RateOf } from '../domain/expenses'
 import { fold } from '../domain/places'
 import type { MemberSummary } from '../domain/serverProtocol'
@@ -28,6 +29,11 @@ export interface TripData {
   exchanges: Exchange[]
   /** Photos and documents (their records: the files are in db.files). */
   attachments: Attachment[]
+  /**
+   * The booking (see bookingKey) of each journey that has one, deleted ones too: a document for a
+   * whole booking stays with the others when the journey it was added to is deleted.
+   */
+  bookings: Map<string, string>
   /** Converts an expense to the trip's currency: its own rate, else what the exchanges got. */
   rateOf: RateOf
   /** The traveller using this phone, if they've said which one they are. */
@@ -97,6 +103,12 @@ export async function loadTrip(tripId: string): Promise<TripData | null> {
     exchanges: exchanges.filter(isLive),
     attachments: attachments.filter(isLive),
   }
+  const bookings = new Map(
+    transports.flatMap((r) => {
+      const key = bookingKey(r.confirmation)
+      return key ? [[r.id, key] as const] : []
+    }),
+  )
   const cities = [...data.stays, ...data.activities, ...data.places].map((r) => r.city?.trim()).filter((c): c is string => Boolean(c))
   // Newest last, so a city's latest time zone wins.
   const cityZones = new Map(
@@ -122,6 +134,7 @@ export async function loadTrip(tripId: string): Promise<TripData | null> {
     trip,
     travellers,
     ...data,
+    bookings,
     rateOf: rateFinder(trip.currency, data.exchanges),
     me: travellers.find((t) => t.id === meId) ?? (server && member ? travellers.find((t) => t.memberId === member.id) : undefined),
     unsent,
