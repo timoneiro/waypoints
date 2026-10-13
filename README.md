@@ -23,7 +23,8 @@ search).
 - **Places to see**, grouped by city: must-sees, a visited tick, and one tap to put a place in the plan.
   Paste a Google or Apple Maps link to open it again later.
 - **Shared expenses**, Splitwise-style: any currency, split equally or by exact amounts, with balances
-  and the fewest payments to settle up, paid back in full or in part.
+  and the fewest payments to settle up, paid back in full or in part. Each expense says whether it was
+  paid in cash or by card.
 - **Exchange rates from your own money**: note a cash withdrawal or a money exchange once ("10,000 JPY for
   €62.50") and every cash expense in that currency is converted at the rate you actually got, fees
   included. Several exchanges are averaged. Card payments use what the bank charged, and can be added

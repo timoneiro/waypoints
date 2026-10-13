@@ -6,6 +6,8 @@ import {
   awaitingCost,
   balances,
   exchangeRates,
+  likelyPaidWith,
+  paidWithOf,
   parseAmount,
   settleUp,
   sharesOf,
@@ -39,9 +41,6 @@ const settlePayments = (bal: ReturnType<typeof balances>) => settleUp(new Map([.
 /** The payment form, filled in: who pays whom, and how much. */
 const paymentPath = (t: TripData, p?: Payment) =>
   `${tripPath(t.trip.id, 'expenses', 'new')}?${new URLSearchParams({ transfer: '1', ...(p && { from: p.from, to: p.to, amount: String(p.amount) }) })}`
-
-/** How an expense was paid. Older ones don't say: a rate of their own came from a card statement. */
-const paidWithOf = (e: Expense): PaidWith => (e.paidWith === 'cash' || e.paidWith === 'card' ? e.paidWith : e.rate ? 'card' : 'cash')
 
 export function MoneyPage() {
   const t = useTrip()
@@ -328,19 +327,16 @@ function ExpenseForm({ existing, transfer, settle }: { existing?: Expense; trans
   const rates = exchangeRates(t.exchanges, trip.currency)
   // The currency used last is likely the one in your wallet now.
   const lastCurrency = [...t.expenses].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]?.currency
-  /** How a new expense in a currency was likely paid: like the last one in it, else cash once there's an exchange. */
-  const likelyPaidWith = (code: string): PaidWith => {
-    if (transfer) return 'cash'
-    const last = t.expenses.filter((e) => e.currency === code && !e.transfer).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]
-    return last ? paidWithOf(last) : rates.has(code) ? 'cash' : 'card'
-  }
+  const likely = (code: string) => likelyPaidWith(t.expenses, code, { tripCurrency: trip.currency, exchanged: rates.has(code), transfer })
+  // An older expense in the trip's currency doesn't say how it was paid until someone picks it.
+  const paidWithBefore = existing && paidWithOf(existing, trip.currency)
   // What the bank charged for a card payment, in the trip's currency, as the form opened.
   const chargedBefore = existing?.rate ? fmtPlain(existing.amount / existing.rate) : ''
 
   const [title, setTitle] = useState(existing?.title ?? '')
   const [amountText, setAmountText] = useState(existing ? fmtPlain(existing.amount) : settle?.amount ? fmtPlain(settle.amount) : '')
   const [currency, setCurrency] = useState(existing?.currency ?? (transfer ? trip.currency : (lastCurrency ?? trip.currency)))
-  const [paidWith, setPaidWith] = useState<PaidWith>(() => (existing ? paidWithOf(existing) : likelyPaidWith(currency)))
+  const [paidWith, setPaidWith] = useState<PaidWith | undefined>(() => (existing ? paidWithBefore : likely(currency)))
   const [chargedText, setChargedText] = useState(chargedBefore)
   const [gotText, setGotText] = useState('')
   const [costText, setCostText] = useState('')
@@ -403,13 +399,13 @@ function ExpenseForm({ existing, transfer, settle }: { existing?: Expense; trans
       await saveRecord('exchanges', trip.id, { date, currency, amount: got, cost, costCurrency: trip.currency, by: paidBy })
     }
     // An older expense that doesn't say how it was paid stays that way while it converts as before.
-    const convertsAsBefore = existing && existing.currency === currency && paidWithOf(existing) === paidWith && existing.rate === cardRate
+    const convertsAsBefore = existing && existing.currency === currency && paidWithBefore === paidWith && existing.rate === cardRate
     void save({
       title: transfer ? 'Payment' : title.trim(),
       amount,
       currency,
       rate: cardRate,
-      paidWith: !foreign ? undefined : convertsAsBefore ? existing.paidWith : paidWith,
+      paidWith: convertsAsBefore ? existing.paidWith : paidWith,
       date,
       category: (transfer ? 'other' : category) as ExpenseCategory,
       paidBy,
@@ -448,7 +444,7 @@ function ExpenseForm({ existing, transfer, settle }: { existing?: Expense; trans
               // Amounts typed for the old currency mean nothing for the new one.
               const back = existing?.currency === code
               setCurrency(code)
-              setPaidWith(back ? paidWithOf(existing) : likelyPaidWith(code))
+              setPaidWith(back ? paidWithBefore : likely(code))
               setChargedText(back ? chargedBefore : '')
               setGotText('')
               setCostText('')
@@ -467,19 +463,18 @@ function ExpenseForm({ existing, transfer, settle }: { existing?: Expense; trans
         )}
       </div>
 
-      {foreign && (
-        <div className="field" role="group" aria-label="Paid with">
-          <span>Paid with</span>
-          <div className="segmented">
-            <button type="button" className={paidWith === 'cash' ? 'active' : ''} onClick={() => setPaidWith('cash')}>
-              💵 Cash
-            </button>
-            <button type="button" className={paidWith === 'card' ? 'active' : ''} onClick={() => setPaidWith('card')}>
-              💳 {transfer ? 'Card or bank' : 'Card'}
-            </button>
-          </div>
+      <div className="field" role="group" aria-label="Paid with">
+        <span>Paid with</span>
+        <div className="segmented">
+          <button type="button" className={paidWith === 'cash' ? 'active' : ''} onClick={() => setPaidWith('cash')}>
+            💵 Cash
+          </button>
+          <button type="button" className={paidWith === 'card' ? 'active' : ''} onClick={() => setPaidWith('card')}>
+            💳 {transfer ? 'Card or bank' : 'Card'}
+          </button>
         </div>
-      )}
+        {!paidWith && <small className="muted">Not noted for this {transfer ? 'payment' : 'expense'}.</small>}
+      </div>
       {foreign && !card && exchangeRate && (
         <div className="notice notice-info small">
           Converted at <strong className="money">1 {trip.currency} = {fmtPlain(exchangeRate, 4)} {currency}</strong>, what your exchanges got
@@ -623,6 +618,7 @@ export function ExpensePage() {
   const rate = t.rateOf(e)
   const cur = t.trip.currency
   const foreign = e.currency !== cur
+  const paidWith = paidWithOf(e, cur)
   return (
     <article className="stack">
       <BackLink to={back}>Money</BackLink>
@@ -662,10 +658,10 @@ export function ExpensePage() {
         <dl className="facts">
           <dt>Day</dt>
           <dd>{fmtDay(e.date)}</dd>
-          {foreign && (
+          {paidWith && (
             <>
               <dt>Paid with</dt>
-              <dd>{paidWithOf(e) === 'cash' ? 'Cash' : e.transfer ? 'Card or bank' : 'Card'}</dd>
+              <dd>{paidWith === 'cash' ? 'Cash' : e.transfer ? 'Card or bank' : 'Card'}</dd>
             </>
           )}
           {t.travellers.length > 1 && (

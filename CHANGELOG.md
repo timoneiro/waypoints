@@ -8,6 +8,19 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.7.0 — 2026-10-13
+
+Cash or card, for every expense.
+
+- **Cash or card in the trip's currency too**: expenses in your own currency now say how they were
+  paid, like the ones in other currencies already did. It doesn't change what they count for: it's
+  there so you can tell later which ones won't be in your bank app.
+- A new expense starts as paid the same way as the last one in its currency (card if there isn't
+  one yet), so it's usually already right. Payments to settle up start as **Card or bank**.
+- Expenses added before this don't say: open one and tap **Edit** to note it.
+- Phones on an older version of the app don't show it for the trip's currency, and editing an
+  expense there forgets it.
+
 ## 0.6.0 — 2026-10-13
 
 Documents for connecting flights.
