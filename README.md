@@ -2,7 +2,8 @@
 
 A trip companion you install on your phone: the bookings, a day-by-day plan, the places you want to see
 and the shared expenses of every trip, in one place. Works offline, needs **no account and no API keys**,
-and connects to nothing unless you set up its optional, self-hosted sync server.
+and connects to nothing unless you set up its optional, self-hosted sync server (or turn on online address
+search).
 
 **Use it:** https://waypoints-pwa.github.io/waypoints/ → open it on your phone → *Add to Home Screen*.
 
@@ -12,6 +13,10 @@ and connects to nothing unless you set up its optional, self-hosted sync server.
 - **Stays, transport and activities**: booking references (tap to copy at the desk), addresses, phone
   numbers and booking links. Times are kept in their own time zone, so overnight flights and trips across
   time zones come out right.
+- **Cities and airports as you type**, offline: every town of 15,000 people or more and every airport with
+  scheduled flights come with the app. Picking one sets the time zone, and new bookings follow your
+  journeys: the day after a flight to Tokyo is in Tokyo time. Address fields suggest the addresses already
+  in the trip, and can also search online (OpenStreetMap, through Photon) if you turn that on in Settings.
 - **Day-by-day plan**: every day of the trip with where you sleep that night. During the trip it shows
   which day you're on, what's next, and directions to tonight's stay. A *Bookings* view lists every
   reservation with its reference.
@@ -59,8 +64,11 @@ server. It's optional: links keep working alongside it, also for people who aren
 Everything is stored in your browser (IndexedDB) on your phone. waypoints has no server of its own (the
 sync server is one you run yourself, if you want it), no accounts, no analytics and no ads. The app is a
 static website. Without a sync server it makes no network requests at all, and its Content-Security-Policy
-only lets it reach HTTPS addresses, for the server address you type in. Maps, calendars and booking
-sites are ordinary links that open in their own apps when you tap them.
+only lets it reach HTTPS addresses, for the server address you type in. The one exception is online address
+search, off unless you turn it on in Settings: then what you type in an address field is sent to
+[Photon](https://photon.komoot.io), komoot's free OpenStreetMap search. Searching for cities and airports
+never leaves the phone. Maps, calendars and booking sites are ordinary links that open in their own apps
+when you tap them.
 
 Browsers can clear website data when space runs low (especially on iPhone), so add the app to your Home
 Screen and export a backup now and then.
@@ -92,7 +100,8 @@ is built by [.github/workflows/server-image.yml](.github/workflows/server-image.
 ```
 src/
   domain/   pure logic: time zones, day-by-day plan, expenses and exchange rates, calendar export,
-            link and backup formats, merging (unit-tested)
+            link and backup formats, merging, city and airport search (unit-tested)
+  data/     the built-in city and airport lists (made by scripts/places-data.mjs)
   db/       Dexie schema (append-only versions), write actions, backup import/export, snapshots
   lib/      browser helpers: trip link encoding, share sheet, app updates, downloads
   sync/     sync server client: syncing, joining, invites, leaving a trip
@@ -102,4 +111,7 @@ server/     the optional sync server (Node, no dependencies; shares src/domain)
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). City and time zone data from [GeoNames](https://www.geonames.org)
+([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)); airports from
+[OurAirports](https://ourairports.com) (public domain) and [mwgg/Airports](https://github.com/mwgg/Airports)
+(MIT). `node scripts/places-data.mjs` downloads them again and rebuilds `src/data/`.

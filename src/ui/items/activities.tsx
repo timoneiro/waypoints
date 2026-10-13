@@ -6,7 +6,8 @@ import { tripPhase } from '../../domain/itinerary'
 import { mapQuery } from '../../domain/links'
 import { isDay, zoneCity } from '../../domain/time'
 import { BackLink, CopyCode, DetailHead } from '../components/bits'
-import { CityField, DateTimeField, Field, NotesField, TextField, ZoneField } from '../components/fields'
+import { DateTimeField, Field, NotesField, TextField, ZoneField } from '../components/fields'
+import { AddressField, CityField } from '../components/PlaceFields'
 import { CalendarLinks, MapLinks, WebLink } from '../components/ItemLinks'
 import { fmtDayTime, fmtTime } from '../format'
 import { labelOf, PLACE_CATEGORIES } from '../labels'
@@ -15,6 +16,7 @@ import { tripPath, useTrip } from '../tripData'
 import { AttachmentsCard } from '../components/Attachments'
 import { ItemFooter, ItemForm, ItemGone } from './common'
 import { opt, useSave } from './save'
+import { useItemZone } from './zone'
 
 export function ActivityFormPage() {
   const t = useTrip()
@@ -36,7 +38,7 @@ function ActivityForm({ existing, date, placeId }: { existing?: Activity; date: 
   const [day, setDay] = useState(existing?.date ?? firstDay)
   const [startTime, setStartTime] = useState(existing?.startTime ?? '')
   const [endTime, setEndTime] = useState(existing?.endTime ?? '')
-  const [timeZone, setTimeZone] = useState(existing?.timeZone ?? trip.timeZone)
+  const [timeZone, setTimeZone] = useItemZone(existing?.timeZone, day)
   const [city, setCity] = useState(existing?.city ?? place?.city ?? '')
   const [address, setAddress] = useState(existing?.address ?? place?.address ?? '')
   const [confirmation, setConfirmation] = useState(existing?.confirmation ?? '')
@@ -73,8 +75,18 @@ function ActivityForm({ existing, date, placeId }: { existing?: Activity; date: 
         </Field>
       )}
       <ZoneField value={timeZone} onChange={setTimeZone} suggestions={t.zones} />
-      <CityField value={city} onChange={setCity} cities={t.cities} />
-      <TextField label="Address or meeting point" value={address} onChange={setAddress} maxLength={500} autoComplete="off" />
+      <CityField value={city} onChange={setCity} onZone={setTimeZone} />
+      <AddressField
+        label="Address or meeting point"
+        value={address}
+        onChange={setAddress}
+        city={city}
+        onPlace={(p) => {
+          if (city.trim()) return
+          setCity(p.city)
+          if (p.zone) setTimeZone(p.zone)
+        }}
+      />
       <TextField label="Booking reference" value={confirmation} onChange={setConfirmation} maxLength={200} autoComplete="off" />
       <TextField label="Link" type="url" value={link} onChange={setLink} placeholder="Tickets, the venue's website…" maxLength={2000} />
       <NotesField value={notes} onChange={setNotes} />

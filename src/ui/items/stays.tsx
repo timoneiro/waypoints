@@ -6,7 +6,8 @@ import { tripPhase } from '../../domain/itinerary'
 import { mapQuery } from '../../domain/links'
 import { addDays, daysBetween, isDay, toDay, zoneCity } from '../../domain/time'
 import { BackLink, CopyCode, DetailHead } from '../components/bits'
-import { ChoiceChips, CityField, DateTimeField, NotesField, TextField, ZoneField } from '../components/fields'
+import { ChoiceChips, DateTimeField, NotesField, TextField, ZoneField } from '../components/fields'
+import { AddressField, CityField } from '../components/PlaceFields'
 import { CalendarLinks, MapLinks, PhoneLink, WebLink } from '../components/ItemLinks'
 import { fmtDayTime, plural } from '../format'
 import { labelOf, STAY_KINDS } from '../labels'
@@ -14,6 +15,7 @@ import { tripPath, useTrip, type TripData } from '../tripData'
 import { AttachmentsCard } from '../components/Attachments'
 import { ItemFooter, ItemForm, ItemGone } from './common'
 import { opt, useSave } from './save'
+import { useItemZone } from './zone'
 
 /** A new stay starts where the last one ended (or on the first day) and runs to the end of the trip. */
 function suggestedDates(t: TripData, date: string | null): { checkIn: Day; checkOut: Day } {
@@ -51,7 +53,7 @@ function StayForm({ existing, date }: { existing?: Stay; date: string | null }) 
   const [checkInTime, setCheckInTime] = useState(existing?.checkInTime ?? '')
   const [checkOutDate, setCheckOutDate] = useState(existing?.checkOutDate ?? suggested.checkOut)
   const [checkOutTime, setCheckOutTime] = useState(existing?.checkOutTime ?? '')
-  const [timeZone, setTimeZone] = useState(existing?.timeZone ?? t.trip.timeZone)
+  const [timeZone, setTimeZone] = useItemZone(existing?.timeZone, checkInDate)
   const [confirmation, setConfirmation] = useState(existing?.confirmation ?? '')
   const [phone, setPhone] = useState(existing?.phone ?? '')
   const [link, setLink] = useState(existing?.link ?? '')
@@ -83,8 +85,17 @@ function StayForm({ existing, date }: { existing?: Stay; date: string | null }) 
     <ItemForm title={existing ? 'Edit stay' : 'New stay'} error={error} busy={busy} onSubmit={onSubmit}>
       <TextField label="Name" value={name} onChange={setName} placeholder="Hotel Sol, Casa da Ana…" maxLength={200} autoFocus={!existing} />
       <ChoiceChips label="Type" options={STAY_KINDS} value={kind} onChange={setKind} />
-      <CityField value={city} onChange={setCity} cities={t.cities} />
-      <TextField label="Address" value={address} onChange={setAddress} maxLength={500} autoComplete="off" />
+      <CityField value={city} onChange={setCity} onZone={setTimeZone} />
+      <AddressField
+        value={address}
+        onChange={setAddress}
+        city={city}
+        onPlace={(p) => {
+          if (city.trim()) return
+          setCity(p.city)
+          if (p.zone) setTimeZone(p.zone)
+        }}
+      />
       <DateTimeField
         label="Check-in"
         date={checkInDate}

@@ -12,7 +12,8 @@ const base = process.env.BASE_PATH ?? '/'
 // Content-Security-Policy for the built app. Only the app's own scripts and styles run. Maps,
 // calendars and booking sites are plain links that open elsewhere. The only requests the app makes
 // are to the optional sync server, whose address people type in, so any https: address is allowed
-// (and localhost, for a server run while developing). Without a server, it connects to nothing.
+// (and localhost, for a server run while developing), and to Photon (photon.komoot.io) for address
+// search, only for people who turn it on in Settings. Otherwise it connects to nothing.
 // Photos and documents are shown from the phone's own storage (blob: URLs), never fetched as images.
 // Anything else that fetches from another host (an API, an image CDN) must be added here.
 const csp = [

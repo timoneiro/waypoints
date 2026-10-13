@@ -4,9 +4,11 @@ import type { Transport, TransportMode } from '../../db/types'
 import { transportEvent } from '../../domain/calendar'
 import { tripPhase } from '../../domain/itinerary'
 import { mapQuery } from '../../domain/links'
+import { airportCode } from '../../domain/places'
 import { isDay, zoneCity, zonedInstant } from '../../domain/time'
 import { BackLink, CopyCode, DetailHead } from '../components/bits'
 import { ChoiceChips, DateTimeField, NotesField, TextField, ZoneField } from '../components/fields'
+import { AirportField, CityField } from '../components/PlaceFields'
 import { CalendarLinks, MapLinks, WebLink } from '../components/ItemLinks'
 import { transportDuration } from '../entries'
 import { fmtDayTime, fmtDuration } from '../format'
@@ -16,6 +18,7 @@ import { tripPath, useTrip } from '../tripData'
 import { AttachmentsCard } from '../components/Attachments'
 import { ItemFooter, ItemForm, ItemGone } from './common'
 import { opt, useSave } from './save'
+import { useItemZone } from './zone'
 
 export function TransportFormPage() {
   const t = useTrip()
@@ -36,7 +39,7 @@ function TransportForm({ existing, date }: { existing?: Transport; date: string 
   const [to, setTo] = useState(existing?.to ?? '')
   const [departDate, setDepartDate] = useState(existing?.departDate ?? firstDay)
   const [departTime, setDepartTime] = useState(existing?.departTime ?? '')
-  const [departTimeZone, setDepartTimeZone] = useState(existing?.departTimeZone ?? trip.timeZone)
+  const [departTimeZone, setDepartTimeZone] = useItemZone(existing?.departTimeZone, departDate)
   const [arriveDate, setArriveDate] = useState(existing?.arriveDate ?? '')
   const [arriveTime, setArriveTime] = useState(existing?.arriveTime ?? '')
   const [arriveTimeZone, setArriveTimeZone] = useState(existing?.arriveTimeZone ?? '')
@@ -47,6 +50,9 @@ function TransportForm({ existing, date }: { existing?: Transport; date: string 
   const [link, setLink] = useState(existing?.link ?? '')
   const [notes, setNotes] = useState(existing?.notes ?? '')
   const { save, busy, error, setError } = useSave('transports', existing?.id)
+  const flight = mode === 'flight'
+  // Picking an airport or a city sets the time zone its times are in.
+  const PlaceField = flight ? AirportField : CityField
 
   const onSubmit = () => {
     if (!from.trim() || !to.trim()) return setError('Fill in where it leaves from and where it goes.')
@@ -82,8 +88,8 @@ function TransportForm({ existing, date }: { existing?: Transport; date: string 
     <ItemForm title={existing ? 'Edit transport' : 'New transport'} error={error} busy={busy} onSubmit={onSubmit}>
       <ChoiceChips label="How" options={TRANSPORT_MODES} value={mode} onChange={setMode} />
       <div className="field-pair">
-        <TextField label="From" value={from} onChange={setFrom} placeholder={mode === 'flight' ? 'LIS' : 'Lisbon'} maxLength={200} />
-        <TextField label="To" value={to} onChange={setTo} placeholder={mode === 'flight' ? 'NRT' : 'Porto'} maxLength={200} />
+        <PlaceField label="From" value={from} onChange={setFrom} onZone={setDepartTimeZone} placeholder={flight ? 'City or code' : 'Lisbon'} />
+        <PlaceField label="To" value={to} onChange={setTo} onZone={setArriveTimeZone} placeholder={flight ? 'City or code' : 'Porto'} />
       </div>
       <DateTimeField label="Leaves" date={departDate} time={departTime} required onDate={setDepartDate} onTime={setDepartTime} />
       <ZoneField label="Departure time is local to" value={departTimeZone} onChange={setDepartTimeZone} suggestions={t.zones} />
@@ -97,8 +103,8 @@ function TransportForm({ existing, date }: { existing?: Transport; date: string 
       />
       <ZoneField label="Arrival time is local to" value={arriveTimeZone || departTimeZone} onChange={setArriveTimeZone} suggestions={t.zones} />
       <div className="field-pair">
-        <TextField label={mode === 'flight' ? 'Airline' : 'Company'} value={carrier} onChange={setCarrier} maxLength={200} />
-        <TextField label={mode === 'flight' ? 'Flight no.' : 'Number'} value={number} onChange={setNumber} maxLength={40} autoCapitalize="characters" />
+        <TextField label={flight ? 'Airline' : 'Company'} value={carrier} onChange={setCarrier} maxLength={200} />
+        <TextField label={flight ? 'Flight no.' : 'Number'} value={number} onChange={setNumber} maxLength={40} autoCapitalize="characters" />
       </div>
       <div className="field-pair">
         <TextField label="Seat" value={seat} onChange={setSeat} maxLength={40} />
@@ -165,7 +171,7 @@ export function TransportPage() {
       <section className="card">
         <h3>Getting there</h3>
         <p className="muted small">Directions to {r.from}.</p>
-        <MapLinks query={mapQuery(r.from)} />
+        <MapLinks query={mapQuery(r.mode === 'flight' && airportCode(r.from) ? `${airportCode(r.from)} airport` : r.from)} />
       </section>
       {r.notes && (
         <section className="card">

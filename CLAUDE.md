@@ -53,8 +53,9 @@ entry is missing). The entry is the app's "What's new" card. Internal changes sk
 
 ## Content-Security-Policy
 The built app ships a CSP `<meta>` (in `vite.config.ts`, build only) with `connect-src 'self' https:` (plus
-localhost): the only requests are to the sync server whose address people type in, and without one the
-app makes none. Maps, calendars and booking sites are plain links. Photos and documents show from the
+localhost): the only requests are to the sync server whose address people type in, and to Photon
+(`photon.komoot.io`, `src/domain/addresses.ts`) for online address search, an opt-in setting that's off
+by default. Without either, the app makes none. Maps, calendars and booking sites are plain links. Photos and documents show from the
 phone's own storage (`img-src blob:`), never from the server directly. Anything else that fetches from
 another host (an exchange-rate API, map tiles) needs adding there, and must stay an optional add-on.
 
@@ -65,7 +66,8 @@ another host (an exchange-rate API, map tiles) needs adding there, and must stay
 - **Local-first.** Fully usable offline.
 - **Links and files are untrusted input**: validated in `src/domain/records.ts` and size-limited; only
   `http(s)` addresses ever become a clickable href (`safeHttpUrl` in `src/domain/links.ts`).
-- **Time**: records keep the wall-clock day/time plus the place's IANA zone; `zonedInstant` puts them on the
+- **Time**: a new item's zone follows the plan (`zoneOnDay`: where the journeys and stays have you by
+  then), and picking a city or an airport sets it; records keep the wall-clock day/time plus the place's IANA zone; `zonedInstant` puts them on the
   real timeline; calendar export is in UTC.
 - **Money**: cash expenses convert at the average rate the trip's exchanges actually got (fees included);
   card payments at what the bank charged (their own `rate`), estimated at the cash average and flagged
@@ -73,6 +75,9 @@ another host (an exchange-rate API, map tiles) needs adding there, and must stay
 - Target scale: a few trips per phone, up to a few hundred items each, groups of 2–10. English only.
 
 ## Layout
+- `src/data/` — the built-in city and airport lists (`scripts/places-data.mjs` rebuilds them from GeoNames,
+  OurAirports and mwgg/Airports; credited in Settings and the README). Loaded on first use as separate
+  chunks, precached for offline. Searched in `src/domain/places.ts`.
 - `src/domain/` — pure, unit-tested logic. Relative imports use explicit `.ts` extensions. No runtime deps.
 - `src/db/` — Dexie schema, write actions, backup/merge IO, snapshots, local settings.
 - `src/lib/` — browser helpers: trip link codec, share sheet, update prompt, downloads.

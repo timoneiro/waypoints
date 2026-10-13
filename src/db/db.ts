@@ -120,4 +120,6 @@ export const SETTINGS = {
   server: 'server',
   /** When this phone found out it's no longer on a trip on the server: shown on the trip until dismissed. */
   serverGone: (tripId: string) => `serverGone:${tripId}`,
+  /** Address fields also search online (Photon, OpenStreetMap). Off unless turned on. */
+  addressSearch: 'addressSearch',
 } as const
