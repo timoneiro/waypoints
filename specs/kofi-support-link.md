@@ -1,7 +1,7 @@
 # Ko-fi support link
 
-Status: ready (agent-ready label on the PR)
-Issue: https://github.com/waypoints-pwa/waypoints/pull/28 (the PR carries the label)
+Status: ready (agent-ready label on the issue)
+Issue: https://github.com/waypoints-pwa/waypoints/issues/29
 Builds after: none
 
 ## Problem
