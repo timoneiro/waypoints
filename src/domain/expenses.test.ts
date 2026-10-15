@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ANA, BO, CY, exchange, expense, T1 } from '../test/fixtures'
 import type { Expense, PaidWith } from '../db/types'
-import { awaitingCost, balances, cashLeft, exchangeRates, likelyPaidWith, paidWithOf, parseAmount, rateFinder, settleUp, sharesOf, totals, unconverted } from './expenses'
+import { awaitingCost, balances, cashLeft, exchangeRates, likelyPaidWith, paidWithOf, parseAmount, paymentSplit, rateFinder, settleUp, sharesOf, totals, unconverted } from './expenses'
 
 /** A trip in EUR, without exchanges unless given. */
 const inEuros = (exchanges = [exchange({ deletedAt: '2026-10-02T10:00:00.000Z' })]) => rateFinder('EUR', exchanges)
@@ -243,5 +243,35 @@ describe('parseAmount', () => {
 
   it('rejects anything else', () => {
     for (const text of ['', 'abc', '-5', '1.234,56', '12e3', '€12']) expect(parseAmount(text), text).toBeUndefined()
+  })
+})
+
+describe('paymentSplit', () => {
+  const rateOf = rateFinder('EUR', [exchange()]) // 160 JPY per EUR
+  const list = [
+    expense({ id: 'a', currency: 'JPY', amount: 1600, paidWith: 'cash' }),
+    expense({ id: 'b', currency: 'JPY', amount: 3200, paidWith: 'card' }),
+    expense({ id: 'c', currency: 'EUR', amount: 10, paidWith: 'cash' }),
+    expense({ id: 'd', currency: 'EUR', amount: 7, paidWith: undefined }),
+    expense({ id: 'e', currency: 'JPY', amount: 800, paidWith: undefined }), // older: cash
+    expense({ id: 'f', currency: 'JPY', amount: 800, paidWith: undefined, rate: 100 }), // older: card
+  ]
+
+  it('sorts spending into card, cash and not noted', () => {
+    expect(paymentSplit(list, rateOf, 'EUR')).toEqual({ card: 20 + 8, cash: 10 + 10 + 5, unsaid: 7 })
+  })
+
+  it('leaves out transfers, deleted and unconverted expenses', () => {
+    const extra = [
+      expense({ id: 'g', currency: 'EUR', amount: 50, paidWith: 'card', transfer: true }),
+      expense({ id: 'h', currency: 'EUR', amount: 50, paidWith: 'card', deletedAt: '2026-10-02T10:00:00.000Z' }),
+      expense({ id: 'i', currency: 'USD', amount: 50, paidWith: 'cash' }),
+    ]
+    expect(paymentSplit(extra, rateOf, 'EUR')).toEqual({ card: 0, cash: 0, unsaid: 0 })
+  })
+
+  it('adds up to the total spent', () => {
+    const split = paymentSplit(list, rateOf, 'EUR')
+    expect(split.card + split.cash + split.unsaid).toBeCloseTo(totals(list, rateOf).total, 10)
   })
 })

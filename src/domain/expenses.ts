@@ -186,6 +186,24 @@ export function totals(expenses: Expense[], rateOf: RateOf): Totals {
   return result
 }
 
+export interface PaymentSplit {
+  card: number
+  cash: number
+  /** Expenses that don't say how they were paid. */
+  unsaid: number
+}
+
+/** Spending in the trip's currency by how it was paid. Same expenses as `totals`, so the three add up to its total. */
+export function paymentSplit(expenses: Expense[], rateOf: RateOf, tripCurrency: string): PaymentSplit {
+  const result: PaymentSplit = { card: 0, cash: 0, unsaid: 0 }
+  for (const e of expenses) {
+    const rate = rateOf(e)
+    if (e.deletedAt || e.transfer || !rate) continue
+    result[paidWithOf(e, tripCurrency) ?? 'unsaid'] += toTripCurrency(e.amount, rate)
+  }
+  return result
+}
+
 /** "12,50" or "12.50" → 12.5. Undefined for anything that isn't a plain positive number. */
 export function parseAmount(text: string): number | undefined {
   const cleaned = text.trim().replace(/\s/g, '').replace(',', '.')
