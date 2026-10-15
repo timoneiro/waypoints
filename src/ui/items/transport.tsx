@@ -6,7 +6,7 @@ import { transportDuration, tripPhase } from '../../domain/itinerary'
 import { mapQuery } from '../../domain/links'
 import { airportCode } from '../../domain/places'
 import { isDay, zoneCity, zonedInstant } from '../../domain/time'
-import { BackLink, CopyCode, DetailHead } from '../components/bits'
+import { CopyCode, DetailHead } from '../components/bits'
 import { ChoiceChips, DateTimeField, NotesField, TextField, ZoneField } from '../components/fields'
 import { AirportField, CityField } from '../components/PlaceFields'
 import { CalendarLinks, MapLinks, WebLink } from '../components/ItemLinks'
@@ -128,7 +128,6 @@ export function TransportPage() {
   const zones = r.departTimeZone === arriveZone ? [r.departTimeZone] : [r.departTimeZone, arriveZone]
   return (
     <article className="stack">
-      <BackLink to={back}>Plan</BackLink>
       <DetailHead emoji={mode.emoji} title={`${r.from} → ${r.to}`} subtitle={[mode.label, r.carrier, r.number].filter(Boolean).join(' · ')} />
       <section className="card">
         <dl className="facts">

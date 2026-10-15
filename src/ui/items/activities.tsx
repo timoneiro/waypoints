@@ -5,7 +5,7 @@ import { activityEvent } from '../../domain/calendar'
 import { tripPhase } from '../../domain/itinerary'
 import { mapQuery } from '../../domain/links'
 import { isDay, zoneCity } from '../../domain/time'
-import { BackLink, CopyCode, DetailHead } from '../components/bits'
+import { CopyCode, DetailHead } from '../components/bits'
 import { DateTimeField, Field, NotesField, TextField, ZoneField } from '../components/fields'
 import { AddressField, CityField } from '../components/PlaceFields'
 import { CalendarLinks, MapLinks, WebLink } from '../components/ItemLinks'
@@ -104,7 +104,6 @@ export function ActivityPage() {
   const place = t.places.find((p) => p.id === a.placeId)
   return (
     <article className="stack">
-      <BackLink to={back}>Plan</BackLink>
       <DetailHead emoji="🎟️" title={a.title} subtitle={a.city} />
       <section className="card">
         <dl className="facts">

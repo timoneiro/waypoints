@@ -20,7 +20,7 @@ import {
 } from '../../domain/expenses'
 import { tripPhase } from '../../domain/itinerary'
 import { isDay } from '../../domain/time'
-import { BackLink, DetailHead, EmptyState, Notice } from '../components/bits'
+import { DetailHead, EmptyState, Notice } from '../components/bits'
 import { ChoiceChips, CurrencySelect, Field, NotesField, TextField } from '../components/fields'
 import { UnsentNotice } from '../components/UnsentNotice'
 import { fmtDay, fmtMoney, fmtPlain, plural } from '../format'
@@ -650,7 +650,6 @@ export function ExpensePage() {
   const paidWith = paidWithOf(e, cur)
   return (
     <article className="stack">
-      <BackLink to={back}>Money</BackLink>
       <DetailHead emoji={e.transfer ? '🤝' : label.emoji} title={e.title} subtitle={e.transfer ? 'Settle-up payment' : label.label} />
       <section className="card">
         <p className="big-number">{fmtMoney(e.amount, e.currency)}</p>

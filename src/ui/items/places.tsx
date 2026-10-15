@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router'
 import { patchRecord } from '../../db/actions'
 import type { Place, PlaceCategory } from '../../db/types'
 import { mapQuery, safeHttpUrl } from '../../domain/links'
-import { BackLink, DetailHead, EmptyState } from '../components/bits'
+import { DetailHead, EmptyState } from '../components/bits'
 import { ChoiceChips, NotesField, TextField } from '../components/fields'
 import { AddressField, CityField } from '../components/PlaceFields'
 import { MapLinks, WebLink } from '../components/ItemLinks'
@@ -218,7 +218,6 @@ export function PlacePage() {
   const link = safeHttpUrl(place.link)
   return (
     <article className="stack">
-      <BackLink to={back}>Places</BackLink>
       <DetailHead emoji={category.emoji} title={place.name} subtitle={[category.label, place.city].filter(Boolean).join(' · ')} />
       <div className="actions">
         <button type="button" className="toggle-chip" aria-pressed={Boolean(place.mustSee)} onClick={() => void patchRecord('places', place.id, { mustSee: place.mustSee ? undefined : true })}>

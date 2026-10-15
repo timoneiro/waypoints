@@ -4,10 +4,10 @@ import { exportTripFile, readTables } from '../../db/backupIO'
 import { downloadJSON, fileSlug } from '../../lib/download'
 import { shareUrl } from '../../lib/shareSheet'
 import { LONG_LINK_CHARS, tripLink } from '../../lib/tripLink'
-import { BackLink, Notice } from '../components/bits'
+import { Notice } from '../components/bits'
 import { Field } from '../components/fields'
 import { plural } from '../format'
-import { needsLinks, tripPath, useTrip } from '../tripData'
+import { needsLinks, useTrip } from '../tripData'
 
 export function SharePage() {
   const t = useTrip()
@@ -54,7 +54,6 @@ export function SharePage() {
 
   return (
     <>
-      <BackLink to={tripPath(trip.id, 'trip')}>Trip</BackLink>
       <h2>Share with the group</h2>
       {t.server && <ServerNote />}
       <p className="muted">
