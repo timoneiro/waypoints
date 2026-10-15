@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { emptyTables } from './types'
-import { addTraveller, clearUnsent, createTrip, deleteRecord, moveTripToServer, patchRecord, removeTripFromPhone, saveRecord, saveReport, saveReview, updateTrip } from './actions'
+import { addRecords, addTraveller, clearUnsent, createTrip, deleteRecord, moveTripToServer, patchRecord, removeTripFromPhone, saveRecord, saveReport, saveReview, updateTrip } from './actions'
 import { applyMerge, previewMerge, readTables } from './backupIO'
 import { db, getSetting, setSetting, SETTINGS } from './db'
 import { buildReport, readReport, reportId } from '../domain/report'
@@ -102,6 +102,27 @@ describe('records', () => {
     expect((await db.places.get(id))!.visited).toBe(true)
     await patchRecord('places', id, { visited: undefined })
     expect('visited' in (await db.places.get(id))!).toBe(false)
+  })
+
+  it('can be added many at once, all unsent and in the outbox', async () => {
+    const tripId = await createTrip(tripInput, people('Ana'))
+    await clearUnsent(tripId)
+    await db.outbox.clear()
+    const ids = await addRecords('places', tripId, [{ name: 'A', category: 'sight' }, { name: 'B', category: 'sight' }, { name: 'C', category: 'sight' }])
+    expect(ids).toHaveLength(3)
+    expect((await db.places.toArray()).map((p) => p.name).sort()).toEqual(['A', 'B', 'C'])
+    expect(await unsentIds(tripId)).toEqual([...ids].sort())
+    expect(await outboxIds(tripId)).toEqual([...ids].sort())
+  })
+
+  it('adding an empty list writes nothing', async () => {
+    const tripId = await createTrip(tripInput, people('Ana'))
+    await clearUnsent(tripId)
+    await db.outbox.clear()
+    expect(await addRecords('places', tripId, [])).toEqual([])
+    expect(await db.places.count()).toBe(0)
+    expect(await unsentIds(tripId)).toEqual([])
+    expect(await outboxIds(tripId)).toEqual([])
   })
 
   it('travellers can be added by someone joining', async () => {

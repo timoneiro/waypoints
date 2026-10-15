@@ -60,6 +60,20 @@ export async function saveRecord<T extends LinkTable>(table: T, tripId: string, 
   })
 }
 
+/** Creates many records at once (e.g. an imported list), all in one write. Returns their ids. */
+export async function addRecords<T extends LinkTable>(table: T, tripId: string, inputs: Input<TableRecords[T]>[]): Promise<string[]> {
+  if (inputs.length === 0) return []
+  const store = recordTable(table)
+  return db.transaction('rw', store, db.unsent, db.outbox, async () => {
+    const now = nowISO()
+    const records = inputs.map((input) => compact({ ...input, id: newId(), tripId, createdAt: now, updatedAt: now }) as TableRecords[T])
+    await store.bulkAdd(records as never)
+    const ids = records.map((r) => r.id)
+    await markChanged(table, ids, tripId)
+    return ids
+  })
+}
+
 /** Changes a few fields of a record, e.g. ticking a place as visited. */
 export async function patchRecord<T extends LinkTable>(table: T, id: string, changes: Partial<Input<TableRecords[T]>>) {
   const store = recordTable(table)
