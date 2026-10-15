@@ -195,6 +195,12 @@ export function SettingsPage() {
           </a>
         </p>
         <p className="muted small">
+          📖{' '}
+          <a className="link" href={LINKS.guide} target="_blank" rel="noreferrer">
+            How to use waypoints
+          </a>
+        </p>
+        <p className="muted small">
           No account, no tracking, no ads. Your trips stay on this phone and only leave it in the links and files you choose to
           send, and for the trips you put on a sync server, if you connect to one. Maps and calendars open in their own apps;
           without a server, waypoints itself never connects to anything, unless you turn on online address search.

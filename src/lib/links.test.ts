@@ -8,6 +8,10 @@ describe('LINKS', () => {
     }
   })
 
+  it('guide points at GUIDE.md on GitHub', () => {
+    expect(LINKS.guide).toBe('https://github.com/waypoints-pwa/waypoints/blob/main/GUIDE.md')
+  })
+
   it('donate points at the Ko-fi page', () => {
     expect(LINKS.donate).toBe('https://ko-fi.com/ricardoalmeida59690')
   })
