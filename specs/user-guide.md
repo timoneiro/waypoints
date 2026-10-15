@@ -1,6 +1,6 @@
 # User guide
 
-Status: ready
+Status: building
 Issue: https://github.com/waypoints-pwa/waypoints/issues/34
 Builds after: none
 
