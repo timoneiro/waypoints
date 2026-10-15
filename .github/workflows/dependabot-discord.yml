@@ -1,0 +1,34 @@
+name: Dependabot to Discord
+
+# Posts a message to Discord when Dependabot opens a PR. It checks out and runs no project code.
+# Runs started by Dependabot can't read Actions secrets, so the webhook URL is a *Dependabot* secret:
+#   gh secret set DISCORD_WEBHOOK_URL --app dependabot
+# Without it the job warns and passes, so Dependabot PRs aren't marked red.
+on:
+  pull_request:
+    types: [opened]
+
+permissions: {}
+
+jobs:
+  notify:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to Discord
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          TITLE: ${{ github.event.pull_request.title }}
+          URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then
+            echo "::warning::No DISCORD_WEBHOOK_URL Dependabot secret; skipping the Discord message"
+            exit 0
+          fi
+          jq -n --arg repo "$REPO" --arg title "#$NUMBER $TITLE" --arg url "$URL" '{
+            username: "Dependabot",
+            allowed_mentions: { parse: [] },
+            embeds: [{ author: { name: $repo }, title: $title[0:256], url: $url, color: 243660 }]
+          }' | curl -fsS -H 'Content-Type: application/json' --data-binary @- "$WEBHOOK"
