@@ -15,13 +15,16 @@ let config: Config
 let store: Store
 let server: Server
 let url: string
+let fakeFetch: typeof fetch = async () => {
+  throw new Error('no network in tests')
+}
 
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), 'waypoints-server-'))
   config = await loadConfig({ DATA_DIR: join(dir, 'data'), FILES_DIR: join(dir, 'files') })
   store = new Store(config.dataDir, join(config.filesDir, 'backups'))
   await store.load()
-  server = createApp(config, store).listen(0)
+  server = createApp(config, store, undefined, { fetchFn: (...args) => fakeFetch(...args), lookupTimeoutMs: 200 }).listen(0)
   await new Promise((r) => server.once('listening', r))
   url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
 })
@@ -233,5 +236,81 @@ describe('photos and documents', () => {
     expect(await readdir(join(dir, 'files', 'trips', 'trip0001'))).toEqual([])
     expect((await download(max.token)).status).toBe(404)
     expect((await upload(max.token, FILE)).status).toBe(404)
+  })
+})
+
+describe('reading Google Maps links', () => {
+  const SHORT = 'https://maps.app.goo.gl/abc'
+  const PLACE =
+    'https://www.google.com/maps/place/Torre+dos+Cl%C3%A9rigos/@41.1457911,-8.6168211,17z/data=!4m7!3m6!1s0xd2464e251ced649:0x425ec51327127c21!8m2!3d41.1456705!4d-8.6145977?entry=tts'
+  const LIST_ID = 'AbCdEfGhIjKlMnOp'
+  const LIST_URL = `https://www.google.com/maps/@/data=!3m1!4b1!4m3!11m2!2s${LIST_ID}!3e3?entry=tts`
+  const LIST_BODY = `)]}'
+${JSON.stringify([
+    [
+      [LIST_ID, 1, null, 1, 1],
+      4,
+      [2, 1, 'x'],
+      ['Owner Person', 'photo', '123'],
+      'Porto',
+      '',
+      null,
+      null,
+      [[null, [null, null, '', null, 'R. das Carmelitas 144, Porto', [null, null, 41.1469, -8.6149], ['964166591612806729', '-6017264553893446605'], '/g/1'], 'Livraria Lello', 'Book tickets', null, null, null, [], [], null, null, null, ['Owner Person', 'photo', '123']]],
+    ],
+  ])}`
+  const redirect = (to: string) => new Response(null, { status: 302, headers: { Location: to } })
+
+  const asker = async () => (await registerAdmin()).token
+
+  it('answers with the place after one redirect, and keeps to the signed-in', async () => {
+    const asked: string[] = []
+    fakeFetch = async (input) => {
+      asked.push(String(input))
+      return redirect(PLACE)
+    }
+    expect(await call('/api/google-maps', { url: SHORT })).toMatchObject({ status: 401 })
+    const answer = await ok<{ kind: string; place: { name: string; lat: number; lng: number } }>('/api/google-maps', { url: SHORT }, await asker())
+    expect(answer).toMatchObject({ kind: 'place', place: { name: 'Torre dos Clérigos', lat: 41.1456705, lng: -8.6145977 } })
+    expect(asked).toEqual([SHORT])
+  })
+
+  it('answers with a list’s places, without who made it', async () => {
+    const asked: string[] = []
+    fakeFetch = async (input) => {
+      asked.push(String(input))
+      return asked.length === 1 ? redirect(LIST_URL) : new Response(LIST_BODY, { status: 200 })
+    }
+    const res = await call<{ kind: string; name: string; places: { name: string }[] }>('/api/google-maps', { url: SHORT }, await asker())
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ kind: 'list', name: 'Porto', places: [{ name: 'Livraria Lello' }] })
+    expect(JSON.stringify(res.body)).not.toContain('Owner Person')
+    expect(asked[1]).toContain('/maps/preview/entitylist/getlist')
+  })
+
+  it('refuses links that are not Google Maps, and redirects that leave it, without fetching them', async () => {
+    const asked: string[] = []
+    fakeFetch = async (input) => {
+      asked.push(String(input))
+      return redirect('https://evil.com/maps')
+    }
+    const token = await asker()
+    expect(await call('/api/google-maps', { url: 'https://example.com' }, token)).toMatchObject({ status: 400, body: { error: "That's not a Google Maps link." } })
+    expect(asked).toEqual([])
+    expect(await call('/api/google-maps', { url: SHORT }, token)).toMatchObject({ status: 400 })
+    expect(asked).toEqual([SHORT])
+  })
+
+  it('refuses too many redirects', async () => {
+    let n = 0
+    fakeFetch = async () => redirect(`https://www.google.com/maps/r${++n}`)
+    expect(await call('/api/google-maps', { url: SHORT }, await asker())).toMatchObject({ status: 400 })
+    expect(n).toBe(5)
+  })
+
+  it('gives up when Google is slow', async () => {
+    fakeFetch = (_input, init) =>
+      new Promise((_resolve, reject) => init?.signal?.addEventListener('abort', () => reject(new Error('aborted'))))
+    expect(await call('/api/google-maps', { url: SHORT }, await asker())).toMatchObject({ status: 502, body: { error: "Google Maps didn't answer." } })
   })
 })
