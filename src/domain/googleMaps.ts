@@ -20,6 +20,8 @@ const MAX_PLACES = 1000
 const TLD = '(?:com|co\\.[a-z]{2}|com\\.[a-z]{2}|[a-z]{2})'
 const GOOGLE_HOST = new RegExp(`^(?:www\\.)?google\\.${TLD}$`)
 const MAPS_HOST = new RegExp(`^maps\\.google\\.${TLD}$`)
+const CONSENT_HOST = new RegExp(`^consent\\.google\\.${TLD}$`)
+const PLACE_ID = /^0x[0-9a-f]{1,16}:0x[0-9a-f]{1,16}$/i
 
 /** Only these addresses are ever fetched by the server, redirects included. */
 export function isGoogleMapsUrl(url: string): boolean {
@@ -35,6 +37,21 @@ export function isGoogleMapsUrl(url: string): boolean {
   if (host === 'goo.gl') return u.pathname.startsWith('/maps/')
   if (MAPS_HOST.test(host)) return true
   return GOOGLE_HOST.test(host) && /^\/maps(?:[/@]|$)/.test(u.pathname)
+}
+
+/**
+ * Where Google's cookie-consent page (`consent.google.…`, which it sends EU addresses to) leads back to,
+ * when that's a Google Maps address; `null` for anything else.
+ */
+export function pastConsent(url: string): string | null {
+  try {
+    const u = new URL(url)
+    if (u.protocol !== 'https:' || !CONSENT_HOST.test(u.hostname)) return null
+    const next = u.searchParams.get('continue')
+    return next && isGoogleMapsUrl(next) ? next : null
+  } catch {
+    return null
+  }
 }
 
 const validLat = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n >= -90 && n <= 90
@@ -83,6 +100,25 @@ export function listIdFromUrl(url: string): string | null {
   }
 }
 
+/**
+ * Google's id of a place (`0x…:0x…`), from addresses that name the place without saying where it is:
+ * `?ftid=0x…:0x…` (where phones' share links often lead) or `?cid=<number>` (the id's second half, which
+ * is enough for Google).
+ */
+export function placeIdFromUrl(url: string): string | null {
+  if (!isGoogleMapsUrl(url)) return null
+  try {
+    const params = new URL(url).searchParams
+    const ftid = params.get('ftid')
+    if (ftid) return PLACE_ID.test(ftid) ? ftid : null
+    const cid = params.get('cid')
+    if (!cid || !/^\d{1,20}$/.test(cid) || BigInt(cid) >= 2n ** 64n) return null
+    return `0x0:0x${BigInt(cid).toString(16)}`
+  } catch {
+    return null
+  }
+}
+
 const hexHalf = (s: string) => `0x${BigInt.asUintN(64, BigInt(s)).toString(16)}`
 
 function hexId(ids: unknown): string | undefined {
@@ -94,6 +130,8 @@ function hexId(ids: unknown): string | undefined {
 
 const asArray = (v: unknown): unknown[] | undefined => (Array.isArray(v) ? v : undefined)
 
+const segmentOf = (name: string) => encodeURIComponent(name).replace(/%20/g, '+')
+
 function placeFromEntry(entry: unknown): GooglePlace | null {
   const e = asArray(entry)
   const info = asArray(e?.[1])
@@ -104,8 +142,7 @@ function placeFromEntry(entry: unknown): GooglePlace | null {
   const lat = point?.[2]
   const lng = point?.[3]
   if (!trimmed || !validLat(lat) || !validLng(lng)) return null
-  const segment = encodeURIComponent(trimmed).replace(/%20/g, '+')
-  const place: GooglePlace = { name: trimmed, link: placeLink(segment, hexId(info[6]), lat, lng), lat, lng }
+  const place: GooglePlace = { name: trimmed, link: placeLink(segmentOf(trimmed), hexId(info[6]), lat, lng), lat, lng }
   const address = typeof info[4] === 'string' ? info[4].trim().slice(0, MAX_ADDRESS) : ''
   if (address) place.address = address
   const note = typeof e[3] === 'string' ? e[3].trim().slice(0, MAX_NOTE) : ''
@@ -128,6 +165,28 @@ export function placesFromList(body: string): { name: string; places: GooglePlac
       if (places.length >= MAX_PLACES) break
     }
     return { name: name.trim().slice(0, MAX_NAME), places }
+  } catch {
+    return null
+  }
+}
+
+/** A place out of the body of Google's place-details address (`/maps/preview/place`); `null` when it isn't one. */
+export function placeFromDetails(body: string): GooglePlace | null {
+  try {
+    const data: unknown = JSON.parse(body.replace(/^\s*\)\]\}'/, ''))
+    const info = asArray(asArray(data)?.[6])
+    const name = info?.[11]
+    const point = asArray(info?.[9])
+    const lat = point?.[2]
+    const lng = point?.[3]
+    if (!info || typeof name !== 'string' || !validLat(lat) || !validLng(lng)) return null
+    const trimmed = name.trim().slice(0, MAX_NAME)
+    if (!trimmed) return null
+    const id = typeof info[10] === 'string' && PLACE_ID.test(info[10]) ? info[10] : undefined
+    const place: GooglePlace = { name: trimmed, link: placeLink(segmentOf(trimmed), id, lat, lng), lat, lng }
+    const address = typeof info[39] === 'string' ? info[39].trim().slice(0, MAX_ADDRESS) : ''
+    if (address) place.address = address
+    return place
   } catch {
     return null
   }

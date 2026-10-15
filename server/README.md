@@ -21,6 +21,8 @@ only use links.
 - **Google Maps links.** From version 0.5.0 the server reads Google Maps links for its members (the app's
   "Paste a Google Maps link" on a new place). Only when someone uses it, the server reaches
   `www.google.com` and `maps.app.goo.gl`, and nothing else: every address it fetches is checked.
+  It answers Google's cookie-consent page (which servers in the EU get) with "reject all"; version
+  0.5.1 is needed for that, and for links that name a place only by its id (`?ftid=`, `?cid=`).
 - **Nothing else from outside.** No third-party services or keys, and no dependencies besides Node.
 - **Your data stays with you.** The trips are in one JSON file, with a daily copy kept for 30 days,
   and the photos and documents are plain files. The copies and the files can live on another disk

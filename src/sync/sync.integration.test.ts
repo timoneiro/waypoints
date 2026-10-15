@@ -98,6 +98,11 @@ describe('sync client ↔ server', async () => {
     expect(await db.trips.get(phoneOnly)).toBeDefined()
   })
 
+  it("shows the server's reason when it turns a Google Maps link away", async () => {
+    const { lookUpGoogleMaps } = await import('./googleMaps')
+    await expect(lookUpGoogleMaps('https://example.com/maps')).rejects.toThrow("That's not a Google Maps link.")
+  })
+
   it('invites Ana with a link', async () => {
     const invite = await createInvite()
     expect(parseInvite(`Join me on waypoints: ${invite.link}`)).toEqual({ code: invite.code, server: url })
