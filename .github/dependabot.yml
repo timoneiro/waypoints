@@ -17,3 +17,13 @@ updates:
     groups:
       actions:
         patterns: ['*']
+
+  # The sync server's base image (pulled through mirror.gcr.io, hence the wildcard).
+  - package-ecosystem: docker
+    directory: /server
+    schedule:
+      interval: weekly
+    ignore:
+      # Node majors move on purpose, to the next LTS (even numbers): odd ones never get long-term support.
+      - dependency-name: '*node'
+        update-types: [version-update:semver-major]
