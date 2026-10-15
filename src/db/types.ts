@@ -126,6 +126,9 @@ export interface Place extends TripRecord {
   notes?: string
   mustSee?: boolean
   visited?: boolean
+  /** Where it is, from Google Maps. Not shown yet. */
+  lat?: number
+  lng?: number
 }
 
 export const EXPENSE_CATEGORIES = ['food', 'groceries', 'transport', 'stay', 'activities', 'shopping', 'other'] as const

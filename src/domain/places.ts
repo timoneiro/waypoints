@@ -11,6 +11,9 @@ export interface City {
   /** State, province or region: tells apart cities with the same name. */
   region?: string
   timeZone: string
+  /** Where it is, when city-points.tsv was read too. */
+  lat?: number
+  lon?: number
 }
 
 export interface Airport {
@@ -71,14 +74,19 @@ export function airportCode(text: string | undefined): string | undefined {
 
 const lines = (text: string) => text.split('\n').filter(Boolean)
 
-/** Parses cities.tsv (see the script for its layout): biggest first. */
-export function parseCities(text: string): City[] {
+/**
+ * Parses cities.tsv (see the script for its layout): biggest first. `points` is city-points.tsv: one
+ * line per city line, in the same order, paired before sorting.
+ */
+export function parseCities(text: string, points?: string): City[] {
   const [zoneLine, ...rest] = lines(text)
   const zones = zoneLine.split('\t')
+  const where = points === undefined ? undefined : lines(points)
   const sized: { city: City; size: number }[] = []
   let country = ''
   let region: string | undefined
   let zone = ''
+  let n = 0
   for (const line of rest) {
     const f = line.split('\t')
     if (line.startsWith('>')) {
@@ -86,7 +94,13 @@ export function parseCities(text: string): City[] {
       region = f[1] || undefined
       zone = zones[Number(f[2])]
     } else {
-      sized.push({ city: { name: f[0], country, region, timeZone: f[2] ? zones[Number(f[2])] : zone }, size: Number(f[1]) })
+      const city: City = { name: f[0], country, region, timeZone: f[2] ? zones[Number(f[2])] : zone }
+      const point = where?.[n++]?.split('\t')
+      if (point) {
+        city.lat = Number(point[0])
+        city.lon = Number(point[1])
+      }
+      sized.push({ city, size: Number(f[1]) })
     }
   }
   return sized.sort((a, b) => b.size - a.size).map((s) => s.city)
@@ -140,6 +154,31 @@ export function cityNamed(index: CityIndex, name: string, country?: string): Cit
   if (!folded) return undefined
   const i = index.names.findIndex((n, i) => n === folded && (!country || index.cities[i].country === country))
   return i < 0 ? undefined : index.cities[i]
+}
+
+/**
+ * The town of a place: the biggest within 10 km, else the nearest within 30 km, else none. Needs an
+ * index made with city points.
+ */
+export function nearestCity(index: CityIndex, lat: number, lng: number): City | undefined {
+  const cosLat = Math.cos((lat * Math.PI) / 180)
+  let nearest: City | undefined
+  let nearestKm = Infinity
+  for (const city of index.cities) {
+    if (city.lat === undefined || city.lon === undefined) continue
+    const dLat = city.lat - lat
+    if (Math.abs(dLat) > 0.3) continue
+    let dLon = Math.abs(city.lon - lng)
+    if (dLon > 180) dLon = 360 - dLon
+    const km = Math.hypot(dLon * cosLat, dLat) * 111.2
+    // Cities are biggest first, so the first one within 10 km is the biggest.
+    if (km <= 10) return city
+    if (km <= 30 && km < nearestKm) {
+      nearest = city
+      nearestKm = km
+    }
+  }
+  return nearest
 }
 
 export interface AirportIndex {

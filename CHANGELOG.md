@@ -8,6 +8,10 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.10.0 — 2026-10-15
+
+With a sync server, a new place fills itself in from a Google Maps link: paste it and tap **Fill in**. Your server needs updating to 0.5.0.
+
 ## 0.9.4 — 2026-10-15
 
 The **‹** arrow at the top of a trip now goes back one screen, like your phone's back button. On the trip's tabs it still takes you back to your trips.

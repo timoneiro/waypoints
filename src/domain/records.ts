@@ -24,6 +24,8 @@ const bool: Check = (v) => typeof v === 'boolean'
 const currency: Check = (v) => typeof v === 'string' && /^[A-Z]{3}$/.test(v)
 const money: Check = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1e12
 const rate: Check = (v) => typeof v === 'number' && Number.isFinite(v) && v > 0 && v <= 1e9
+const latitude: Check = (v) => typeof v === 'number' && Number.isFinite(v) && v >= -90 && v <= 90
+const longitude: Check = (v) => typeof v === 'number' && Number.isFinite(v) && v >= -180 && v <= 180
 const positive: Check = (v) => money(v) && (v as number) > 0
 const count = (max: number): Check => (v) => Number.isSafeInteger(v) && (v as number) > 0 && (v as number) <= max
 const mediaType: Check = (v) => typeof v === 'string' && /^[\w.+-]{1,40}\/[\w.+-]{1,120}$/.test(v)
@@ -138,6 +140,8 @@ const SPECS: { [T in RecordTable]: Record<string, { check: Check; required: bool
     notes: optional(LONG),
     mustSee: optional(bool),
     visited: optional(bool),
+    lat: optional(latitude),
+    lng: optional(longitude),
   },
   expenses: {
     tripId: required(isId),

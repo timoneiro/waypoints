@@ -9,6 +9,7 @@ import {
   cityIndex,
   cityNamed,
   fold,
+  nearestCity,
   parseAirports,
   parseCities,
   searchAirports,
@@ -141,5 +142,24 @@ describe('online address search (Photon)', () => {
     ])
     expect(photonAddresses(null)).toEqual([])
     expect(photonAddresses({ features: 'no' })).toEqual([])
+  })
+})
+
+describe('the nearest town', () => {
+  const pointsText = readFileSync(new URL('../data/city-points.tsv', import.meta.url), 'utf8')
+  const citiesText = readFileSync(new URL('../data/cities.tsv', import.meta.url), 'utf8')
+  const located = cityIndex(parseCities(citiesText, pointsText))
+
+  it('has a point for every city', () => {
+    const count = (text: string) => text.split('\n').filter(Boolean).length
+    expect(count(pointsText)).toBe(count(citiesText) - 1 - citiesText.split('\n').filter((l) => l.startsWith('>')).length)
+    expect(located.cities.every((c) => c.lat !== undefined && c.lon !== undefined)).toBe(true)
+  })
+
+  it('is the biggest within 10 km, else the nearest within 30 km, else none', () => {
+    expect(nearestCity(located, 41.1457, -8.6146)?.name).toBe('Porto')
+    expect(nearestCity(located, 38.697, -9.206)?.name).toBe('Lisbon')
+    expect(nearestCity(located, 16.4695, 107.5774)?.name).toBe('Huế')
+    expect(nearestCity(located, 30, -40)).toBeUndefined()
   })
 })

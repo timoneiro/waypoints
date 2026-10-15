@@ -1,0 +1,29 @@
+import { getServerConfig } from '../db/serverState'
+import { checkGoogleMapsAnswer } from '../domain/googleMaps'
+import type { GoogleMapsAnswer, GoogleMapsRequest } from '../domain/serverProtocol'
+import { api, SyncError } from './client'
+
+/*
+ * Reads a Google Maps link through the phone's sync server (phones can't: Google doesn't let web pages
+ * read it). Every failure is an Error whose message is ready to show.
+ */
+
+export const GOOGLE_UNREACHABLE = "Can't reach your waypoints server. Paste the link into Link below and type the name."
+export const GOOGLE_OLD_SERVER = 'Your waypoints server needs updating to read Google Maps links.'
+export const GOOGLE_UNREADABLE = "Google Maps didn't give the place's details. Try again later, or fill it in by hand."
+
+export async function lookUpGoogleMaps(url: string): Promise<GoogleMapsAnswer> {
+  const cfg = await getServerConfig()
+  if (!cfg) throw new Error(GOOGLE_UNREACHABLE)
+  let raw: unknown
+  try {
+    raw = await api<unknown>(cfg, '/api/google-maps', { url } satisfies GoogleMapsRequest)
+  } catch (err) {
+    if (err instanceof SyncError && err.status === 404 && err.message === 'Not found') throw new Error(GOOGLE_OLD_SERVER)
+    if (err instanceof SyncError && (err.status === 422 || err.status === 502)) throw new Error(GOOGLE_UNREADABLE)
+    throw new Error(GOOGLE_UNREACHABLE)
+  }
+  const answer = checkGoogleMapsAnswer(raw)
+  if (!answer) throw new Error(GOOGLE_UNREADABLE)
+  return answer
+}

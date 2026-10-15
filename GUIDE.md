@@ -130,6 +130,8 @@ The 📍 Places tab keeps the places you'd like to visit, grouped by city.
 - Tick **✅ Been there** when you've visited.
 - Tap **🗓️ Add to the plan** to turn a place into an activity on a day.
 - Paste a Google or Apple Maps link to open the place on the map again later.
+- With a sync server, a new place has a **Paste a Google Maps link** box: paste the link (in Google Maps,
+  tap Share → Copy link) and tap **Fill in** to get the name, link and city filled in for you.
 
 ### Calendar
 
@@ -263,6 +265,8 @@ everyone by themselves, without links, and photos and documents are shared too. 
 4. Changes made offline wait on your phone and go up the next time the server can be reached.
 5. To leave a trip, use **Leave the trip** on the Trip tab. The trip stays with the others, with your
    expenses.
+
+The server also reads Google Maps links for the people who use it, to fill in new places.
 
 A trip on the server is seen only by the people on it. Links still work next to it, also for people who
 aren't on the server. To run a server yourself, see [server/README.md](server/README.md).

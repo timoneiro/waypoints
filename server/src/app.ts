@@ -10,6 +10,7 @@ import {
   type AdminMembersRequest,
   type Credentials,
   type DeviceSummary,
+  type GoogleMapsRequest,
   type InviteRequest,
   type InviteResponse,
   type MeResponse,
@@ -19,11 +20,12 @@ import {
 } from '../../src/domain/serverProtocol.ts'
 import type { Config } from './config.ts'
 import { FileStore } from './files.ts'
+import { lookUp, LookupError, LOOKUP_TIMEOUT_MS } from './googleMaps.ts'
 import { codesMatch, hashCode, hashSecret, newCode, newId, newToken } from './secrets.ts'
 import type { Device, Member, Store } from './store.ts'
 import { applySync, BadRequest, memberList, memberSummary, parseSyncRequest, tripMembers } from './sync.ts'
 
-export const VERSION = '0.4.0'
+export const VERSION = '0.5.0'
 const MAX_BODY = 10 * 1024 * 1024 // a first sync uploads whole trips
 const INVITE_DAYS = 7
 const MAX_CODE_FAILURES = 20 // per 10 minutes, across all clients
@@ -98,7 +100,13 @@ interface Session {
 type Handler = (req: IncomingMessage, session: Session) => Promise<unknown>
 type PublicHandler = (req: IncomingMessage) => Promise<unknown>
 
-export function createApp(config: Config, store: Store, files = new FileStore(join(config.filesDir, 'trips'))) {
+/** What tests swap out: the `fetch` that reaches Google, and how long a lookup may take. */
+export interface AppOptions {
+  fetchFn?: typeof fetch
+  lookupTimeoutMs?: number
+}
+
+export function createApp(config: Config, store: Store, files = new FileStore(join(config.filesDir, 'trips')), options: AppOptions = {}) {
   /** Brute-force brake for the server code and invite codes. */
   let codeFailures: number[] = []
   const guardCodes = () => {
@@ -266,6 +274,17 @@ export function createApp(config: Config, store: Store, files = new FileStore(jo
       if (size === undefined) throw new HttpError(404, "The server doesn't have that file yet")
       const type = thumb ? 'image/jpeg' : SERVED_TYPES.test(String(attachment.type)) ? String(attachment.type) : 'application/octet-stream'
       return new FileReply(files.path(tripId, id, thumb), size, type)
+    },
+
+    /** Reads a Google Maps link (a place, or a shared list), as the phone can't. Never logs links or answers. */
+    'POST /api/google-maps': async (req) => {
+      const b = (await readJson(req)) as Partial<GoogleMapsRequest> | null
+      try {
+        return await lookUp(typeof b?.url === 'string' ? b.url.trim() : '', options.fetchFn, options.lookupTimeoutMs ?? LOOKUP_TIMEOUT_MS)
+      } catch (err) {
+        if (err instanceof LookupError) throw new HttpError(err.status, err.message)
+        throw new HttpError(502, "Google Maps answered something this server can't read.")
+      }
     },
 
     'POST /api/invites': async (req, { member }): Promise<InviteResponse> => {

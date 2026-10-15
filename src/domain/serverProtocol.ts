@@ -1,4 +1,5 @@
 import type { Tables } from '../db/types.ts'
+import type { GooglePlace } from './googleMaps.ts'
 
 /*
  * Wire format between the app and the optional waypoints sync server (server/). Shared by both sides:
@@ -94,6 +95,14 @@ export interface RemoveDeviceRequest {
 export interface RemoveMemberRequest {
   memberId: string
 }
+
+/** POST /api/google-maps (server 0.5.0+): the server reads a Google Maps link, since phones can't. */
+export interface GoogleMapsRequest {
+  url: string
+}
+
+/** A place (from a place link) or a shared list's places (from a list link). Only names, notes, addresses, coordinates and links. */
+export type GoogleMapsAnswer = { kind: 'place'; place: GooglePlace } | { kind: 'list'; name: string; places: GooglePlace[] }
 
 /** A file the server has for one of a trip's photos or documents (attachments). */
 export interface FileInfo {
