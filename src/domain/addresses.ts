@@ -21,6 +21,12 @@ export function photonUrl(query: string, city?: string): string {
   return `${PHOTON}?${new URLSearchParams({ q: q.slice(0, 200), limit: '6', lang: 'en' })}`
 }
 
+/** The address at a point, for a place that has coordinates but no address. */
+export function photonReverseUrl(lat: number, lng: number): string {
+  const round = (n: number) => String(Math.round(n * 1e6) / 1e6)
+  return `${PHOTON.replace('/api/', '/reverse')}?${new URLSearchParams({ lat: round(lat), lon: round(lng), lang: 'en' })}`
+}
+
 // Where the house number goes before the street: "10 Downing Street".
 const NUMBER_FIRST = new Set(['US', 'CA', 'GB', 'IE', 'AU', 'NZ', 'FR', 'SG', 'MY', 'PH', 'IN', 'ZA'])
 // Results that are areas rather than somewhere to go: they belong in the city field, if anywhere.
