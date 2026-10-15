@@ -194,7 +194,7 @@ function PlaceForm({ existing }: { existing?: Place }) {
     } catch (err) {
       const message = err instanceof Error ? err.message : GOOGLE_UNREACHABLE
       setLookupError(message)
-      if (message === GOOGLE_UNREACHABLE) setLink((l) => l || url)
+      setLink((l) => l || url)
     } finally {
       setLooking(false)
     }

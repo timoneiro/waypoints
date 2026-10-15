@@ -8,6 +8,12 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.10.1 — 2026-10-15
+
+Filling in a place from a Google Maps link works with more links, such as the ones Android's Share gives, and from servers in Europe. Your server needs updating to 0.5.1.
+
+When the server can't read a link, it now says why, instead of "Can't reach your waypoints server", and the link still goes into **Link**.
+
 ## 0.10.0 — 2026-10-15
 
 With a sync server, a new place fills itself in from a Google Maps link: paste it and tap **Fill in**. Your server needs updating to 0.5.0.

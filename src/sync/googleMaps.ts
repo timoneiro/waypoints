@@ -21,6 +21,8 @@ export async function lookUpGoogleMaps(url: string): Promise<GoogleMapsAnswer> {
   } catch (err) {
     if (err instanceof SyncError && err.status === 404 && err.message === 'Not found') throw new Error(GOOGLE_OLD_SERVER)
     if (err instanceof SyncError && (err.status === 422 || err.status === 502)) throw new Error(GOOGLE_UNREADABLE)
+    // The server did answer: say why it turned the link away (or that this phone is no longer connected).
+    if (err instanceof SyncError && err.status !== undefined && err.status >= 400 && err.status < 500) throw new Error(err.message)
     throw new Error(GOOGLE_UNREACHABLE)
   }
   const answer = checkGoogleMapsAnswer(raw)

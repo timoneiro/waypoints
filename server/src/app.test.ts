@@ -308,6 +308,53 @@ ${JSON.stringify([
     expect(n).toBe(5)
   })
 
+  it("goes past Google's consent page once, asking with the consent cookie", async () => {
+    const asked: string[] = []
+    const cookies: string[] = []
+    fakeFetch = async (input, init) => {
+      asked.push(String(input))
+      cookies.push(new Headers(init?.headers).get('cookie') ?? '')
+      return redirect(`https://consent.google.com/ml?continue=${encodeURIComponent(PLACE)}&gl=PT`)
+    }
+    const answer = await ok<{ kind: string; place: { name: string } }>('/api/google-maps', { url: SHORT }, await asker())
+    expect(answer).toMatchObject({ kind: 'place', place: { name: 'Torre dos Clérigos' } })
+    expect(asked).toEqual([SHORT])
+    expect(cookies).toEqual(['SOCS=CAI'])
+  })
+
+  it('answers 502 when the consent page comes back', async () => {
+    let n = 0
+    fakeFetch = async () => redirect(`https://consent.google.com/ml?continue=${encodeURIComponent(`https://www.google.com/maps/r${++n}`)}`)
+    expect(await call('/api/google-maps', { url: SHORT }, await asker())).toMatchObject({ status: 502 })
+    expect(n).toBe(2)
+  })
+
+  it('reads a place named only by its id, from its details', async () => {
+    const info: unknown[] = new Array(40).fill(null)
+    info[9] = [null, null, 41.1456705, -8.6145977]
+    info[10] = '0xd2464e251ced649:0x425ec51327127c21'
+    info[11] = 'Torre dos Clérigos'
+    info[39] = 'R. de São Filipe de Nery, 4050-546 Porto, Portugal'
+    const asked: string[] = []
+    fakeFetch = async (input) => {
+      asked.push(String(input))
+      if (asked.length === 1) return redirect('https://www.google.com/maps?q=Torre+dos+Cl%C3%A9rigos&ftid=0xd2464e251ced649:0x425ec51327127c21&entry=gps')
+      return new Response(`)]}'\n${JSON.stringify([null, null, null, null, [], null, info])}`, { status: 200 })
+    }
+    const token = await asker()
+    const answer = await ok<{ kind: string; place: { name: string; lat: number; address: string } }>('/api/google-maps', { url: SHORT }, token)
+    expect(answer).toMatchObject({ kind: 'place', place: { name: 'Torre dos Clérigos', lat: 41.1456705, address: 'R. de São Filipe de Nery, 4050-546 Porto, Portugal' } })
+    expect(asked[1]).toBe('https://www.google.com/maps/preview/place?authuser=0&hl=en&gl=us&pb=!1m1!1s0xd2464e251ced649:0x425ec51327127c21')
+
+    asked.length = 0
+    fakeFetch = async (input) => {
+      asked.push(String(input))
+      return new Response(`)]}'\n[null,null,null,null,[],null]`, { status: 200 })
+    }
+    expect(await call('/api/google-maps', { url: 'https://maps.google.com/?cid=4782476540364618785' }, token)).toMatchObject({ status: 422 })
+    expect(asked).toEqual(['https://www.google.com/maps/preview/place?authuser=0&hl=en&gl=us&pb=!1m1!1s0x0:0x425ec51327127c21'])
+  })
+
   it('gives up when Google is slow', async () => {
     fakeFetch = (_input, init) =>
       new Promise((_resolve, reject) => init?.signal?.addEventListener('abort', () => reject(new Error('aborted'))))
