@@ -196,7 +196,7 @@ function RatesCard() {
   const { trip } = t
   const rates = exchangeRates(t.exchanges, trip.currency)
   const left = cashLeft(t.exchanges, t.expenses, trip.currency)
-  const cardsWaiting =t.expenses.filter((e) => awaitingCost(e, trip.currency))
+  const cardsWaiting = t.expenses.filter((e) => awaitingCost(e, trip.currency))
   const yours = t.me ? cardsWaiting.filter((e) => e.paidBy === t.me?.id).length : 0
   // Card payments wait for the bank, not for an exchange.
   const waiting = unconverted(t.expenses, t.rateOf).filter((e) => !awaitingCost(e, trip.currency))
@@ -237,14 +237,14 @@ function RatesCard() {
         </p>
       ))}
       {[...left].map(([currency, amount]) =>
-        amount < 0 ? (
-          <p key={currency} className="small minus">
+        Math.round(amount * 100) < 0 ? (
+          <p key={currency} className="notice notice-warn small">
             Cash left: <span className="money">−{fmtMoney(-amount, currency)}</span> (more cash spent than changed: an exchange may be
             missing)
           </p>
         ) : (
           <p key={currency} className="small">
-            Cash left: <strong className="money">{fmtMoney(amount, currency)}</strong>
+            Cash left: <strong className="money">{fmtMoney(Math.max(amount, 0), currency)}</strong>
           </p>
         ),
       )}
