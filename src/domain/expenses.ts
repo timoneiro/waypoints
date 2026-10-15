@@ -29,6 +29,23 @@ export function exchangeRates(exchanges: Exchange[], tripCurrency: string): Map<
   return new Map([...sums].map(([currency, s]) => [currency, { rate: s.amount / s.cost, count: s.count }]))
 }
 
+/**
+ * Cash left per foreign currency that has an exchange: everything the exchanges got, minus cash
+ * expenses in it (group total, transfers and deleted records left out).
+ */
+export function cashLeft(exchanges: Exchange[], expenses: Expense[], tripCurrency: string): Map<string, number> {
+  const left = new Map<string, number>()
+  for (const x of exchanges) {
+    if (x.deletedAt || x.currency === tripCurrency) continue
+    left.set(x.currency, (left.get(x.currency) ?? 0) + x.amount)
+  }
+  for (const e of expenses) {
+    if (e.deletedAt || e.transfer || !left.has(e.currency) || paidWithOf(e, tripCurrency) !== 'cash') continue
+    left.set(e.currency, left.get(e.currency)! - e.amount)
+  }
+  return left
+}
+
 /** The rate an expense converts at, or undefined while its currency has none. */
 export type RateOf = (expense: Pick<Expense, 'currency' | 'rate'>) => number | undefined
 
@@ -165,6 +182,24 @@ export function totals(expenses: Expense[], rateOf: RateOf): Totals {
     result.total += value
     result.byCategory.set(e.category, (result.byCategory.get(e.category) ?? 0) + value)
     result.byDay.set(e.date, (result.byDay.get(e.date) ?? 0) + value)
+  }
+  return result
+}
+
+export interface PaymentSplit {
+  card: number
+  cash: number
+  /** Expenses that don't say how they were paid. */
+  unsaid: number
+}
+
+/** Spending in the trip's currency by how it was paid. Same expenses as `totals`, so the three add up to its total. */
+export function paymentSplit(expenses: Expense[], rateOf: RateOf, tripCurrency: string): PaymentSplit {
+  const result: PaymentSplit = { card: 0, cash: 0, unsaid: 0 }
+  for (const e of expenses) {
+    const rate = rateOf(e)
+    if (e.deletedAt || e.transfer || !rate) continue
+    result[paidWithOf(e, tripCurrency) ?? 'unsaid'] += toTripCurrency(e.amount, rate)
   }
   return result
 }

@@ -1,6 +1,6 @@
 # Cash visibility on the Money tab
 
-Status: draft
+Status: building
 Issue: https://github.com/waypoints-pwa/waypoints/issues/16
 
 ## Problem
@@ -10,9 +10,9 @@ app, or the card/cash split.
 
 ## Behavior
 1. **Cash left, per currency.** In the Exchange rates card, each foreign currency with at least one
-   exchange shows "Cash left: 42,000 JPY" = everything received by exchanges in that currency minus
-   cash expenses in that currency (group total, all travellers). Negative shows as "−3,000 JPY (more
-   cash spent than changed: an exchange may be missing)" in the warning style.
+   exchange shows "Cash left: ¥42,000" (as `fmtMoney` prints it) = everything received by exchanges in that currency minus
+   cash expenses in that currency (group total, all travellers). Negative shows as "−¥3,000 (more
+   cash spent than changed: an exchange may be missing)" in the warning style (`notice notice-warn`). Sign and zero are decided on the cent-rounded value, so spending cash to exactly zero never warns.
 2. **Payment mark on rows.** Each expense row shows a small "Cash" or "Card" tag when
    `paidWithOf(expense, tripCurrency)` knows it. Expenses where it is `undefined` show nothing there.
 3. **Card vs cash split.** Below the category bars, one line "Card 1,100 · Cash 240 · Not noted 60"
@@ -70,7 +70,7 @@ shows 32,500 JPY. Card payments in JPY are not subtracted.
 - [ ] Card expenses and trip-currency expenses do not reduce cash left.
 - [ ] Each expense row shows Cash/Card, or nothing where it is not noted.
 - [ ] Card + Cash + Not noted equals the "Spent so far" figure.
-- [ ] A trip with no foreign currency shows no cash-left and no change other than the split line.
+- [ ] A trip with no foreign currency shows no cash-left and no change other than the split line and the Cash/Card row tags.
 - [ ] No data changes: existing trips open and sync exactly as before.
 
 ## Verification

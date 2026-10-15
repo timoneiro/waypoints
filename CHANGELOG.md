@@ -8,6 +8,14 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.9.1 — 2026-10-15
+
+See your cash at a glance on the Money tab.
+
+- **Cash left**: each foreign currency in Exchange rates shows how much cash you have left, from what you changed minus what you spent in cash.
+- **Cash or card**: expense rows show a small Cash or Card tag where it's noted.
+- **Card vs cash**: a line under the categories splits what you've spent into card, cash and not noted.
+
 ## 0.9.0 — 2026-10-13
 
 The trip report: the whole trip on one page, once it's over.
