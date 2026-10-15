@@ -1,5 +1,5 @@
 import { photonAddresses, photonUrl, type FoundAddress } from '../domain/addresses'
-import { airportIndex, cityIndex, parseAirports, parseCities, type AirportIndex, type CityIndex } from '../domain/places'
+import { airportIndex, cityIndex, nearestCity, parseAirports, parseCities, type AirportIndex, type CityIndex } from '../domain/places'
 
 /*
  * The built-in city and airport lists load the first time a form needs one, as separate files the
@@ -22,6 +22,28 @@ export const loadCities = () =>
     () => import('../data/cities.tsv?raw').then((m) => cityIndex(parseCities(m.default))),
     () => (cities = undefined),
   ))
+
+let cityPoints: Promise<CityIndex> | undefined
+
+/** The cities with where they are. Fetched on its own (not kept for offline use), so city search stays small. */
+export const loadCityPoints = () =>
+  (cityPoints ??= once(
+    async () => {
+      const [{ default: url }, { default: citiesText }] = await Promise.all([
+        import('../data/city-points.tsv?url'),
+        import('../data/cities.tsv?raw'),
+      ])
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`City points: ${res.status}`)
+      return cityIndex(parseCities(citiesText, await res.text()))
+    },
+    () => (cityPoints = undefined),
+  ))
+
+/** The built-in list's town for a place's coordinates, if there's one near. Throws when offline. */
+export async function cityAt(lat: number, lng: number): Promise<string | undefined> {
+  return nearestCity(await loadCityPoints(), lat, lng)?.name
+}
 
 export const loadAirports = () =>
   (airports ??= once(

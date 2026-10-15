@@ -142,14 +142,21 @@ const countryZones = new Set(tsvRows(zonesText).slice(1).map((r) => `${r[0]} ${r
   const size = (population) => Math.max(0, Math.floor(Math.log10(population) * 4) - 16)
   const grouped = Map.groupBy(towns, (t) => `${t.country}.${t.admin1}`)
   const lines = []
+  const points = []
   for (const [key, group] of [...grouped].sort(([a], [b]) => a.localeCompare(b))) {
     const zone = zones.of(group[0].zone)
     lines.push(`>${[group[0].country, regions.get(key) ?? '', zone].join('\t')}`)
-    for (const t of group) lines.push([t.name, size(t.population), zones.of(t.zone) === zone ? '' : zones.of(t.zone)].join('\t').trimEnd())
+    for (const t of group) {
+      lines.push([t.name, size(t.population), zones.of(t.zone) === zone ? '' : zones.of(t.zone)].join('\t').trimEnd())
+      points.push(`${t.lat.toFixed(2)}\t${t.lon.toFixed(2)}`)
+    }
   }
   const text = [zones.values.join('\t'), ...lines].join('\n') + '\n'
   writeFileSync(new URL('cities.tsv', OUT), text)
   console.log(`cities.tsv: ${towns.length} cities, ${(text.length / 1024).toFixed(0)} KB`)
+  // Where each city is (lat, lon): one line per city line above, in the same order. Kept apart so city
+  // search doesn't get bigger; only "the nearest town" of a Google Maps place reads it.
+  writeFileSync(new URL('city-points.tsv', OUT), points.join('\n') + '\n')
 }
 
 // Airports with scheduled flights, the big ones first (which is how they rank):
