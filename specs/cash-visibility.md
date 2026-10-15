@@ -1,6 +1,6 @@
 # Cash visibility on the Money tab
 
-Status: draft
+Status: approved
 Issue: https://github.com/waypoints-pwa/waypoints/issues/16
 
 ## Problem
