@@ -1,3 +1,4 @@
+import cityPointsUrl from '../data/city-points.tsv?url'
 import { photonAddresses, photonReverseUrl, photonUrl, type FoundAddress } from '../domain/addresses'
 import { airportIndex, cityIndex, nearestCity, parseAirports, parseCities, type AirportIndex, type CityIndex } from '../domain/places'
 
@@ -29,11 +30,8 @@ let cityPoints: Promise<CityIndex> | undefined
 export const loadCityPoints = () =>
   (cityPoints ??= once(
     async () => {
-      const [{ default: url }, { default: citiesText }] = await Promise.all([
-        import('../data/city-points.tsv?url'),
-        import('../data/cities.tsv?raw'),
-      ])
-      const res = await fetch(url)
+      const { default: citiesText } = await import('../data/cities.tsv?raw')
+      const res = await fetch(cityPointsUrl)
       if (!res.ok) throw new Error(`City points: ${res.status}`)
       return cityIndex(parseCities(citiesText, await res.text()))
     },
