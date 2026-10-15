@@ -64,6 +64,8 @@ file doesn't ask: pick yourself under **Which one are you?** on the 🧳 Trip ta
 If someone sent you a trip, tap **🔗 Open a trip someone sent you** on the welcome screen, or open their
 link or file. See [section 7](#7-sharing-with-your-group).
 
+Inside a trip, **‹** at the top left goes back one screen. On the five tabs at the bottom, it takes you back to your trips.
+
 ## 4. Before the trip
 
 A trip has five tabs at the bottom: 🗓️ Plan, 📍 Places, 💶 Money, 📷 Photos and 🧳 Trip. Most of what you
