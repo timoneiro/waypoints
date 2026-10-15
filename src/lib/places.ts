@@ -1,4 +1,4 @@
-import { photonAddresses, photonUrl, type FoundAddress } from '../domain/addresses'
+import { photonAddresses, photonReverseUrl, photonUrl, type FoundAddress } from '../domain/addresses'
 import { airportIndex, cityIndex, nearestCity, parseAirports, parseCities, type AirportIndex, type CityIndex } from '../domain/places'
 
 /*
@@ -63,4 +63,16 @@ export async function searchAddressesOnline(query: string, city: string | undefi
   const results = photonAddresses(await res.json())
   found.set(url, results)
   return results
+}
+
+/** Online address for a place's coordinates (Photon), for people who turned it on in Settings. Throws when offline. */
+export async function reverseAddressOnline(lat: number, lng: number): Promise<string | undefined> {
+  const url = photonReverseUrl(lat, lng)
+  const known = found.get(url)
+  if (known) return known[0]?.address
+  const res = await fetch(url, { credentials: 'omit' })
+  if (!res.ok) throw new Error(`Address lookup: ${res.status}`)
+  const results = photonAddresses(await res.json())
+  found.set(url, results)
+  return results[0]?.address
 }

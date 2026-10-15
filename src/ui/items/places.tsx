@@ -2,12 +2,17 @@ import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { patchRecord } from '../../db/actions'
 import type { Place, PlaceCategory } from '../../db/types'
+import { SETTINGS } from '../../db/db'
+import { isGoogleMapsUrl } from '../../domain/googleMaps'
 import { mapQuery, safeHttpUrl } from '../../domain/links'
-import { DetailHead, EmptyState } from '../components/bits'
+import { cityAt, reverseAddressOnline } from '../../lib/places'
+import { GOOGLE_UNREACHABLE, lookUpGoogleMaps } from '../../sync/googleMaps'
+import { DetailHead, EmptyState, Notice } from '../components/bits'
 import { ChoiceChips, NotesField, TextField } from '../components/fields'
 import { AddressField, CityField } from '../components/PlaceFields'
 import { MapLinks, WebLink } from '../components/ItemLinks'
 import { fmtDayTime, plural } from '../format'
+import { usable, useServer, useSetting } from '../hooks'
 import { labelOf, PLACE_CATEGORIES } from '../labels'
 import { tripPath, useTrip } from '../tripData'
 import { AttachmentsCard } from '../components/Attachments'
@@ -156,7 +161,44 @@ function PlaceForm({ existing }: { existing?: Place }) {
   const [link, setLink] = useState(existing?.link ?? '')
   const [notes, setNotes] = useState(existing?.notes ?? '')
   const [mustSee, setMustSee] = useState(existing?.mustSee ?? false)
+  const [lat, setLat] = useState(existing?.lat)
+  const [lng, setLng] = useState(existing?.lng)
+  const [pasted, setPasted] = useState('')
+  const [looking, setLooking] = useState(false)
+  const [lookupError, setLookupError] = useState<string>()
   const { save, busy, error, setError } = useSave('places', existing?.id)
+  const server = usable(useServer())
+  const onlineAddresses = useSetting<boolean>(SETTINGS.addressSearch)?.value === true
+
+  const fillIn = async (input: string) => {
+    const url = input.trim()
+    if (!url || looking) return
+    setLookupError(undefined)
+    if (!safeHttpUrl(url) || !isGoogleMapsUrl(url)) return setLookupError("That's not a Google Maps link.")
+    setLooking(true)
+    try {
+      const answer = await lookUpGoogleMaps(url)
+      if (answer.kind === 'list') return setLookupError("That's a list, not a place.")
+      const { place } = answer
+      setName(place.name)
+      setLink(place.link)
+      setLat(place.lat)
+      setLng(place.lng)
+      if (place.address) setAddress((a) => a || place.address!)
+      else if (onlineAddresses) {
+        const found = await reverseAddressOnline(place.lat, place.lng).catch(() => undefined)
+        if (found) setAddress((a) => a || found)
+      }
+      const town = await cityAt(place.lat, place.lng).catch(() => undefined)
+      if (town) setCity((c) => c || town)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : GOOGLE_UNREACHABLE
+      setLookupError(message)
+      if (message === GOOGLE_UNREACHABLE) setLink((l) => l || url)
+    } finally {
+      setLooking(false)
+    }
+  }
 
   const onSubmit = () => {
     if (!name.trim()) return setError('Give the place a name.')
@@ -170,11 +212,38 @@ function PlaceForm({ existing }: { existing?: Place }) {
       notes: opt(notes),
       mustSee: mustSee || undefined,
       visited: existing?.visited,
+      lat,
+      lng,
     })
   }
 
   return (
     <ItemForm title={existing ? 'Edit place' : 'New place'} error={error} busy={busy} onSubmit={onSubmit}>
+      {!existing && server && (
+        <div className="stack">
+          <TextField
+            label="Paste a Google Maps link"
+            type="url"
+            value={pasted}
+            onChange={setPasted}
+            onPaste={(e) => {
+              if (pasted.trim()) return
+              const text = e.clipboardData.getData('text')
+              setPasted(text)
+              e.preventDefault()
+              void fillIn(text)
+            }}
+            placeholder="https://maps.app.goo.gl/…"
+            maxLength={2000}
+            hint="In Google Maps, tap Share → Copy link."
+          />
+          <button type="button" className="btn btn-small" style={{ alignSelf: 'flex-start' }} disabled={looking || !pasted.trim()} onClick={() => void fillIn(pasted)}>
+            Fill in
+          </button>
+          {looking && <p className="muted small">Looking it up…</p>}
+          {lookupError && <Notice kind="warn">{lookupError}</Notice>}
+        </div>
+      )}
       <TextField label="Name" value={name} onChange={setName} placeholder="Livraria Lello, Time Out Market…" maxLength={200} autoFocus={!existing} />
       <ChoiceChips label="Kind" options={PLACE_CATEGORIES} value={category} onChange={setCategory} />
       <CityField value={city} onChange={setCity} />
