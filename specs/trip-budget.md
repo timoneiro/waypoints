@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/15
+Builds after: none
 
 ## Problem
 The Money tab shows what was spent but not against what. Groups agree a budget before a trip and have
@@ -13,7 +14,7 @@ On the Money tab, a **Budget** card appears above the category bars.
 - The form has **Total** (required, in the trip's currency) and, optionally, an amount per expense
   category (the same categories as expenses). Categories left empty have no budget.
 - With a budget the card shows: "€1,200 budget · €740 spent · €460 left" and a progress bar. Over the
-  budget shows "€85 over" in the warning style, never blocking anything.
+  budget shows "€85 over" in the warning style (`notice notice-warn`), never blocking anything. Over/under is decided on the cent-rounded value, so spending exactly the budget is never "over".
 - If category amounts are set, each category bar in the existing breakdown also shows its own
   "spent of budget" and turns to the warning style when over.
 - "Spent" is exactly the figure the Money tab already shows (`totals().total`: settle-up payments and
@@ -57,26 +58,31 @@ the food bar says "450 of 400 · 50 over".
    - Depends on: none
    - Done when: `npm run typecheck` passes; new tests accept a valid budget and reject a negative
      total, a bad currency and 21 categories.
+   - Executor: sonnet
 2. **Domain function**
    - Change: new `budgetStatus(trip, totals)` in `src/domain/budget.ts` returning `undefined` (no
      budget), `{ stale: true }` (currency differs) or `{ total, spent, left, over, categories }`.
    - Depends on: 1
    - Done when: `src/domain/budget.test.ts` covers no budget, under, exactly at, over, stale
      currency, and a category with no spending.
+   - Executor: haiku
 3. **Write path**
    - Change: `patchTrip` in `src/db/actions.ts`; test in `src/db/actions.test.ts` that an unchanged
      save writes nothing and a change lands in `unsent` and `outbox`.
    - Depends on: 1
    - Done when: `npm test` passes.
+   - Executor: sonnet
 4. **Money tab UI**
    - Change: Budget card and inline form in `src/ui/items/expenses.tsx`; per-category figures on the
      existing bars.
    - Depends on: 2, 3
    - Done when: the manual check under Verification passes; `npm run lint` is clean.
+   - Executor: sonnet
 5. **Version and changelog**
    - Change: bump the `package.json` minor version and add the `CHANGELOG.md` entry.
    - Depends on: 4
    - Done when: `npm test` (incl. changelog test) and `npm run build` pass.
+   - Executor: haiku
 
 ## Acceptance criteria
 - [ ] With no budget, the Money tab looks as before plus a "Set a budget" link.

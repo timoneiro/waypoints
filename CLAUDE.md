@@ -118,4 +118,4 @@ Server locally: `DATA_DIR=./server/data FILES_DIR=./server/files node server/src
 On Windows Git Bash, set `MSYS_NO_PATHCONV=1` when passing `BASE_PATH=/waypoints/` to a local build.
 
 ## Ideas
-Future ideas live in `specs/`: `specs/BACKLOG.md` for parked ideas, and one `specs/<feature>.md` per specced feature (see the `/spec` skill). Build only specs whose Status is `approved`; update a spec to match what shipped. Adding a synced table: `specs/new-table-checklist.md`.
+Future ideas live in `specs/`: `specs/BACKLOG.md` for parked ideas, and one `specs/<feature>.md` per specced feature (see the `/spec` skill). Build only specs whose issue has the `agent-ready` label (`/build` checks it); update a spec to match what shipped. Adding a synced table: `specs/new-table-checklist.md`.

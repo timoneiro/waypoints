@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/24
+Builds after: trip-budget (both may add `patchTrip` to `src/db/actions.ts`)
 
 ## Problem
 Removing a trip only removes it from one phone; the others keep it, and on a sync server it stays
@@ -66,16 +67,19 @@ removes the photos at once; the records go 90 days later if `PURGE_AFTER_DAYS=90
    - Depends on: none
    - Done when: `actions.test.ts`: tombstone set, unsent/outbox noted, snapshot taken, records of the
      trip untouched; manual check passes.
+   - Executor: sonnet
 2. **Hide deleted trips**
    - Change: every list/query of trips filters `deletedAt`; opening a deleted trip's URL shows
      "This trip was deleted".
    - Depends on: 1
    - Done when: tests for `TripsPage`/`loadTrip`; a merged tombstone from a link hides the trip.
+   - Executor: sonnet
 3. **Server deletes files on tombstone**
    - Change: in `server/src/sync.ts` `merge`, a trip record that becomes deleted queues all the
      trip's attachment files for removal (reuse `removedFiles`).
    - Depends on: none
    - Done when: `server/src/sync.test.ts` covers it, including a sync that sends the tombstone twice.
+   - Executor: sonnet
 4. **Purge job**
    - Change: `purgeStaleTrips(data, now, days)` pure function in `server/src/sync.ts` (or a new
      `purge.ts`), called from `main.ts` at start and daily; env parsing in `config.ts`; deletes
@@ -83,11 +87,13 @@ removes the photos at once; the records go 90 days later if `PURGE_AFTER_DAYS=90
    - Depends on: 3
    - Done when: tests: tombstoned and old purged; tombstoned and recent kept; linked members keep
      it; unset env purges nothing; value under 30 refused; one log line per trip.
+   - Executor: sonnet
 5. **Docs, version and changelog**
    - Change: README section for `PURGE_AFTER_DAYS` and the re-upload caveat; bump
      `package.json` version and (server) version; `CHANGELOG.md`.
    - Depends on: 2, 4
    - Done when: `npm test` and `npm run build` pass.
+   - Executor: sonnet
 
 ## Acceptance criteria
 - [ ] Typing the wrong name does not delete; the right name does and hides the trip locally.

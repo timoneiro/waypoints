@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/14
+Builds after: none
 
 ## Problem
 Groups plan what to bring and what to do before leaving in chat messages that get lost. The app has
@@ -57,12 +58,14 @@ the charger is ticked.
    - Depends on: none
    - Done when: `npm run typecheck` passes; a new test accepts a valid item and rejects a missing
      `text` and a 500-character `text`.
+   - Executor: sonnet
 2. **Database version and server table**
    - Change: add the table and the next `db.version(n)` in `src/db/db.ts` per the checklist; extend
      `src/db/migrations.test.ts`; make `server/` accept the table via `RECORD_TABLES`.
    - Depends on: 1
    - Done when: `npm test` passes including the migration test (a 0.9.0-shaped database opens, the
      `packingItems` table is empty, `serverTrips` cursors reset to 0).
+   - Executor: sonnet
 3. **Domain logic and templates**
    - Change: new `src/domain/packing.ts`: `TEMPLATES` (beach, city, hiking, skiing, ~10 common items
      each), `sortedItems(items)` (unpacked first, then by `createdAt` then `id`),
@@ -70,20 +73,24 @@ the charger is ticked.
      `progress(items)`.
    - Depends on: 1
    - Done when: new `src/domain/packing.test.ts` covers ordering, dedupe, progress and the empty list.
+   - Executor: haiku
 4. **Load into the trip**
    - Change: `src/ui/tripData.ts` loads live `packingItems` into `TripData.packingItems`.
    - Depends on: 2
    - Done when: `npm run typecheck` passes; existing tests still pass.
+   - Executor: haiku
 5. **Page and entry card**
    - Change: `src/ui/pages/PackingPage.tsx` (list, add, tick, edit, delete, templates, assignee
      picker), route `packing` in `src/App.tsx`, card with progress on `TripInfoPage.tsx`.
    - Depends on: 3, 4
    - Done when: the manual check under Verification passes; `npm run lint` is clean.
+   - Executor: sonnet
 6. **Sync tests, version and changelog**
    - Change: tests in `src/domain/sync.test.ts` and `server/src/sync.test.ts` for the new table; bump
      the `package.json` minor version and add the `CHANGELOG.md` entry.
    - Depends on: 5
    - Done when: `npm test` and `npm run build` pass, including the changelog test.
+   - Executor: sonnet
 
 ## Acceptance criteria
 - [ ] A trip has a Packing & to-do page reachable from the Trip tab, with the empty state and templates.

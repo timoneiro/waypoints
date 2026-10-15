@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/19
+Builds after: none
 
 ## Problem
 Changing an activity's day means opening its form and editing the date; ordering untimed activities
@@ -63,33 +64,40 @@ Example: Trip 10–17 Apr, duplicate to start 3 Jul: a stay 12–15 Apr becomes 
    - Depends on: none
    - Done when: new `itinerary.test.ts` cases (untimed sorted by order then createdAt; timed ignore
      order) and a `records` test pass.
+   - Executor: sonnet
 2. **Move and reorder actions**
    - Change: `moveActivity(id, day)` and `swapActivityOrder(idA, idB)` helpers in
      `src/db/actions.ts`; each a single transaction, skipping a no-op.
    - Depends on: 1
    - Done when: `actions.test.ts` covers moving, zone choice, swap, and no-op.
+   - Executor: sonnet
 3. **Move and reorder UI**
    - Change: Move picker with undo toast; ▲▼ on untimed activities in `EntryRow`.
    - Depends on: 2
    - Done when: manual check passes.
+   - Executor: sonnet
 4. **Shift helper**
    - Change: `shiftDay(day, offsetDays)` (and `offsetBetween`) in `src/domain/time.ts`.
    - Depends on: none
    - Done when: `time.test.ts` covers month/year ends and leap day.
+   - Executor: haiku
 5. **duplicateTrip**
    - Change: `duplicateTrip(tripId, {name, startDate}): Promise<string>` in `src/db/actions.ts`,
      one transaction, marking every new record changed.
    - Depends on: 4
    - Done when: `actions.test.ts`: counts per table, shifted dates, `placeId` remapped, source
      untouched, excluded tables empty, confirmations dropped.
+   - Executor: sonnet
 6. **Duplicate UI**
    - Change: button and small form (name, start date) on the Trip tab; navigate to the new trip.
    - Depends on: 5
    - Done when: manual check passes; `npm run lint` clean.
+   - Executor: sonnet
 7. **Version and changelog**
    - Change: bump `package.json` version and add the `CHANGELOG.md` entry.
    - Depends on: 3, 6
    - Done when: `npm test` and `npm run build` pass.
+   - Executor: haiku
 
 ## Acceptance criteria
 - [ ] Moving an activity changes only its day (and zone when the new day's zone differs) and appears

@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/21
+Builds after: none
 
 ## Problem
 Sharing a trip when people are in the same room means sending a link through a chat app. A QR code
@@ -49,20 +50,24 @@ would let someone scan it from your screen.
    - Depends on: none
    - Done when: `npm run typecheck` and `npm run lint` pass; lint config excludes the vendored file
      only if needed (state why in the README).
+   - Executor: sonnet
 2. **QR component and limit**
    - Change: `QrCode.tsx` (prop `text`, optional `label`), exported `QR_MAX_CHARS = 2300`; a test
      `QrCode.test.ts` for the pure part: matrix dimensions for a known string are the expected QR
      version size (e.g. "hello" is 21×21), and a 2,300-char string encodes without throwing.
    - Depends on: 1
    - Done when: `npm test` passes.
+   - Executor: sonnet
 3. **Share page integration**
    - Change: button, sheet, too-big message, iPhone note.
    - Depends on: 2
    - Done when: manual check passes; `npm run lint` clean.
+   - Executor: sonnet
 4. **Version and changelog**
    - Change: bump `package.json` version and add the `CHANGELOG.md` entry.
    - Depends on: 3
    - Done when: `npm test` and `npm run build` pass.
+   - Executor: haiku
 
 ## Acceptance criteria
 - [ ] A small trip (one place) shows a QR code that a phone camera reads and that opens the trip.

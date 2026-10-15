@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/17
+Builds after: none
 
 ## Problem
 Expenses live only in the app. People want them in a spreadsheet, Actual Budget or Splitwise's
@@ -54,15 +55,18 @@ Example row: `2027-04-03,Ramen,food,2400,JPY,14.88,161.3,cash,Ana,Ana;Bo,expense
    - Done when: `src/domain/expensesCsv.test.ts` covers quoting (comma, quote, newline), the
      formula guard, an unconverted expense (empty converted cell), a card estimate, an exact split,
      a payment, a deleted expense (omitted), ordering, and a removed traveller.
+   - Executor: haiku
 2. **Download button**
    - Change: button on `MoneyPage` that builds the CSV and saves it via the existing download helper;
      disabled with no expenses.
    - Depends on: 1
    - Done when: manual check below passes; `npm run lint` clean.
+   - Executor: sonnet
 3. **Version and changelog**
    - Change: bump the `package.json` version (minor) and add the `CHANGELOG.md` entry.
    - Depends on: 2
    - Done when: `npm test` and `npm run build` pass.
+   - Executor: haiku
 
 ## Acceptance criteria
 - [ ] The file opens in a spreadsheet with correct columns and accented characters intact.
