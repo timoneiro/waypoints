@@ -8,6 +8,10 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.9.2 — 2026-10-15
+
+waypoints stays free. If you'd like to support it, a small "Support it on Ko-fi" link is now on the trips list and in Settings → About.
+
 ## 0.9.1 — 2026-10-15
 
 See your cash at a glance on the Money tab.

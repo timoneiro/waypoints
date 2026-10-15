@@ -90,6 +90,9 @@ pull requests that pass the automated tests, and every user-facing change is in 
 [changelog](CHANGELOG.md) and in the app's *What's new*. Found a security problem? Please report it
 privately, as described in [SECURITY.md](SECURITY.md).
 
+Completely optional, and much appreciated: if waypoints has helped on your travels, you can
+[buy me a coffee on Ko-fi ☕](https://ko-fi.com/ricardoalmeida59690).
+
 ## Development
 
 ```sh
