@@ -7,6 +7,9 @@
  * and who made a list (their name, photo or account) is never read at all.
  */
 
+import type { Place } from '../db/types.ts'
+import { fold } from './places.ts'
+
 export type GooglePlace = { name: string; link: string; lat: number; lng: number; address?: string; note?: string }
 
 const MAX_NAME = 200
@@ -230,4 +233,25 @@ export function checkGoogleMapsAnswer(
     return { kind: 'list', name: v.name, places }
   }
   return null
+}
+
+/**
+ * The places of a looked-up list, matched against the trip: a place is `existing` when a live place
+ * has the same name (ignoring case and accents) or the same Google link. A place repeated within the
+ * list is kept once, the first time it appears.
+ */
+export function markExisting(found: GooglePlace[], places: Place[]): { place: GooglePlace; existing: boolean }[] {
+  const links = new Set(places.map((p) => p.link).filter(Boolean))
+  const names = new Set(places.map((p) => fold(p.name)))
+  const seenLinks = new Set<string>()
+  const seenNames = new Set<string>()
+  const rows: { place: GooglePlace; existing: boolean }[] = []
+  for (const place of found) {
+    const name = fold(place.name)
+    if (seenLinks.has(place.link) || seenNames.has(name)) continue
+    seenLinks.add(place.link)
+    seenNames.add(name)
+    rows.push({ place, existing: links.has(place.link) || names.has(name) })
+  }
+  return rows
 }

@@ -295,7 +295,7 @@ criteria, tap **Fill in**, save, then check the place page.
   - Pasting fills in at once only into an empty box; otherwise **Fill in** does it.
   - `scripts/places-data.mjs` also rewrites `airports.tsv`; the regenerated one dropped Moroni (HAH),
     so it was restored from main.
-- Fixed in 0.10.1 (server 0.5.1), after "Can't reach your waypoints server" showed with the server up:
+- Fixed in 0.11.1 (server 0.5.1), after "Can't reach your waypoints server" showed with the server up:
   - Google redirects EU addresses to `consent.google.com/ml?continue=…` before any Maps page that
     isn't already `/maps/place/…`. The server took that for a redirect leaving Google Maps (400), and
     the app showed 400 as "Can't reach". The server now sends `Cookie: SOCS=CAI` ("reject all") on

@@ -8,6 +8,7 @@ import { AttachmentFormPage, AttachmentPage } from './ui/items/attachments'
 import { ExchangeFormPage } from './ui/items/exchanges'
 import { ExpenseFormPage, ExpensePage, MoneyPage } from './ui/items/expenses'
 import { PlaceFormPage, PlacePage, PlacesPage } from './ui/items/places'
+import { PlacesImportPage } from './ui/items/placesImport'
 import { StayFormPage, StayPage } from './ui/items/stays'
 import { TransportFormPage, TransportPage } from './ui/items/transport'
 import { MoveToServerPage } from './ui/pages/MoveToServerPage'
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="activities/:itemId" element={<ActivityPage />} />
           <Route path="activities/:itemId/edit" element={<ActivityFormPage />} />
           <Route path="places/new" element={<PlaceFormPage />} />
+          <Route path="places/import" element={<PlacesImportPage />} />
           <Route path="places/:itemId" element={<PlacePage />} />
           <Route path="places/:itemId/edit" element={<PlaceFormPage />} />
           <Route path="expenses/new" element={<ExpenseFormPage />} />
