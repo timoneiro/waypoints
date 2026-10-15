@@ -1,7 +1,7 @@
 # Import a shared Google Maps list
 
 Status: ready
-Issue: <issue link>
+Issue: https://github.com/waypoints-pwa/waypoints/issues/45
 Builds after: google-maps-links (uses its server lookup, `GooglePlace`, nearest town, Photon reverse
 lookup and the `lat`/`lng` fields)
 
