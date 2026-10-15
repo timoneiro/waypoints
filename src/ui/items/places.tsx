@@ -24,6 +24,7 @@ const NO_CITY = ''
 
 export function PlacesPage() {
   const t = useTrip()
+  const server = usable(useServer())
   const [params, setParams] = useSearchParams()
   const city = params.get('city')
   const category = params.get('category')
@@ -54,15 +55,27 @@ export function PlacesPage() {
         <h2>
           Places <span className="count">{t.places.length}</span>
         </h2>
-        <Link className="btn btn-small btn-primary" to={tripPath(t.trip.id, 'places', 'new')}>
-          + Place
-        </Link>
+        <div className="actions">
+          {server && (
+            <Link className="btn btn-small" to={tripPath(t.trip.id, 'places', 'import')}>
+              Import list
+            </Link>
+          )}
+          <Link className="btn btn-small btn-primary" to={tripPath(t.trip.id, 'places', 'new')}>
+            + Place
+          </Link>
+        </div>
       </div>
       {t.places.length === 0 ? (
         <EmptyState>
           <p className="big-emoji">📍</p>
           <p>Save the places you want to check out: sights, restaurants, bars, viewpoints.</p>
           <p className="muted small">Paste a Google or Apple Maps link to open them in one tap later.</p>
+          {server && (
+            <p className="muted small">
+              Have a shared Google Maps list? <Link className="link" to={tripPath(t.trip.id, 'places', 'import')}>Import it</Link>
+            </p>
+          )}
         </EmptyState>
       ) : (
         <>
