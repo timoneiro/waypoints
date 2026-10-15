@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/24
+Builds after: trip-budget (both may add `patchTrip` to `src/db/actions.ts`)
 
 ## Problem
 Removing a trip only removes it from one phone; the others keep it, and on a sync server it stays

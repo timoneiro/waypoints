@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/20
+Builds after: packing-lists (both add a synced table and share Dexie version numbering)
 
 ## Problem
 A group collects places but has no light way to see which ones people actually want to see, so the

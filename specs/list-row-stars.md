@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/23
+Builds after: none
 
 ## Problem
 Reviews (0.8.0) show on item pages and in the trip report, but rows in the places list, the plan and

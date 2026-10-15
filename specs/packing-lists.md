@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/14
+Builds after: none
 
 ## Problem
 Groups plan what to bring and what to do before leaving in chat messages that get lost. The app has

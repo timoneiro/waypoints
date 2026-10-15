@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/18
+Builds after: none
 
 ## Problem
 Journeys on one booking (LIS → FRA → NRT) are listed as unrelated rows, with no layover time. A typo

@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/15
+Builds after: none
 
 ## Problem
 The Money tab shows what was spent but not against what. Groups agree a budget before a trip and have

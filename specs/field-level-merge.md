@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/22
+Builds after: none
 
 ## Problem
 Merging is record by record: if Ana changes a stay's check-in time while Bo changes its notes, the

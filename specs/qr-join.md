@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/21
+Builds after: none
 
 ## Problem
 Sharing a trip when people are in the same room means sending a link through a chat app. A QR code

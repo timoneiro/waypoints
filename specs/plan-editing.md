@@ -2,6 +2,7 @@
 
 Status: draft
 Issue: https://github.com/waypoints-pwa/waypoints/issues/19
+Builds after: none
 
 ## Problem
 Changing an activity's day means opening its form and editing the date; ordering untimed activities
