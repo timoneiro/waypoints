@@ -163,6 +163,7 @@ code { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
 .group-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-top: 6px; }
 .muted { color: var(--muted); }
 .small { font-size: 0.85rem; }
+.support-line { text-align: center; margin: 8px 0 0; }
 .prewrap { white-space: pre-wrap; overflow-wrap: anywhere; }
 .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .nowrap { flex-wrap: nowrap; }

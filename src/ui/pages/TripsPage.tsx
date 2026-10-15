@@ -5,6 +5,7 @@ import { db, SETTINGS } from '../../db/db'
 import type { Day, Trip } from '../../db/types'
 import { tripPhase } from '../../domain/itinerary'
 import { EmptyState } from '../components/bits'
+import { SupportLine } from '../components/SupportLine'
 import { WhatsNewCard } from '../components/WhatsNew'
 import { fmtDayRange } from '../format'
 import { useSetting, useToday, useTrips } from '../hooks'
@@ -60,6 +61,7 @@ export function TripsPage() {
       <Link className="btn btn-ghost" to="/open">
         🔗 Open a trip link or file
       </Link>
+      <SupportLine className="support-line" />
     </>
   )
 }
