@@ -1,7 +1,7 @@
 # Back arrow goes back one screen
 
 Status: ready
-Issue: <issue link>
+Issue: https://github.com/waypoints-pwa/waypoints/issues/40
 Builds after: none
 
 ## Problem
