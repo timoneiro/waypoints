@@ -43,14 +43,17 @@ the bookings view give no hint of how good something was.
    - Depends on: none
    - Done when: `reviews.test.ts` covers none, one, mixed stars/missed, planned place, deleted
      reviews ignored.
+   - Executor: haiku
 2. **Rows**
    - Change: render the figure in the three row types.
    - Depends on: 1
    - Done when: manual check passes; `npm run lint` clean.
+   - Executor: sonnet
 3. **Version and changelog**
    - Change: bump `package.json` version, add `CHANGELOG.md` entry.
    - Depends on: 2
    - Done when: `npm test` and `npm run build` pass.
+   - Executor: haiku
 
 ## Acceptance criteria
 - [ ] A reviewed activity shows its average in the day list and the bookings view.

@@ -41,10 +41,12 @@ plan is decided in chat.
      `emptyTables`; `SPECS` entry (`placeId`, `by` both `isId` and required).
    - Depends on: none
    - Done when: `npm run typecheck` passes; records test accepts a vote and rejects missing `by`.
+   - Executor: sonnet
 2. **Dexie version and server**
    - Change: per the checklist (`db.ts`, `migrations.test.ts`, server `RECORD_TABLES`).
    - Depends on: 1
    - Done when: `npm test` passes incl. migration from a 0.9.0-shaped database.
+   - Executor: sonnet
 3. **Domain**
    - Change: `src/domain/votes.ts`: `voteId`, `votesOf(votes, placeId)`, `rankByVotes(places,
      votes)`; `saveVote(tripId, placeId, by, want)` in `actions.ts` (tombstone when off, revive when
@@ -52,18 +54,22 @@ plan is decided in chat.
    - Depends on: 1
    - Done when: `votes.test.ts` and `actions.test.ts` cover toggle on/off/on, two travellers,
      same traveller on two phones (same id), deleted place's votes ignored.
+   - Executor: sonnet
 4. **Load into the trip**
    - Change: `TripData.votes` in `src/ui/tripData.ts`.
    - Depends on: 2
    - Done when: `npm run typecheck` passes.
+   - Executor: haiku
 5. **UI**
    - Change: toggle and count on list and page; sort option; "who are you" path.
    - Depends on: 3, 4
    - Done when: manual check passes; `npm run lint` clean.
+   - Executor: sonnet
 6. **Sync tests, version, changelog**
    - Change: sync tests (client and server), version bump, `CHANGELOG.md`.
    - Depends on: 5
    - Done when: `npm test` and `npm run build` pass.
+   - Executor: sonnet
 
 ## Acceptance criteria
 - [ ] Toggling "I want to go" on and off changes the count and persists after reload.

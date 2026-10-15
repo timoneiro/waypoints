@@ -63,37 +63,44 @@ whole record going to the newer copy.
    - Done when: new unit tests pass, incl. a property test that, for 500 random pairs/triples of
      records, `merge(a,b) == merge(b,a)`, `merge(merge(a,b),c) == merge(a,merge(b,c))`, and
      `merge(a,a) == a`.
+   - Executor: sonnet
 2. **Validation**
    - Change: `fieldsAt` in `SPECS` for the six tables.
    - Depends on: none
    - Done when: records tests accept valid, reject non-timestamp values and 41 keys.
+   - Executor: sonnet
 3. **Stamp on write**
    - Change: `saveRecord`, `patchRecord`, `updateTrip` call `stampFields`.
    - Depends on: 1
    - Done when: `actions.test.ts`: changing one field stamps only it; an unchanged save writes
      nothing and stamps nothing.
+   - Executor: sonnet
 4. **Use in client merge**
    - Change: `planMerge` uses `mergeFields` for the six tables; counts (`added/updated/removed`)
      stay meaningful (a record whose merge equals the local copy isn't "updated").
    - Depends on: 1, 2
    - Done when: `sync.test.ts` incl. the Ana/Bo example above passes and old whole-record cases still
      pass unchanged.
+   - Executor: sonnet
 5. **Use in server merge**
    - Change: `mergeRecord` in `server/src/sync.ts` uses `mergeFields`; the returned winner/loser
      bookkeeping (`losers`) still lets phones converge.
    - Depends on: 4
    - Done when: `server/src/sync.test.ts` and `src/sync/sync.integration.test.ts` pass, with a new
      integration case: two phones edit different fields offline, sync via the server, both end equal.
+   - Executor: sonnet
 6. **Link size and compatibility**
    - Change: test that a 60-record trip link grows by less than 10% compared with the same trip
      without `fieldsAt` where every record was edited once; a 0.9.0-shaped record with no
      `fieldsAt` merges as a whole record.
    - Depends on: 4
    - Done when: those tests pass; if the 10% limit fails, stop (Escalate).
+   - Executor: sonnet
 7. **Wording, version, changelog**
    - Change: Share page sentence; version bump; `CHANGELOG.md` entry.
    - Depends on: 5, 6
    - Done when: `npm test` and `npm run build` pass.
+   - Executor: sonnet
 
 ## Acceptance criteria
 - [ ] The Ana/Bo example ends with both changes on both phones, via link and via server.

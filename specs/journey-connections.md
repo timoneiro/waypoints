@@ -15,7 +15,7 @@ for every booking ref (as matched by `bookingKey`) with two or more live journey
 - One line per join: "Layover 2 h 10 min in FRA", computed from the first leg's arrival and the next
   leg's departure on the real timeline (each in its own time zone). If a time is missing the line
   says "Layover time unknown".
-- A **warning** line in the existing warning style, shown on the card, when a join is suspicious:
+- A **warning** line in the existing warning style (`notice notice-warn`), shown on the card, when a join is suspicious:
   - the next leg leaves from a different place than the previous one reached
     ("Leg 2 leaves from MUC but leg 1 arrives in FRA"), compared with `fold` and, for flights,
     airport codes;
@@ -57,18 +57,22 @@ Example: LIS 08:10 → FRA 10:40 and FRA 12:50 → NRT 07:30 next day: "LIS → 
    - Done when: new cases in `bookings.test.ts` pass: direct pair with layover, missing time, leaves
      before arrival, different place, over 24 h, three legs, single leg (no connection), deleted leg
      ignored, ref differing only in case/spacing/hyphen (one booking).
+   - Executor: haiku
 2. **Connections group**
    - Change: render the group in `Bookings` in `PlanPage.tsx`.
    - Depends on: 1
    - Done when: manual check passes; `npm run lint` clean.
+   - Executor: sonnet
 3. **Journey page note**
    - Change: show the "Part of a connection" line with warnings on `transport.tsx` detail.
    - Depends on: 1
    - Done when: manual check passes.
+   - Executor: sonnet
 4. **Version and changelog**
    - Change: bump the `package.json` version and add the `CHANGELOG.md` entry.
    - Depends on: 3
    - Done when: `npm test` and `npm run build` pass.
+   - Executor: haiku
 
 ## Acceptance criteria
 - [ ] Two flights with the same ref show one card with route, stop count and layover.
