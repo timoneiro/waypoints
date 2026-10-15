@@ -1,6 +1,6 @@
 # User guide
 
-Status: building
+Status: shipped (0.9.3)
 Issue: https://github.com/waypoints-pwa/waypoints/issues/34
 Builds after: none
 
@@ -81,8 +81,7 @@ the README, in full in the guide).
   "New here? **Read the guide**".
 
 Example: a friend opens the app for the first time, sees the Welcome screen, taps *Read the guide*,
-and reads on GitHub how to open the trip link they were sent and pick which traveller they are,
-with a screenshot of that screen.
+and reads on GitHub how to open the trip link they were sent and pick which traveller they are.
 
 States:
 - Offline: the in-app links are plain links; they fail to load in the new tab and the app is unchanged.
@@ -118,8 +117,9 @@ States:
   `src/domain/records.ts` validate it on import, so a wrong field fails loudly. Both modules run
   directly under Node 24 (type stripping, `.ts` imports), as `server/` does. Review ids must come from
   `reviewId` (`src/domain/reviews.ts`), the report is not needed in the file (built on the phone).
-- Import path in the UI: `/open` (`src/ui/pages/OpenPage.tsx`, file `<input type="file">`), then
-  `TripLinkPage.tsx` may ask "which traveller are you" (pick Ana). Photos: the hidden file input in
+- Import path in the UI: `/open` (`src/ui/pages/OpenPage.tsx`, file `<input type="file">`). A file import
+  doesn't ask "which traveller are you" (only links do); pick Ana under "Which one are you?" on the
+  🧳 Trip tab. Photos: the hidden file input in
   `src/ui/components/Attachments.tsx` (use `setInputFiles` on it).
 - Time: use Playwright's `page.clock.setFixedTime` so the trip is "now" (during-trip shots) or over
   (reviews, report). Use `colorScheme: 'light'`, viewport 390×844, `deviceScaleFactor: 2`.
@@ -131,10 +131,10 @@ States:
 
 ## Tasks
 1. **Demo trip**
-   - Change: create `scripts/guide/demo-trip.ts` exporting `demoBackup(): Backup` (via `buildBackup`)
+   - Change: create `scripts/guide/demo-trip.ts` exporting `demoBackup(): Promise<Backup>` (via `buildBackup`; async because `reviewId` is)
      for the trip in Behavior, with fixed dates 2026-04-08 to 2026-04-15, trip currency EUR, ids
      from `crypto.randomUUID()` and timestamps from a fixed date. Add `scripts/guide/demo-trip.test.ts`
-     asserting `parseBackup(JSON.stringify(demoBackup()))` succeeds and has 1 trip, 3 travellers,
+     asserting `parseBackup(JSON.stringify(await demoBackup()))` succeeds and has 1 trip, 3 travellers,
      ≥2 stays, ≥2 transport, ≥3 activities, ≥4 places, ≥6 expenses, 2 exchanges, ≥6 reviews. Vitest's
      default `include` (no `include` in `vite.config.ts`) already picks up `scripts/**/*.test.ts`.
    - Depends on: none
@@ -149,7 +149,8 @@ States:
      photos (render a coloured page with an emoji in Playwright, screenshot it as JPEG to a temp
      folder); writes these PNGs to `docs/guide/` (viewport only, not full page): `welcome`,
      `trips`, `new-trip`, `plan-today`, `bookings`, `flight`, `city-search` (typing "Kyo" in the City
-     field of a new activity, list open), `places`, `money`, `expense`, `exchanges`, `photos`, `share`,
+     field of a new activity, list open), `places`, `money` (top of the 💶 Money tab), `expense` (the "cost pending" card expense),
+     `exchanges` (the 💱 Exchange rates card scrolled to the top), `photos`, `share`,
      `reviews`, `report`, `settings`. `welcome` is taken before the import. The clock is fixed at
      2026-04-11T10:00:00+09:00 for all shots except `reviews` and `report` (2026-04-20T10:00:00+01:00). Add `scripts/` to `tsconfig.node.json` `include`; if that makes `npm run typecheck`
      fail on files under `src/`, remove it again and say so in the commit message. Run it and commit

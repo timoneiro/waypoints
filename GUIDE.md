@@ -76,8 +76,8 @@ plan goes in from the Plan tab, with **+ Stay**, **+ Transport** and **+ Activit
 - An **activity** is anything you do: a visit, a dinner, a tour.
 
 Each one can have an address, a phone number, a booking link and a **booking reference**. Tap a booking
-reference to copy it, which is handy at the desk. Tap a phone number to call. Tap an address to get
-directions in Google Maps or Apple Maps.
+reference to copy it, which is handy at the desk. Tap a phone number to call. An address gets **🧭 Directions** and
+**🗺️ Google Maps** buttons, plus **🍎 Apple Maps** on iPhone and iPad.
 
 <img src="docs/guide/flight.png" alt="A flight from Lisbon to Tokyo with its times, booking reference and seats" width="300">
 
@@ -124,8 +124,8 @@ The 📍 Places tab keeps the places you'd like to visit, grouped by city.
 
 <img src="docs/guide/places.png" alt="The Places tab with places grouped by city, must-sees marked" width="300">
 
-- Mark a place as **must-see**.
-- Tick **Been there** when you've visited.
+- Mark a place as **⭐ Must see**.
+- Tick **✅ Been there** when you've visited.
 - Tap **🗓️ Add to the plan** to turn a place into an activity on a day.
 - Paste a Google or Apple Maps link to open the place on the map again later.
 
@@ -141,8 +141,8 @@ A single booking has its own **📅 Add to Google Calendar** link and calendar f
 
 ### Plan and Bookings
 
-The 🗓️ Plan tab shows the day you're on and what's next. It names tonight's stay, with **Directions** and
-**Google Maps** buttons.
+The 🗓️ Plan tab shows the day you're on and what's next. It names tonight's stay, with **🧭 Directions** and
+**🗺️ Google Maps** buttons.
 
 <img src="docs/guide/plan-today.png" alt="The Plan tab on day 4: what's next, tonight's stay and the days listed below" width="300">
 
@@ -199,7 +199,7 @@ below, by day.
 ### Reviews
 
 Once something has started, its page has a **Reviews** card. Places get theirs once they're ticked
-**Been there**.
+**✅ Been there**.
 
 - Give **1 to 5 stars** and add a note, or tap **Didn't go**.
 - Everyone writes their own, and they show side by side.
@@ -254,7 +254,7 @@ Good to know:
 If someone you know runs a waypoints **sync server** (on a home computer, for example), changes reach
 everyone by themselves, without links, and photos and documents are shared too. You join as a traveller:
 
-1. The person who runs it taps **Invite someone** in Settings and sends you an invite link.
+1. The person who runs it taps **+ Invite someone** in Settings and sends you an invite link.
 2. Open the link. It fills in the server and asks for your name.
 3. When you make a trip, choose to keep it **on the server**, and tick the people on it. For a trip you
    already have, use **🌐 Put it on the server** on the Trip tab.
@@ -331,8 +331,7 @@ instead, send the file, and have the others open it with **Open a trip link or f
 If the trip is on a sync server, ask the person who runs it (or use another of your phones) for a
 **sign-in link**. It brings the new phone back as the same person, with all your trips. Don't join again
 as a new member: that would be someone new, who can't see them. The lost phone can be disconnected there
-too. Otherwise ask
-someone in the group to send you a link, or import a backup file if you have one. This is why a backup now
+too. Otherwise ask someone in the group to send you a link, or import a backup file if you have one. This is why a backup now
 and then is worth it.
 
 **How do I get updates?**
