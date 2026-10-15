@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ANA, BO, CY, exchange, expense, T1 } from '../test/fixtures'
 import type { Expense, PaidWith } from '../db/types'
-import { awaitingCost, balances, exchangeRates, likelyPaidWith, paidWithOf, parseAmount, rateFinder, settleUp, sharesOf, totals, unconverted } from './expenses'
+import { awaitingCost, balances, cashLeft, exchangeRates, likelyPaidWith, paidWithOf, parseAmount, rateFinder, settleUp, sharesOf, totals, unconverted } from './expenses'
 
 /** A trip in EUR, without exchanges unless given. */
 const inEuros = (exchanges = [exchange({ deletedAt: '2026-10-02T10:00:00.000Z' })]) => rateFinder('EUR', exchanges)
@@ -86,6 +86,42 @@ describe('exchange rates', () => {
     expect(totals([ramen], inEuros()).total).toBe(0)
     expect(unconverted([ramen], rateFinder('EUR', [exchange()]))).toEqual([])
     expect(totals([ramen], rateFinder('EUR', [exchange()])).total).toBe(10)
+  })
+})
+
+describe('cashLeft', () => {
+  const jpy = (over: Partial<Expense>) => expense({ currency: 'JPY', paidWith: 'cash', ...over })
+
+  it('is empty without exchanges', () => {
+    expect(cashLeft([], [jpy({ amount: 500 })], 'EUR').size).toBe(0)
+  })
+
+  it('is what the exchanges got when nothing was spent', () => {
+    const left = cashLeft([exchange(), exchange({ id: 'cash0002', amount: 20_000 })], [], 'EUR')
+    expect(left.get('JPY')).toBe(30_000)
+  })
+
+  it('subtracts cash expenses and ignores card ones', () => {
+    const expenses = [jpy({ amount: 2_500 }), jpy({ id: 'cost0002', amount: 4_000, paidWith: 'card' }), expense({ id: 'cost0003', amount: 10, paidWith: 'cash' })]
+    expect(cashLeft([exchange()], expenses, 'EUR').get('JPY')).toBe(7_500)
+  })
+
+  it('counts a pre-0.7.0 expense with its own rate as card', () => {
+    const old = expense({ currency: 'JPY', amount: 3_000, rate: 155 })
+    expect(cashLeft([exchange()], [old], 'EUR').get('JPY')).toBe(10_000)
+  })
+
+  it('ignores deleted records', () => {
+    const left = cashLeft([exchange(), exchange({ id: 'cash0002', amount: 99_000, deletedAt: T1 })], [jpy({ amount: 3_000, deletedAt: T1 })], 'EUR')
+    expect(left.get('JPY')).toBe(10_000)
+  })
+
+  it('goes negative when more cash was spent than changed', () => {
+    expect(cashLeft([exchange()], [jpy({ amount: 13_000 })], 'EUR').get('JPY')).toBe(-3_000)
+  })
+
+  it('leaves transfers out', () => {
+    expect(cashLeft([exchange()], [jpy({ amount: 4_000, transfer: true })], 'EUR').get('JPY')).toBe(10_000)
   })
 })
 

@@ -29,6 +29,23 @@ export function exchangeRates(exchanges: Exchange[], tripCurrency: string): Map<
   return new Map([...sums].map(([currency, s]) => [currency, { rate: s.amount / s.cost, count: s.count }]))
 }
 
+/**
+ * Cash left per foreign currency that has an exchange: everything the exchanges got, minus cash
+ * expenses in it (group total, transfers and deleted records left out).
+ */
+export function cashLeft(exchanges: Exchange[], expenses: Expense[], tripCurrency: string): Map<string, number> {
+  const left = new Map<string, number>()
+  for (const x of exchanges) {
+    if (x.deletedAt || x.currency === tripCurrency) continue
+    left.set(x.currency, (left.get(x.currency) ?? 0) + x.amount)
+  }
+  for (const e of expenses) {
+    if (e.deletedAt || e.transfer || !left.has(e.currency) || paidWithOf(e, tripCurrency) !== 'cash') continue
+    left.set(e.currency, left.get(e.currency)! - e.amount)
+  }
+  return left
+}
+
 /** The rate an expense converts at, or undefined while its currency has none. */
 export type RateOf = (expense: Pick<Expense, 'currency' | 'rate'>) => number | undefined
 
