@@ -16,8 +16,6 @@ dist-ssr
 *.suo
 *.sw?
 
-# Local feature backlog (kept out of the public repo)
-FEATURE_IDEAS.md
 
 # Sync server data when run locally
 server/data
