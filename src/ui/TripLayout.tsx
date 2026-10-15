@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect } from 'react'
-import { Link, Outlet, useLocation, useParams } from 'react-router'
+import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router'
 import { setSetting, SETTINGS } from '../db/db'
 import { tripPhase } from '../domain/itinerary'
 import { EmptyState } from './components/bits'
@@ -8,12 +8,13 @@ import { ServerGoneNotice } from './components/ServerGoneNotice'
 import { fmtDayRange } from './format'
 import { useToday } from './hooks'
 import { loadTrip, needsLinks, TripContext, tripPath } from './tripData'
-import { TABS, tabOf } from './tripNav'
+import { TABS, tabOf, topBarBack } from './tripNav'
 
 export function TripLayout() {
   const { tripId = '' } = useParams()
   const data = useLiveQuery(() => loadTrip(tripId), [tripId])
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const today = useToday()
   const found = Boolean(data)
 
@@ -37,15 +38,31 @@ export function TripLayout() {
   }
 
   const { trip } = data
-  const active = tabOf(pathname.split('/')[3], tripPhase(trip, today).phase === 'past')
+  const over = tripPhase(trip, today).phase === 'past'
+  const active = tabOf(pathname.split('/')[3], over)
+  const back = topBarBack(pathname, over)
   const showUnsent = needsLinks(data)
   return (
     <TripContext.Provider value={data}>
       <header className="topbar">
         <div className="topbar-inner">
-          <Link className="icon-btn back" to="/" aria-label="All trips">
-            ‹
-          </Link>
+          {'to' in back ? (
+            <Link className="icon-btn back" to="/" aria-label="All trips">
+              ‹
+            </Link>
+          ) : (
+            <button
+              type="button"
+              className="icon-btn back"
+              aria-label="Back"
+              onClick={() => {
+                if ((window.history.state as { idx?: number } | null)?.idx) void navigate(-1)
+                else void navigate(back.fallback, { replace: true })
+              }}
+            >
+              ‹
+            </button>
+          )}
           <div className="topbar-title">
             <strong>
               {trip.emoji ?? '🧳'} {trip.name}
