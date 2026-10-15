@@ -5,10 +5,12 @@ import type { Expense, ExpenseCategory, PaidWith, Split } from '../../db/types'
 import {
   awaitingCost,
   balances,
+  cashLeft,
   exchangeRates,
   likelyPaidWith,
   paidWithOf,
   parseAmount,
+  paymentSplit,
   settleUp,
   sharesOf,
   toTripCurrency,
@@ -57,6 +59,7 @@ export function MoneyPage() {
     byDay.set(e.date, [...(byDay.get(e.date) ?? []), e])
   }
   const foreign = t.exchanges.length > 0 || t.expenses.some((e) => e.currency !== cur)
+  const split = paymentSplit(t.expenses, t.rateOf, cur)
 
   return (
     <>
@@ -89,6 +92,17 @@ export function MoneyPage() {
               )
             })}
           </div>
+        )}
+        {categories.length > 0 && (
+          <p className="muted small">
+            Card <span className="money">{fmtMoney(split.card, cur)}</span> · Cash <span className="money">{fmtMoney(split.cash, cur)}</span>
+            {split.unsaid > 0 && (
+              <>
+                {' '}
+                · Not noted <span className="money">{fmtMoney(split.unsaid, cur)}</span>
+              </>
+            )}
+          </p>
         )}
         {!foreign && (
           <Link className="link small" to={tripPath(trip.id, 'exchanges', 'new')}>
@@ -181,7 +195,8 @@ function RatesCard() {
   const t = useTrip()
   const { trip } = t
   const rates = exchangeRates(t.exchanges, trip.currency)
-  const cardsWaiting = t.expenses.filter((e) => awaitingCost(e, trip.currency))
+  const left = cashLeft(t.exchanges, t.expenses, trip.currency)
+  const cardsWaiting =t.expenses.filter((e) => awaitingCost(e, trip.currency))
   const yours = t.me ? cardsWaiting.filter((e) => e.paidBy === t.me?.id).length : 0
   // Card payments wait for the bank, not for an exchange.
   const waiting = unconverted(t.expenses, t.rateOf).filter((e) => !awaitingCost(e, trip.currency))
@@ -221,6 +236,18 @@ function RatesCard() {
           <span className="muted small">{count > 1 ? `· average of ${count} exchanges` : '· what you got'}</span>
         </p>
       ))}
+      {[...left].map(([currency, amount]) =>
+        amount < 0 ? (
+          <p key={currency} className="small minus">
+            Cash left: <span className="money">−{fmtMoney(-amount, currency)}</span> (more cash spent than changed: an exchange may be
+            missing)
+          </p>
+        ) : (
+          <p key={currency} className="small">
+            Cash left: <strong className="money">{fmtMoney(amount, currency)}</strong>
+          </p>
+        ),
+      )}
       {exchanges.length > 0 && (
         <ul className="history">
           {exchanges.map((x) => (
@@ -273,6 +300,7 @@ function ExpenseRow({ expense: e }: { expense: Expense }) {
   const inTrip = converted(e, t)
   const foreign = e.currency !== t.trip.currency
   const waiting = awaitingCost(e, t.trip.currency)
+  const paidWith = paidWithOf(e, t.trip.currency)
   return (
     <li>
       <Link to={tripPath(t.trip.id, 'expenses', e.id)} className="list-row">
@@ -292,6 +320,7 @@ function ExpenseRow({ expense: e }: { expense: Expense }) {
             </span>
           )}
           {foreign && (waiting ? <span className="chip chip-must">cost pending</span> : inTrip === undefined && <span className="chip chip-must">no rate yet</span>)}
+          {paidWith && <span className="muted small">{paidWith === 'cash' ? 'Cash' : 'Card'}</span>}
         </span>
       </Link>
     </li>
