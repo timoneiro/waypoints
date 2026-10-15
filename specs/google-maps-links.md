@@ -1,6 +1,6 @@
 # Places from Google Maps links
 
-Status: ready
+Status: building
 Issue: https://github.com/waypoints-pwa/waypoints/issues/43
 Builds after: none
 
