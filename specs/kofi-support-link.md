@@ -1,6 +1,6 @@
 # Ko-fi support link
 
-Status: ready (agent-ready label on the issue)
+Status: building (agent-ready label on the issue)
 Issue: https://github.com/waypoints-pwa/waypoints/issues/29
 Builds after: none
 
