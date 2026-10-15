@@ -132,6 +132,9 @@ The 📍 Places tab keeps the places you'd like to visit, grouped by city.
 - Paste a Google or Apple Maps link to open the place on the map again later.
 - With a sync server, a new place has a **Paste a Google Maps link** box: paste the link (in Google Maps,
   tap Share → Copy link) and tap **Fill in** to get the name, link and city filled in for you.
+- With a sync server, **Import list** (above the places) brings in a shared Google Maps list: paste its link
+  (in Google Maps, open the list, tap Share → Copy link), tap **Look it up**, tick the places you want and
+  tap **Add**.
 
 ### Calendar
 
