@@ -1,6 +1,6 @@
 # Places from Google Maps links
 
-Status: building
+Status: shipped (0.10.0)
 Issue: https://github.com/waypoints-pwa/waypoints/issues/43
 Builds after: none
 
@@ -185,12 +185,12 @@ notes, addresses, coordinates and links: never who made a list, their photo or a
 4. **Nearest town**
    - Change: `scripts/places-data.mjs` also writes `src/data/city-points.tsv`: one line per city line
      of `cities.tsv` in the same order, `lat<TAB>lon` with 2 decimals (no header). Run it
-     (`node scripts/places-data.mjs`, downloads GeoNames) and commit both files (`cities.tsv` may
+     (`node scripts/places-data.mjs`, downloads GeoNames) and commit both files, not `airports.tsv`, which it rewrites too (`cities.tsv` may
      change a little: GeoNames updates). In `src/domain/places.ts`: `City` gets `lat?`, `lon?`;
      `parseCities(text, points?)` pairs them in file order before sorting; `nearestCity(index, lat,
      lng): City | undefined` per the rule in Behavior (equirectangular distance is enough). In
-     `src/lib/places.ts`: `loadCityPoints()` (`import url from '../data/city-points.tsv?url'`, then
-     `fetch`, `once` like the others) and `cityAt(lat, lng): Promise<string | undefined>`.
+     `src/lib/places.ts`: `loadCityPoints()` (a static `import url from '../data/city-points.tsv?url'` at the top of the file, then
+     `fetch`, `once` like the others; a dynamic `import()` of it builds a small JS chunk that gets precached) and `cityAt(lat, lng): Promise<string | undefined>`.
      Tests in `places.test.ts` with the real files: same count of points and cities; the three
      examples in Behavior; Hue Imperial City (16.4695, 107.5774) → "Huế".
    - Depends on: none
@@ -281,3 +281,17 @@ criteria, tap **Fill in**, save, then check the place page.
   says which place it is.
 - Overlaps (files only, no shared data): `list-row-stars`, `place-votes` edit
   `src/ui/items/places.tsx`; `place-votes` and `packing-lists` add Dexie versions, this spec doesn't.
+- As built:
+  - The test seam is an optional 4th parameter of `createApp`, `{ fetchFn, lookupTimeoutMs }`.
+  - More than 5 redirects answers 400 "That's not a Google Maps link.". A non-200 list answer or a
+    body over 5 MB answers 502 "Google Maps answered something this server can't read.".
+  - The server stops following redirects once the address is a place or list, so a place costs one
+    fetch and Google's place page is never downloaded.
+  - `checkGoogleMapsAnswer` returns `null` for a bad answer. The app also shows "Google Maps didn't
+    give the place's details" for the server's 422 and 502. Other errors (including the server's 400
+    and a 401) still show "Can't reach", as specified; Ricardo chose to keep that.
+  - A place without a `0x…:0x…` id gets the link `…/maps/place/<name>/@<lat>,<lng>,17z`.
+  - `isGoogleMapsUrl` also refuses addresses with a port or a user name/password.
+  - Pasting fills in at once only into an empty box; otherwise **Fill in** does it.
+  - `scripts/places-data.mjs` also rewrites `airports.tsv`; the regenerated one dropped Moroni (HAH),
+    so it was restored from main.
