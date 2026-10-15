@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { checkGoogleMapsAnswer, isGoogleMapsUrl, listIdFromUrl, placeFromUrl, placesFromList } from './googleMaps'
+import { checkGoogleMapsAnswer, isGoogleMapsUrl, listIdFromUrl, markExisting, placeFromUrl, placesFromList } from './googleMaps'
+import type { GooglePlace } from './googleMaps'
+import type { Place } from '../db/types.ts'
 
 const PLACE_URL =
   'https://www.google.com/maps/place/Torre+dos+Cl%C3%A9rigos/@41.1457911,-8.6168211,17z/data=!4m7!3m6!1s0xd2464e251ced649:0x425ec51327127c21!8m2!3d41.1456705!4d-8.6145977!15sABC!16s%2Fg%2F120l7r57!18m1!1e1?entry=tts&g_ep=x'
@@ -141,5 +143,50 @@ describe('checkGoogleMapsAnswer', () => {
     expect(checkGoogleMapsAnswer({ kind: 'place', place: { ...place, link: 'https://evil.com/x' } })).toBeNull()
     expect(checkGoogleMapsAnswer({ kind: 'place', place: { ...place, name: 'x'.repeat(201) } })).toBeNull()
     expect(checkGoogleMapsAnswer({ kind: 'list', name: 'L', places: [place, 'x'] })).toBeNull()
+  })
+})
+
+describe('markExisting', () => {
+  const at = '2026-01-01T00:00:00.000Z'
+  const found = (name: string, link: string): GooglePlace => ({ name, link, lat: 1, lng: 2 })
+  const inTrip = (name: string, link?: string): Place => ({
+    id: name,
+    tripId: 't',
+    name,
+    category: 'sight',
+    link,
+    createdAt: at,
+    updatedAt: at,
+  })
+  const LINK_A = 'https://www.google.com/maps/place/A/data=!4m2!3m1!1s0x1:0x2'
+  const LINK_B = 'https://www.google.com/maps/place/B/data=!4m2!3m1!1s0x3:0x4'
+
+  it('matches a trip place by name, ignoring case and accents', () => {
+    const rows = markExisting([found('Café Majestic', LINK_A)], [inTrip('cafe majestic')])
+    expect(rows).toEqual([{ place: found('Café Majestic', LINK_A), existing: true }])
+  })
+  it('matches a trip place by the same Google link under another name', () => {
+    const rows = markExisting([found('Café Majestic', LINK_A)], [inTrip('Majestic', LINK_A)])
+    expect(rows[0].existing).toBe(true)
+  })
+  it('leaves a place new when nothing in the trip matches', () => {
+    const rows = markExisting([found('Café Majestic', LINK_A)], [inTrip('Hotel', LINK_B)])
+    expect(rows[0].existing).toBe(false)
+  })
+  it('does not match against places that are not passed in (deleted ones)', () => {
+    const rows = markExisting([found('Café Majestic', LINK_A)], [])
+    expect(rows[0].existing).toBe(false)
+  })
+  it('keeps a place repeated within the list once', () => {
+    const rows = markExisting(
+      [found('Café Majestic', LINK_A), found('cafe majestic', LINK_B), found('Other', LINK_A), found('Other', LINK_B)],
+      [],
+    )
+    expect(rows.map((r) => r.place.name)).toEqual(['Café Majestic', 'Other'])
+    expect(rows[1].place.link).toBe(LINK_B)
+  })
+  it('keeps the order of the list', () => {
+    const rows = markExisting([found('B', LINK_B), found('A', LINK_A)], [])
+    expect(rows.map((r) => r.place.name)).toEqual(['B', 'A'])
   })
 })
