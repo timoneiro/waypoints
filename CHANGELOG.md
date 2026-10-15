@@ -8,6 +8,10 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.11.0 — 2026-10-15
+
+With a sync server, bring a whole shared Google Maps list into a trip: 📍 Places → **Import list**.
+
 ## 0.10.0 — 2026-10-15
 
 With a sync server, a new place fills itself in from a Google Maps link: paste it and tap **Fill in**. Your server needs updating to 0.5.0.
