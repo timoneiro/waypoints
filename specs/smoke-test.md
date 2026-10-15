@@ -1,7 +1,7 @@
 # Smoke test
 
 Status: ready
-Issue: (to be created)
+Issue: https://github.com/waypoints-pwa/waypoints/issues/38
 Builds after: none
 
 ## Problem
