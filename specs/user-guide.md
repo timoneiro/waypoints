@@ -1,7 +1,7 @@
 # User guide
 
 Status: ready
-Issue: <issue link>
+Issue: https://github.com/waypoints-pwa/waypoints/issues/34
 Builds after: none
 
 ## Problem
