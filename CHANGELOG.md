@@ -8,6 +8,10 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.9.4 — 2026-10-15
+
+The **‹** arrow at the top of a trip now goes back one screen, like your phone's back button. On the trip's tabs it still takes you back to your trips.
+
 ## 0.9.3 — 2026-10-15
 
 A new guide explains everything waypoints does, with screenshots. Open it from Settings → About or from the welcome screen.
