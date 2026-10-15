@@ -7,11 +7,11 @@ import { fileSlug } from '../../lib/download'
 import { reportFile } from '../../lib/reportFile'
 import { shareFile } from '../../lib/shareSheet'
 import { photoTime, tripPhotos, useTripFiles } from '../attachments'
-import { BackLink, Notice } from '../components/bits'
+import { Notice } from '../components/bits'
 import { ReportView } from '../components/ReportView'
 import { fmtTimestamp, plural } from '../format'
 import { useNow, useToday } from '../hooks'
-import { nameOf, tripPath, useTrip, type TripData } from '../tripData'
+import { nameOf, useTrip, type TripData } from '../tripData'
 
 /** What the report is made from: the trip as it is on this phone, and the photos anyone may see. */
 const reportInput = (t: TripData): ReportInput => ({
@@ -95,7 +95,6 @@ export function ReportPage() {
   return (
     <>
       <div className="stack no-print">
-        <BackLink to={tripPath(tripId, over ? '' : 'trip')}>{over ? 'Plan' : 'Trip'}</BackLink>
         <h2>Trip report</h2>
         <Status over={over} kept={Boolean(kept)} unreadable={Boolean(t.report && !kept)} synced={synced} changes={changes} onMakeAgain={() => void makeAgain()} />
         <div className="segmented" role="tablist" aria-label="Version">

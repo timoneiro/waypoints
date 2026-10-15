@@ -8,7 +8,7 @@ import { openFile, shareFile } from '../../lib/shareSheet'
 import { fetchFull, retryUpload } from '../../sync/files'
 import { attachableItems, isPhoto, ownerFinder, parseTarget, photoTime, stateFinder, stateText, targetBooking, targetOf, tripPhotos, useObjectUrl } from '../attachments'
 import { BelongsToField, WholeBookingField } from '../components/Attachments'
-import { BackLink, DetailHead, Notice } from '../components/bits'
+import { DetailHead, Notice } from '../components/bits'
 import { NotesField, TextField } from '../components/fields'
 import { fmtBytes, fmtDayTime, fmtTimestamp } from '../format'
 import { usable, useServer } from '../hooks'
@@ -24,18 +24,6 @@ export function AttachmentPage() {
   const a = t.attachments.find((x) => x.id === itemId)
   if (!a) return <ItemGone backTo={tripPath(t.trip.id, 'photos')} />
   return <AttachmentView key={a.id} a={a} />
-}
-
-/** Back to where it was opened from (an item, the Photos tab), or to the Photos tab for a link opened afresh. */
-function Back({ fallback }: { fallback: string }) {
-  const navigate = useNavigate()
-  const opened = Boolean((window.history.state as { idx?: number } | null)?.idx)
-  if (!opened) return <BackLink to={fallback}>Photos</BackLink>
-  return (
-    <button type="button" className="link small back-link" onClick={() => navigate(-1)}>
-      ← Back
-    </button>
-  )
 }
 
 function AttachmentView({ a }: { a: Attachment }) {
@@ -83,7 +71,6 @@ function AttachmentView({ a }: { a: Attachment }) {
 
   return (
     <article className="stack">
-      <Back fallback={back} />
       {!isPhoto(a) && <DetailHead emoji="📄" title={a.name} subtitle={fmtBytes(a.size)} />}
       {image &&
         (full || preview ? (

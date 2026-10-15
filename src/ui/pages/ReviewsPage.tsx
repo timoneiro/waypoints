@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import type { Review } from '../../db/types'
 import { averageStars, plannedPlaces, reviewsOf, reviewTargets, toReview, whenOver, type ReviewTarget } from '../../domain/reviews'
-import { BackLink, EmptyState } from '../components/bits'
+import { EmptyState } from '../components/bits'
 import { AverageStars, MyReview, ReviewList, WhoAreYou } from '../components/Reviews'
 import { describeTarget } from '../entries'
 import { plural } from '../format'
@@ -38,7 +38,6 @@ export function ReviewsPage() {
 
   return (
     <article className="stack">
-      <BackLink to={tripPath(t.trip.id)}>Plan</BackLink>
       <h2>Reviews</h2>
       {!t.me && <WhoAreYou />}
 

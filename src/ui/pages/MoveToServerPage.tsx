@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { moveTripToServer } from '../../db/actions'
 import type { ServerConfig } from '../../db/serverState'
-import { BackLink, EmptyState } from '../components/bits'
+import { EmptyState } from '../components/bits'
 import { Field, FormError } from '../components/fields'
 import { usable, useServer } from '../hooks'
 import { tripPath, useTrip, type TripData } from '../tripData'
@@ -77,7 +77,6 @@ function MoveForm({ t, server }: { t: TripData; server: ServerConfig }) {
 
   return (
     <form className="form" onSubmit={(e) => void onSubmit(e)}>
-      <BackLink to={tripPath(t.trip.id, 'trip')}>Trip</BackLink>
       <h2>Put “{t.trip.name}” on the server</h2>
       <p className="muted">
         Say who each traveller is on the server. They get the trip, and every change after it, by themselves. Anyone not on the server

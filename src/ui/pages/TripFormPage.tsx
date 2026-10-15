@@ -105,7 +105,7 @@ function TripForm(props: { existing?: TripData; myName?: string; lastCurrency?: 
 
   return (
     <form className="form" onSubmit={(e) => void onSubmit(e)} noValidate>
-      {trip ? <BackLink to={tripPath(trip.id, 'trip')}>Trip</BackLink> : <BackLink to="/">Your trips</BackLink>}
+      {!trip && <BackLink to="/">Your trips</BackLink>}
       <h2>{trip ? 'Edit trip' : 'New trip'}</h2>
 
       <TextField label="Name" value={name} onChange={setName} placeholder="Japan in spring" maxLength={200} autoFocus={!trip} />

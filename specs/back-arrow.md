@@ -1,6 +1,6 @@
 # Back arrow goes back one screen
 
-Status: ready
+Status: shipped (0.9.4)
 Issue: https://github.com/waypoints-pwa/waypoints/issues/40
 Builds after: none
 
@@ -131,9 +131,9 @@ Offline, sync and empty states are unaffected: this only changes navigation.
 4. **Guide text and screenshots**
    - Change: in `GUIDE.md`, at the end of section "## 3. Your first trip", add one paragraph:
      "Inside a trip, **‹** at the top left goes back one screen. On the five tabs at the bottom, it
-     takes you back to your trips." Then run `npm run guide:screenshots` (it builds and serves the
-     app itself; if Chromium is missing, run `npx playwright install chromium` first). Commit only the
-     changed images.
+     takes you back to your trips." Then start `npm run dev` and, with it running, run
+     `npm run guide:screenshots` (it needs the app on localhost:5173; if Chromium is missing, run
+     `npx playwright install chromium` first). Commit only the changed images.
    - Depends on: task 3
    - Done when: `grep -c "goes back one screen" GUIDE.md` prints 1; `grep -c "‹" src/ui/TripLayout.tsx`
      is at least 1; `git diff --name-only HEAD~1 -- docs/guide` (after committing) includes
@@ -193,3 +193,6 @@ Offline, sync and empty states are unaffected: this only changes navigation.
   reuses it rather than a second table.
 - No overlap with other specs: none touch `TripLayout.tsx` or the back links. The smoke test
   (`specs/smoke-test.md`) checks headings and item titles, not back links.
+- As built: the screenshot run also changed `money.png` (Cash €167.89 → €167.90) and `exchanges.png`
+  (Balances rows reordered). `scripts/guide/demo-trip.ts` uses random ids, so record order (and float
+  rounding) varies per run; both were restored from main.

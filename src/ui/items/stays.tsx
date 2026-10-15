@@ -5,7 +5,7 @@ import { stayEvent } from '../../domain/calendar'
 import { tripPhase } from '../../domain/itinerary'
 import { mapQuery } from '../../domain/links'
 import { addDays, daysBetween, isDay, toDay, zoneCity } from '../../domain/time'
-import { BackLink, CopyCode, DetailHead } from '../components/bits'
+import { CopyCode, DetailHead } from '../components/bits'
 import { ChoiceChips, DateTimeField, NotesField, TextField, ZoneField } from '../components/fields'
 import { AddressField, CityField } from '../components/PlaceFields'
 import { CalendarLinks, MapLinks, PhoneLink, WebLink } from '../components/ItemLinks'
@@ -127,7 +127,6 @@ export function StayPage() {
   const kind = labelOf(STAY_KINDS, stay.kind)
   return (
     <article className="stack">
-      <BackLink to={back}>Plan</BackLink>
       <DetailHead emoji={kind.emoji} title={stay.name} subtitle={[kind.label, stay.city].filter(Boolean).join(' · ')} />
       <section className="card">
         <dl className="facts">
