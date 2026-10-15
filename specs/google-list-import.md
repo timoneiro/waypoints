@@ -1,6 +1,6 @@
 # Import a shared Google Maps list
 
-Status: building
+Status: shipped (0.11.0)
 Issue: https://github.com/waypoints-pwa/waypoints/issues/45
 Builds after: google-maps-links (uses its server lookup, `GooglePlace`, nearest town, Photon reverse
 lookup and the `lat`/`lng` fields)
@@ -90,7 +90,9 @@ tab groups them by town (Hanoi, Huế, Phnom Penh…), and "Thanh Toan Bridge" h
    - Change: new `src/ui/items/placesImport.tsx` (`PlacesImportPage`, steps, messages and address
      lookups exactly as in Behavior; addresses via `patchRecord('places', id, { address })`, stopped
      with an `AbortController` on unmount); route in `src/App.tsx`; **Import list** button and the
-     empty-state line in `PlacesPage`, only with a server token.
+     empty-state line in `PlacesPage`, only with a server token. In `src/sync/googleMaps.ts`,
+     `lookUpGoogleMaps` passes on the server's 422 "This list isn't shared, or doesn't exist."
+     (`GOOGLE_LIST_NOT_SHARED`) instead of turning it into the generic message.
    - Depends on: 1, 2
    - Done when: `npm run lint`, `npm run typecheck` clean; the manual check in Verification passes.
    - Executor: sonnet
@@ -145,3 +147,14 @@ list**, paste a shared list link, add, check the Places tab and one place page; 
   (`LONG_LINK_CHARS`) covers it.
 - Overlaps (files only): `list-row-stars`, `place-votes` edit `src/ui/items/places.tsx`;
   `packing-lists`, `qr-join` add routes in `src/App.tsx`.
+- As built:
+  - `lookUpGoogleMaps` used to turn every 422 into "Google Maps didn't give the place's details", so
+    the list message never showed. It now passes that one message through. Side effect: an unshared
+    list link pasted into the New place box shows it too.
+  - "Can't reach" reuses the `google-maps-links` message, which ends "Paste the link into Link below
+    and type the name."; the import page has no Link box. Open for Ricardo: import-specific wording.
+  - "+ Place" in the single-place message is plain text, not bold.
+  - Towns are looked up for every place at once when the list arrives; the button and empty-state line
+    show when `usable(useServer())`, the same test as the New place paste box.
+  - Known gaps: no unit test for the 422 list message; if saving the places fails (storage full), the
+    page shows no error and the button stays disabled.
