@@ -45,3 +45,5 @@ Specced ideas live in their own files in this folder. Shipped features are in `C
 - **Typing a city without picking it**: a pick sets the time zone by design.
 - **Half stars**: records already accept them; no UI wanted.
 - **Reviewing for someone without a phone (a child)**: low value.
+- **Google Takeout zip/CSV import of Maps lists**: Takeout only has lists you made yourself, not shared
+  ones, and names/links only. Shared list links through the sync server instead (`google-list-import`).
