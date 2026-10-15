@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router'
 import { db, SETTINGS } from '../../db/db'
 import type { Day, Trip } from '../../db/types'
 import { tripPhase } from '../../domain/itinerary'
+import { LINKS } from '../../lib/links'
 import { EmptyState } from '../components/bits'
 import { SupportLine } from '../components/SupportLine'
 import { WhatsNewCard } from '../components/WhatsNew'
@@ -124,6 +125,12 @@ function Welcome() {
       <Link className="btn" to="/open">
         🔗 Open a trip someone sent you
       </Link>
+      <p className="muted small">
+        New here?{' '}
+        <a className="link" href={LINKS.guide} target="_blank" rel="noreferrer">
+          Read the guide
+        </a>
+      </p>
     </EmptyState>
   )
 }

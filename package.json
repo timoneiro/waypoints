@@ -1,7 +1,7 @@
 {
   "name": "waypoints",
   "private": true,
-  "version": "0.9.2",
+  "version": "0.9.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "guide:screenshots": "node scripts/guide/screenshots.ts"
   },
   "dependencies": {
     "dexie": "^4.4.6",
@@ -25,6 +26,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "fake-indexeddb": "^6.2.5",
     "oxlint": "^1.81.0",
+    "playwright": "^1.64.1",
     "typescript": "~7.0.2",
     "vite": "^8.3.0",
     "vite-plugin-pwa": "^2.0.0",

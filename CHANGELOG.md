@@ -8,6 +8,10 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.9.3 — 2026-10-15
+
+A new guide explains everything waypoints does, with screenshots. Open it from Settings → About or from the welcome screen.
+
 ## 0.9.2 — 2026-10-15
 
 waypoints stays free. If you'd like to support it, a small "Support it on Ko-fi" link is now on the trips list and in Settings → About.

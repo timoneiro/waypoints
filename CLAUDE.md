@@ -69,6 +69,7 @@ non-destructive for existing data:
 Every user-facing change bumps `version` in `package.json` and adds a `## x.y.z — YYYY-MM-DD` entry at the
 top of `CHANGELOG.md`, written for people who use the app (`src/domain/changelog.test.ts` fails CI if the
 entry is missing). The entry is the app's "What's new" card. Internal changes skip the bump.
+A user-facing change also updates `GUIDE.md`, and re-runs `npm run guide:screenshots` when a pictured screen changed.
 
 ## Content-Security-Policy
 The built app ships a CSP `<meta>` (in `vite.config.ts`, build only) with `connect-src 'self' https:` (plus
