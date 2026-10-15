@@ -1,7 +1,7 @@
 # Stars on list rows
 
 Status: draft
-Issue: none
+Issue: https://github.com/waypoints-pwa/waypoints/issues/23
 
 ## Problem
 Reviews (0.8.0) show on item pages and in the trip report, but rows in the places list, the plan and

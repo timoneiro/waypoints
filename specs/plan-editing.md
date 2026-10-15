@@ -1,7 +1,7 @@
 # Plan editing: move activities, duplicate a trip
 
 Status: draft
-Issue: none
+Issue: https://github.com/waypoints-pwa/waypoints/issues/19
 
 ## Problem
 Changing an activity's day means opening its form and editing the date; ordering untimed activities

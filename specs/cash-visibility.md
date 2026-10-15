@@ -1,7 +1,7 @@
 # Cash visibility on the Money tab
 
 Status: draft
-Issue: none
+Issue: https://github.com/waypoints-pwa/waypoints/issues/16
 
 ## Problem
 Expenses say whether they were paid in cash or by card (since 0.2.0 and 0.7.0), but the Money tab

@@ -1,7 +1,7 @@
 # Export expenses as CSV
 
 Status: draft
-Issue: none
+Issue: https://github.com/waypoints-pwa/waypoints/issues/17
 
 ## Problem
 Expenses live only in the app. People want them in a spreadsheet, Actual Budget or Splitwise's

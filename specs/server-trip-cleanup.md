@@ -1,7 +1,7 @@
 # Delete a trip for everyone, and clean up abandoned trips
 
 Status: draft
-Issue: none
+Issue: https://github.com/waypoints-pwa/waypoints/issues/24
 
 ## Problem
 Removing a trip only removes it from one phone; the others keep it, and on a sync server it stays

@@ -1,7 +1,7 @@
 # Trip budget
 
 Status: draft
-Issue: none
+Issue: https://github.com/waypoints-pwa/waypoints/issues/15
 
 ## Problem
 The Money tab shows what was spent but not against what. Groups agree a budget before a trip and have

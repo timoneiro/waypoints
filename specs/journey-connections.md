@@ -1,7 +1,7 @@
 # Connections in the plan
 
 Status: draft
-Issue: none
+Issue: https://github.com/waypoints-pwa/waypoints/issues/18
 
 ## Problem
 Journeys on one booking (LIS → FRA → NRT) are listed as unrelated rows, with no layover time. A typo

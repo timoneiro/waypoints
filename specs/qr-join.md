@@ -1,7 +1,7 @@
 # QR code to join a trip in person
 
 Status: draft
-Issue: none
+Issue: https://github.com/waypoints-pwa/waypoints/issues/21
 
 ## Problem
 Sharing a trip when people are in the same room means sending a link through a chat app. A QR code

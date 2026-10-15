@@ -1,7 +1,7 @@
 # Field-level merging
 
 Status: draft
-Issue: none
+Issue: https://github.com/waypoints-pwa/waypoints/issues/22
 
 ## Problem
 Merging is record by record: if Ana changes a stay's check-in time while Bo changes its notes, the

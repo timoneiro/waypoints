@@ -1,7 +1,7 @@
 # Votes on places
 
 Status: draft
-Issue: none
+Issue: https://github.com/waypoints-pwa/waypoints/issues/20
 
 ## Problem
 A group collects places but has no light way to see which ones people actually want to see, so the
