@@ -54,11 +54,12 @@ Fill in:
 
 - the **name** and the **dates** of the trip,
 - the **currency** you count in (the one your shared expenses are added up in),
-- your **home time zone**,
+- the **time zone** where the trip happens,
 - **who's going**. Type each name. Your own name is suggested first.
 
-Then say **which traveller you are**. The app uses it for your own reviews, what you paid and what you
-owe. If someone sends you a trip, it asks the same thing when you open it.
+You are the first row in the list, marked "you". The app uses that for your own reviews, what you paid and
+what you owe. If someone sends you a trip link, it asks which traveller you are when you open it. A trip
+file doesn't ask: pick yourself under **Which one are you?** on the 🧳 Trip tab.
 
 If someone sent you a trip, tap **🔗 Open a trip someone sent you** on the welcome screen, or open their
 link or file. See [section 7](#7-sharing-with-your-group).
@@ -125,7 +126,7 @@ The 📍 Places tab keeps the places you'd like to visit, grouped by city.
 
 - Mark a place as **must-see**.
 - Tick **Been there** when you've visited.
-- Tap **Add to plan** to turn a place into an activity on a day.
+- Tap **🗓️ Add to the plan** to turn a place into an activity on a day.
 - Paste a Google or Apple Maps link to open the place on the map again later.
 
 ### Calendar
@@ -154,9 +155,7 @@ reservation with its booking reference, so you can find one fast.
 
 On the 💶 Money tab, add an expense: what it was, how much, in which currency, who paid and who shares it.
 
-<img src="docs/guide/money.png" alt="The Money tab with balances, exchange rates and the list of expenses" width="300">
-
-<img src="docs/guide/expense.png" alt="Adding an expense in yen, paid in cash and split between three travellers" width="300">
+<img src="docs/guide/money.png" alt="The Money tab: what was spent so far, by category, and the Exchange rates card" width="300">
 
 - Use **any currency**.
 - **Split** equally between the people who share it, or by exact amounts.
@@ -170,7 +169,7 @@ Note each cash withdrawal or money exchange once, for example "10,000 JPY for �
 rates**. Every cash expense in that currency is then counted at the rate you really got, fees included.
 With several exchanges, the rates are averaged.
 
-<img src="docs/guide/exchanges.png" alt="Exchange rates, with what was changed and how much cash is left" width="300">
+<img src="docs/guide/exchanges.png" alt="The Exchange rates card with the average rate, cash left and each exchange, above the Balances" width="300">
 
 Under each foreign currency you also see the **cash left**: what you changed, minus what you spent in cash.
 
@@ -179,6 +178,8 @@ Under each foreign currency you also see the **cash left**: what you changed, mi
 A card payment uses what your bank charged, which you may not see yet. Save the expense without the
 amount. It's marked **cost pending**, counts at your cash rate in the meantime, and the Money tab tells
 you how many are waiting, and which are yours. Add the real amount when the bank shows it.
+
+<img src="docs/guide/expense.png" alt="A card expense, Shinkansen to Kyoto, with the notice that it is waiting for what the bank charged" width="300">
 
 ### Balances and settling up
 
@@ -205,7 +206,7 @@ Once something has started, its page has a **Reviews** card. Places get theirs o
 - Once things are over, the Plan tab says how many are **to review**. Tap it to rate them one after
   another. Afterwards you can see everyone's reviews, the latest or the top rated first.
 
-<img src="docs/guide/reviews.png" alt="Reviews of an activity: stars and notes from Ana, Ben and Chloé" width="300">
+<img src="docs/guide/reviews.png" alt="The list of five things to review, each with empty stars and a Didn't go button" width="300">
 
 ### Trip report
 
@@ -213,7 +214,7 @@ The report is the whole trip on one page: what it cost (by category, by day, who
 everyone has settled up, the best and worst of the trip with everyone's stars and notes, the stays and
 journeys, places you saved but never visited, a photo a day, and a few numbers to remember it.
 
-<img src="docs/guide/report.png" alt="The trip report with costs, the best of the trip and a few numbers" width="300">
+<img src="docs/guide/report.png" alt="The report options: Full report or Shareable, print or save as PDF, save as a file, and The trip in numbers" width="300">
 
 - Open it from the Plan tab once the trip is over, or from the 🧳 Trip tab to see the trip so far.
 - Choose the **Full report**, for the group, or the **Shareable** one for anyone else. Shareable leaves
@@ -232,7 +233,8 @@ Everyone in the group keeps their own copy of the trip on their phone. There are
 
 1. In the trip, tap 🔗. Tap **Share trip link** and send the link in your group chat. Or use
    **Save as a file** and send the file.
-2. Opening the link adds the trip. Each person says which traveller they are.
+2. Opening the link adds the trip and asks which traveller you are. A file doesn't ask: pick yourself
+   under **Which one are you?** on the 🧳 Trip tab.
 3. Anyone can add things and send a link back the same way. Opening it **merges** the changes into your
    copy, item by item: new things are added, the newest edit of each item wins, and deletions are passed
    on. Opening the same link twice changes nothing, and links can arrive in any order.
@@ -309,7 +311,8 @@ Open Settings from the trip list. It has these cards:
 <img src="docs/guide/settings.png" alt="The Settings screen with its cards" width="300">
 
 waypoints updates itself: a new version is picked up the next time you open the app, and your trips are
-never touched by an update.
+never touched by an update. If the app is already open, a banner says "A new version of waypoints is
+ready": tap **Reload** to update now, or **Later**.
 
 ## 11. Questions
 
@@ -325,12 +328,16 @@ Long trips make long links, and some chat apps cut them. Use **Save as a file** 
 instead, send the file, and have the others open it with **Open a trip link or file**.
 
 **I lost my phone.**
-If the trip is on a sync server, join again on a new phone and open the trip from there. Otherwise ask
+If the trip is on a sync server, ask the person who runs it (or use another of your phones) for a
+**sign-in link**. It brings the new phone back as the same person, with all your trips. Don't join again
+as a new member: that would be someone new, who can't see them. The lost phone can be disconnected there
+too. Otherwise ask
 someone in the group to send you a link, or import a backup file if you have one. This is why a backup now
 and then is worth it.
 
 **How do I get updates?**
-You don't have to do anything. A new version is picked up the next time you open the app. Settings →
+You don't have to do anything. A new version is picked up the next time you open the app. If it's already
+open, a banner offers **Reload** or **Later**. Settings →
 **✨ What's new** shows what changed.
 
 **Can I use it with just one person, or only for myself?**
