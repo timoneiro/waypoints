@@ -8,6 +8,7 @@ import { downloadJSON } from '../../lib/download'
 import { LINKS } from '../../lib/links'
 import { requestPersistentStorage } from '../../lib/storage'
 import { Notice } from '../components/bits'
+import { SupportLine } from '../components/SupportLine'
 import { fmtBytes, mergeSummary, plural } from '../format'
 import { useServer, useSetting } from '../hooks'
 
@@ -213,6 +214,7 @@ export function SettingsPage() {
           </a>
           .
         </p>
+        <SupportLine />
       </section>
     </>
   )
