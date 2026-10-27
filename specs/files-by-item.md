@@ -1,6 +1,6 @@
 # Files per item, and deleting several at once
 
-Status: building
+Status: shipped (0.13.0)
 Issue: https://github.com/waypoints-pwa/waypoints/issues/56
 Builds after: none
 
@@ -279,3 +279,20 @@ with 4 whole-trip photos, 2 photos on one activity, 1 on another and a whole-boo
 - Overlap scan: `journey-connections` (draft) only reads `src/ui/attachments.ts`. `smoke-test` (ready)
   visits `photos`, which is kept, and doesn't touch the screenshot script. Nothing shared, so
   `Builds after: none`.
+- As built:
+  - **Select** sits in its own row under the Documents/Photos switch, not beside it. On the See all pages
+    it sits beside the photo count.
+  - `Attachments.tsx` also exports `selectOf` and the `Select`/`Selection` types, and `PhotosByDay` takes
+    an optional `selection`, so the See all pages' tiles can be ticked.
+  - `button.tile` also resets `border` and `padding`: without that, ticked tiles showed the browser's
+    button border (review fix).
+  - The screenshot script scrolls with `page.evaluate('scrollTo(0, 0)')`: `scripts` are type-checked
+    without DOM types, so `window` broke `npm run build` (review fix). `photos.png` is scrolled to the
+    Activities heading. `report.png` now counts 8 photos.
+  - After deleting every photo on a See all page, only "No photos here any more." shows, not
+    "Deleted N photos.".
+  - Checked in the running app (Playwright, 39 checks): kind order and per-item sections for every kind,
+    the whole-booking section, See all and Back, `ItemGone` for unknown items and bookings, an emptied
+    booking page, select/untick, Select all (shown only), the confirm texts, delete and its message,
+    Cancel and view switch, and select mode on both See all pages. Not checked: the server sentence,
+    offline deletes.
