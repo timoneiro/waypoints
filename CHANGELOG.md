@@ -8,6 +8,12 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.12.0 — 2026-10-27
+
+The 📷 Photos tab is now 📎 Files. A switch at the top picks Documents or Photos. Both are grouped by what they belong to, with the whole trip first.
+
+Photos show 3 per group, with a "See all" link to see the rest of that group's photos.
+
 ## 0.11.1 — 2026-10-15
 
 Filling in a place from a Google Maps link works with more links, such as the ones Android's Share gives, and from servers in Europe. Your server needs updating to 0.5.1.

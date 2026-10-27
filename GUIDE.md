@@ -68,7 +68,7 @@ Inside a trip, **‹** at the top left goes back one screen. On the five tabs at
 
 ## 4. Before the trip
 
-A trip has five tabs at the bottom: 🗓️ Plan, 📍 Places, 💶 Money, 📷 Photos and 🧳 Trip. Most of what you
+A trip has five tabs at the bottom: 🗓️ Plan, 📍 Places, 💶 Money, 📎 Files and 🧳 Trip. Most of what you
 plan goes in from the Plan tab, with **+ Stay**, **+ Transport** and **+ Activity**.
 
 ### Stays, transport and activities
@@ -194,12 +194,16 @@ Balances show who owes whom, with the fewest payments needed to settle up. Tap *
 a payment. It opens filled in, so you can change the amount: owe €100 and give back €35, and €65 stays
 owed. **+ Payment** records any other payment.
 
-### Photos tab
+### Files tab
 
-The 📷 Photos tab holds the trip's documents at the top (tickets, bookings, insurance) and its photos
-below, by day.
+The 📎 Files tab has a switch at the top: **Documents** (tickets, bookings, insurance) or **Photos**. Both
+group what's in them by what it belongs to, with the whole trip first, then stays, journeys, activities,
+places and expenses. Documents lists every document in each group. Photos shows the first 3 photos of each
+group; tap **See all** to see all of that group's photos, by day.
 
-<img src="docs/guide/photos.png" alt="The Photos tab with documents on top and photos below, by day" width="300">
+<img src="docs/guide/documents.png" alt="The Files tab on Documents, with the whole trip's documents above those of a journey" width="300">
+
+<img src="docs/guide/photos.png" alt="The Files tab on Photos, with a row of photos for the whole trip and a See all link, then one photo under Journeys" width="300">
 
 ## 6. After the trip
 

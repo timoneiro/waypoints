@@ -146,7 +146,7 @@ export function photoTime(a: Attachment): string {
 export const byTimeTaken = (a: Attachment, b: Attachment) =>
   photoTime(a).localeCompare(photoTime(b)) || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)
 
-/** The trip's photos in the order the Photos tab shows them. */
+/** The trip's photos in the order the Files tab shows them. */
 export const tripPhotos = (t: TripData) => t.attachments.filter(isPhoto).sort(byTimeTaken)
 
 /** Documents: those of the whole trip first, then by their item's day, then by name. */

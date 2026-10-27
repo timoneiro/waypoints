@@ -1,6 +1,6 @@
 # Files tab: documents and photos apart, grouped by type
 
-Status: ready
+Status: shipped (0.12.0)
 Issue: https://github.com/waypoints-pwa/waypoints/issues/51
 Builds after: none
 
@@ -194,3 +194,14 @@ Photos view.
   done later if it feels odd from a group page.
 - Overlap scan: `journey-connections.md` only reads `src/ui/attachments.ts` (booking summary), and
   `smoke-test.md` visits `photos` (kept). No shared Dexie version, table or helper change, so `Builds after: none`.
+- As built:
+  - `PhotosByDay` sits above the comment that said "Photos tab", so that comment was at
+    `Attachments.tsx:181`, not 154, by task 3.
+  - `scripts/guide/screenshots.ts` goes back to `/trips/<id>/photos` after the flight uploads: the next
+    step clicks "All trips", which the flight page doesn't have. `flight.png` now shows the flight's
+    e-ticket and photo.
+  - Back from a group page returns to the Photos view through history. Opened cold from a link, the top
+    bar's ‹ falls back to `/trips/<id>/photos`, which opens on Documents.
+  - Checked in the running app (Playwright, 24 checks): tab label, default view, group order, 3-tile
+    rows and See all, group page, both Backs, `/photos/nope`, a deleted item's files under Whole trip,
+    and an emptied group's page.

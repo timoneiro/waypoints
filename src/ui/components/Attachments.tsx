@@ -10,6 +10,7 @@ import {
   ITEM_GROUPS,
   ownerFinder,
   parseTarget,
+  photoTime,
   showsOn,
   sortDocuments,
   stateBadge,
@@ -58,6 +59,32 @@ export function DocumentRow({ a, file, state, item }: { a: Attachment; file?: St
         {status && <small className="muted">{status}</small>}
       </span>
     </Link>
+  )
+}
+
+/** Photos under their days, each day a grid of tiles. */
+export function PhotosByDay({ photos }: { photos: Attachment[] }) {
+  const t = useTrip()
+  const files = useTripFiles(t.trip.id)
+  const stateOf = stateFinder(t)
+  const days = new Map<string, Attachment[]>()
+  for (const a of photos) {
+    const day = photoTime(a).slice(0, 10)
+    days.set(day, [...(days.get(day) ?? []), a])
+  }
+  return (
+    <>
+      {[...days].map(([day, list]) => (
+        <div key={day} className="stack" style={{ gap: 6 }}>
+          <h4 className="small muted">{fmtDay(day)}</h4>
+          <div className="photo-grid">
+            {list.map((a) => (
+              <PhotoTile key={a.id} a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </>
   )
 }
 
@@ -151,7 +178,7 @@ const PICK: Record<AttachmentKind, { label: string; accept?: string }> = {
 
 /**
  * Buttons to add photos or documents, then what to add them as. On an item's page they belong to it;
- * on the Photos tab (`choose`), to whatever is picked, the whole trip by default.
+ * on the Files tab (`choose`), to whatever is picked, the whole trip by default.
  */
 export function AddAttachments({ to, choose = false }: { to?: AttachedTo; choose?: boolean }) {
   const t = useTrip()

@@ -1,8 +1,11 @@
-import { isPhoto, ownerFinder, photoTime, sortDocuments, stateFinder, tripPhotos, useTripFiles } from '../attachments'
+import { Link, useSearchParams } from 'react-router'
+import type { Attachment } from '../../db/types'
+import { isPhoto, ownerFinder, sortDocuments, stateFinder, tripPhotos, useTripFiles } from '../attachments'
 import { Notice } from '../components/bits'
 import { AddAttachments, DocumentRow, PhotoTile } from '../components/Attachments'
-import { fmtBytes, fmtDay, plural } from '../format'
-import { useTrip } from '../tripData'
+import { groupFiles, type FileGroup } from '../fileGroups'
+import { fmtBytes, plural } from '../format'
+import { tripPath, useTrip } from '../tripData'
 
 /** The trip's documents and photos: those of the whole trip and of each item, in one place. */
 export function PhotosPage() {
@@ -10,13 +13,11 @@ export function PhotosPage() {
   const files = useTripFiles(t.trip.id)
   const ownerOf = ownerFinder(t)
   const stateOf = stateFinder(t)
-  const docs = sortDocuments(t.attachments.filter((a) => !isPhoto(a)), ownerOf)
-  const photos = tripPhotos(t)
-  const days = new Map<string, typeof photos>()
-  for (const a of photos) {
-    const day = photoTime(a).slice(0, 10)
-    days.set(day, [...(days.get(day) ?? []), a])
-  }
+  const [params, setParams] = useSearchParams()
+  const view = params.get('view') === 'photos' ? 'photos' : 'documents'
+  const groupOf = (a: Attachment): FileGroup => ownerOf(a)?.table ?? 'trip'
+  const docGroups = groupFiles(sortDocuments(t.attachments.filter((a) => !isPhoto(a)), ownerOf), groupOf)
+  const photoGroups = groupFiles(tripPhotos(t), groupOf)
   const states = t.attachments.map((a) => stateOf(a, files?.get(a.id)))
   const waiting = states.filter((s) => s === 'waiting').length
   const refused = states.filter((s) => s === 'refused').length
@@ -24,7 +25,7 @@ export function PhotosPage() {
 
   return (
     <>
-      <h2>Photos & documents</h2>
+      <h2>Files</h2>
       {!t.server && t.travellers.length > 1 && (
         <p className="muted small">
           They stay on this phone: links can't carry them. To share them with the group, put the trip on a sync server (Trip tab).
@@ -42,35 +43,58 @@ export function PhotosPage() {
 
       <AddAttachments choose />
 
-      <section className="stack">
-        <h3 className="group-title">Documents</h3>
-        {docs.length > 0 ? (
-          <ul className="list">
-            {docs.map((a) => (
-              <li key={a.id}>
-                <DocumentRow a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} item={ownerOf(a)} />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="muted small">Tickets, boarding passes, bookings, insurance… They open here without signal.</p>
-        )}
-      </section>
+      <div className="segmented" role="tablist" aria-label="View">
+        <button role="tab" aria-selected={view === 'documents'} className={view === 'documents' ? 'active' : ''} onClick={() => setParams({}, { replace: true })}>
+          Documents
+        </button>
+        <button
+          role="tab"
+          aria-selected={view === 'photos'}
+          className={view === 'photos' ? 'active' : ''}
+          onClick={() => setParams({ view: 'photos' }, { replace: true })}
+        >
+          Photos
+        </button>
+      </div>
 
-      <section className="stack">
-        <h3 className="group-title">Photos</h3>
-        {photos.length === 0 && <p className="muted small">Photos of the trip, by day. Add them here, or to a stay, an activity or a place.</p>}
-        {[...days].map(([day, list]) => (
-          <div key={day} className="stack" style={{ gap: 6 }}>
-            <h4 className="small muted">{fmtDay(day)}</h4>
-            <div className="photo-grid">
-              {list.map((a) => (
-                <PhotoTile key={a.id} a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} />
-              ))}
+      {view === 'documents' ? (
+        <section className="stack">
+          {docGroups.length === 0 && <p className="muted small">Tickets, boarding passes, bookings, insurance… They open here without signal.</p>}
+          {docGroups.map((g) => (
+            <div key={g.group} className="stack" style={{ gap: 6 }}>
+              <h3 className="group-title">{g.label}</h3>
+              <ul className="list">
+                {g.items.map((a) => (
+                  <li key={a.id}>
+                    <DocumentRow a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} item={ownerOf(a)} />
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
-        ))}
-      </section>
+          ))}
+        </section>
+      ) : (
+        <section className="stack">
+          {photoGroups.length === 0 && <p className="muted small">Photos of the trip, by day. Add them here, or to a stay, an activity or a place.</p>}
+          {photoGroups.map((g) => (
+            <div key={g.group} className="stack" style={{ gap: 6 }}>
+              <div className="row spread">
+                <h3 className="group-title">{g.label}</h3>
+                {g.items.length > 3 && (
+                  <Link className="link small" to={tripPath(t.trip.id, 'photos', g.group)}>
+                    See all {g.items.length} ›
+                  </Link>
+                )}
+              </div>
+              <div className="photo-grid photo-row">
+                {g.items.slice(0, 3).map((a) => (
+                  <PhotoTile key={a.id} a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
 
       {used > 0 && <p className="muted small">They take {fmtBytes(used)} on this phone.</p>}
     </>

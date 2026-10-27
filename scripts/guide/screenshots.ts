@@ -41,12 +41,13 @@ const context = await browser.newContext({
 })
 const page = await context.newPage()
 
-// Three coloured pages with an emoji, as JPEG photos for the trip.
+// Four coloured pages with an emoji, as JPEG photos for the trip.
 const photoFiles: string[] = []
 const scenes = [
   ['#ffd1dc', '🌸'],
   ['#c7e8f3', '🗼'],
   ['#d4edc9', '🍵'],
+  ['#fde2b8', '⛩️'],
 ]
 const maker = await context.newPage()
 for (const [i, [colour, emoji]] of scenes.entries()) {
@@ -95,7 +96,26 @@ await page.getByLabel('Which one are you?').selectOption({ label: 'Ana' })
 await go(`/trips/${tripId}/photos`)
 await page.locator('label', { hasText: 'Add photos' }).locator('input[type=file]').setInputFiles(photoFiles)
 await page.getByRole('button', { name: 'Add', exact: true }).click()
-await page.getByText(/^Added 3 photos/).waitFor()
+await page.getByText(/^Added 4 photos/).waitFor()
+
+// A document for the whole trip.
+const insurance = join(tmp, 'travel-insurance.txt')
+writeFileSync(insurance, 'Travel insurance: policy 123456. Call +351 000 000 000 in an emergency.\n')
+await page.locator('label', { hasText: 'Add documents' }).locator('input[type=file]').setInputFiles(insurance)
+await page.getByRole('button', { name: 'Add', exact: true }).click()
+await page.getByText(/^Added 1 document/).waitFor()
+
+// A photo and a document on the flight.
+const eTicket = join(tmp, 'e-ticket.txt')
+writeFileSync(eTicket, 'E-ticket: Lisbon to Tokyo. Show this at check-in.\n')
+await go(`/trips/${tripId}/transport/${flightId}`)
+await page.locator('label', { hasText: 'Add photos' }).locator('input[type=file]').setInputFiles(photoFiles[0])
+await page.getByRole('button', { name: 'Add', exact: true }).click()
+await page.getByText(/^Added 1 photo/).waitFor()
+await page.locator('label', { hasText: 'Add documents' }).locator('input[type=file]').setInputFiles(eTicket)
+await page.getByRole('button', { name: 'Add', exact: true }).click()
+await page.getByText(/^Added 1 document/).waitFor()
+await go(`/trips/${tripId}/photos`)
 
 // In the app, not a reload: opening the app during a trip goes straight into it.
 await page.getByRole('link', { name: 'All trips' }).click()
@@ -126,6 +146,8 @@ await page
   .evaluate((el) => el.scrollIntoView({ block: 'start' }))
 await shot('exchanges')
 await go(`/trips/${tripId}/photos`)
+await shot('documents')
+await go(`/trips/${tripId}/photos?view=photos`)
 await shot('photos')
 await go(`/trips/${tripId}/share`)
 await shot('share')
