@@ -1,7 +1,7 @@
 # Files per item, and deleting several at once
 
 Status: ready
-Issue: none yet
+Issue: https://github.com/waypoints-pwa/waypoints/issues/56
 Builds after: none
 
 ## Problem
