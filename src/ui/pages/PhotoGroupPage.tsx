@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router'
-import { ownerFinder, tripPhotos } from '../attachments'
+import { ATTACHABLE_TABLES } from '../../db/types'
+import { attachableItems, bookingOf, ownerFinder, tripPhotos } from '../attachments'
 import { PhotosByDay } from '../components/Attachments'
 import { FILE_GROUPS, isFileGroup } from '../fileGroups'
 import { plural } from '../format'
@@ -18,6 +19,50 @@ export function PhotoGroupPage() {
   return (
     <>
       <h2>{label}</h2>
+      {photos.length === 0 ? (
+        <>
+          <p className="muted small">No photos here any more.</p>
+          <Link className="link small" to={back}>
+            Back to photos
+          </Link>
+        </>
+      ) : (
+        <>
+          <p className="muted small">{plural(photos.length, 'photo')}</p>
+          <PhotosByDay photos={photos} />
+        </>
+      )}
+    </>
+  )
+}
+
+/** All the photos of one item, or of one whole booking, by day. */
+export function PhotoItemPage() {
+  const t = useTrip()
+  const { group, itemId } = useParams()
+  const back = tripPath(t.trip.id, 'photos') + '?view=photos'
+  const ownerOf = ownerFinder(t)
+  const isTable = (ATTACHABLE_TABLES as readonly string[]).includes(group ?? '')
+  const heading =
+    group === 'booking'
+      ? (() => {
+          const b = bookingOf(t, itemId)
+          return b && { emoji: b.legs[0].emoji, title: b.route }
+        })()
+      : isTable
+        ? attachableItems(t).get(`${group}:${itemId}`)
+        : undefined
+  if (!heading) return <ItemGone backTo={back} />
+  const photos = tripPhotos(t).filter((a) => {
+    const owner = ownerOf(a)
+    if (!owner) return false
+    return group === 'booking' ? !!owner.booking && owner.id === itemId : !owner.booking && owner.table === group && owner.id === itemId
+  })
+  return (
+    <>
+      <h2>
+        {heading.emoji} {heading.title}
+      </h2>
       {photos.length === 0 ? (
         <>
           <p className="muted small">No photos here any more.</p>
