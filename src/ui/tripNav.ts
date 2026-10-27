@@ -4,7 +4,7 @@ export const TABS = [
   { key: 'plan', path: '', icon: '🗓️', label: 'Plan' },
   { key: 'places', path: 'places', icon: '📍', label: 'Places' },
   { key: 'money', path: 'money', icon: '💶', label: 'Money' },
-  { key: 'photos', path: 'photos', icon: '📷', label: 'Photos' },
+  { key: 'photos', path: 'photos', icon: '📎', label: 'Files' },
   { key: 'trip', path: 'trip', icon: '🧳', label: 'Trip' },
 ] as const
 

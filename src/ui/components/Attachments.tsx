@@ -178,7 +178,7 @@ const PICK: Record<AttachmentKind, { label: string; accept?: string }> = {
 
 /**
  * Buttons to add photos or documents, then what to add them as. On an item's page they belong to it;
- * on the Photos tab (`choose`), to whatever is picked, the whole trip by default.
+ * on the Files tab (`choose`), to whatever is picked, the whole trip by default.
  */
 export function AddAttachments({ to, choose = false }: { to?: AttachedTo; choose?: boolean }) {
   const t = useTrip()

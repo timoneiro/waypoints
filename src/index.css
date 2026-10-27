@@ -460,6 +460,7 @@ a.list-row:hover { border-color: var(--accent); }
 
 /* Photos and documents */
 .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 4px; }
+.photo-row { grid-template-columns: repeat(3, 1fr); }
 .tile {
   position: relative;
   display: flex;
