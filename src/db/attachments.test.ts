@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { FILE, FILE_SHA256 } from '../test/fixtures'
 import { createTrip, removeTripFromPhone } from './actions'
-import { addAttachments, deleteAttachment, keepOnlyHere, shareAttachment, updateAttachment, type NewFile } from './attachments'
+import { addAttachments, deleteAttachment, deleteAttachments, keepOnlyHere, shareAttachment, updateAttachment, type NewFile } from './attachments'
 import { applyMerge, exportTripFile, readTables } from './backupIO'
 import { db } from './db'
 import { emptyTables } from './types'
@@ -84,6 +84,18 @@ describe('photos and documents', () => {
     expect((await db.attachments.get(id))!.deletedAt).toBeDefined()
     expect(await db.files.get(id)).toBeUndefined()
     expect(await outboxIds(tripId)).toEqual([id])
+  })
+
+  it('are deleted several at once, skipping ones already deleted', async () => {
+    const [a, b, gone] = [...(await addAttachments(tripId, [photo(), photo(), photo()]))]
+    await deleteAttachment(gone)
+    await db.outbox.clear()
+    await deleteAttachments([a, b, gone])
+    expect((await db.attachments.get(a))!.deletedAt).toBeDefined()
+    expect((await db.attachments.get(b))!.deletedAt).toBeDefined()
+    expect(await db.files.get(a)).toBeUndefined()
+    expect(await db.files.get(b)).toBeUndefined()
+    expect(await outboxIds(tripId)).toEqual([a, b].sort())
   })
 
   it('switch between shared and kept only here', async () => {
