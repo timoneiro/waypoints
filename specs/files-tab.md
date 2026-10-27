@@ -1,7 +1,7 @@
 # Files tab: documents and photos apart, grouped by type
 
 Status: ready
-Issue: <issue link>
+Issue: https://github.com/waypoints-pwa/waypoints/issues/51
 Builds after: none
 
 ## Problem
