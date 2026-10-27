@@ -164,7 +164,7 @@ await page
   .getByRole('heading', { name: 'Activities' })
   .evaluate((el) => el.scrollIntoView({ block: 'start' }))
 await shot('photos')
-await page.evaluate(() => window.scrollTo(0, 0))
+await page.evaluate('scrollTo(0, 0)')
 await page.getByRole('button', { name: 'Select', exact: true }).click()
 await page.locator('button.tile').nth(0).click()
 await page.locator('button.tile').nth(1).click()
