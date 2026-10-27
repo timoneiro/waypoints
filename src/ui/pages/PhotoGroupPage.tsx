@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { ATTACHABLE_TABLES } from '../../db/types'
 import { attachableItems, bookingOf, ownerFinder, tripPhotos } from '../attachments'
-import { PhotosByDay } from '../components/Attachments'
+import { Notice } from '../components/bits'
+import { PhotosByDay, SelectBar, useSelection } from '../components/Attachments'
 import { FILE_GROUPS, isFileGroup } from '../fileGroups'
 import { plural } from '../format'
 import { ItemGone } from '../items/common'
@@ -11,6 +13,8 @@ import { tripPath, useTrip } from '../tripData'
 export function PhotoGroupPage() {
   const t = useTrip()
   const { group } = useParams()
+  const selection = useSelection()
+  const [deleted, setDeleted] = useState<string>()
   const back = tripPath(t.trip.id, 'photos') + '?view=photos'
   if (!isFileGroup(group)) return <ItemGone backTo={back} />
   const ownerOf = ownerFinder(t)
@@ -28,8 +32,24 @@ export function PhotoGroupPage() {
         </>
       ) : (
         <>
-          <p className="muted small">{plural(photos.length, 'photo')}</p>
-          <PhotosByDay photos={photos} />
+          <div className="row spread">
+            <p className="muted small">{plural(photos.length, 'photo')}</p>
+            {!selection.active && (
+              <button
+                type="button"
+                className="btn btn-small"
+                onClick={() => {
+                  setDeleted(undefined)
+                  selection.start()
+                }}
+              >
+                Select
+              </button>
+            )}
+          </div>
+          {deleted && <Notice kind="ok">{deleted}</Notice>}
+          <PhotosByDay photos={photos} selection={selection} />
+          {selection.active && <SelectBar shown={photos} noun="photo" selection={selection} onDeleted={(n) => setDeleted(`Deleted ${plural(n, 'photo')}.`)} />}
         </>
       )}
     </>
@@ -40,6 +60,8 @@ export function PhotoGroupPage() {
 export function PhotoItemPage() {
   const t = useTrip()
   const { group, itemId } = useParams()
+  const selection = useSelection()
+  const [deleted, setDeleted] = useState<string>()
   const back = tripPath(t.trip.id, 'photos') + '?view=photos'
   const ownerOf = ownerFinder(t)
   const isTable = (ATTACHABLE_TABLES as readonly string[]).includes(group ?? '')
@@ -72,8 +94,24 @@ export function PhotoItemPage() {
         </>
       ) : (
         <>
-          <p className="muted small">{plural(photos.length, 'photo')}</p>
-          <PhotosByDay photos={photos} />
+          <div className="row spread">
+            <p className="muted small">{plural(photos.length, 'photo')}</p>
+            {!selection.active && (
+              <button
+                type="button"
+                className="btn btn-small"
+                onClick={() => {
+                  setDeleted(undefined)
+                  selection.start()
+                }}
+              >
+                Select
+              </button>
+            )}
+          </div>
+          {deleted && <Notice kind="ok">{deleted}</Notice>}
+          <PhotosByDay photos={photos} selection={selection} />
+          {selection.active && <SelectBar shown={photos} noun="photo" selection={selection} onDeleted={(n) => setDeleted(`Deleted ${plural(n, 'photo')}.`)} />}
         </>
       )}
     </>

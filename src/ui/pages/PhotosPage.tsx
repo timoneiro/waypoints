@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { isPhoto, ownerFinder, sortDocuments, stateFinder, tripPhotos, useTripFiles } from '../attachments'
 import { Notice } from '../components/bits'
-import { AddAttachments, DocumentRow, PhotoTile } from '../components/Attachments'
+import { AddAttachments, DocumentRow, PhotoTile, SelectBar, selectOf, useSelection } from '../components/Attachments'
 import { sectionFiles } from '../fileGroups'
 import { fmtBytes, plural } from '../format'
 import { tripPath, useTrip } from '../tripData'
@@ -13,9 +14,20 @@ export function PhotosPage() {
   const ownerOf = ownerFinder(t)
   const stateOf = stateFinder(t)
   const [params, setParams] = useSearchParams()
+  const selection = useSelection()
+  const [deleted, setDeleted] = useState<string>()
   const view = params.get('view') === 'photos' ? 'photos' : 'documents'
   const docGroups = sectionFiles(sortDocuments(t.attachments.filter((a) => !isPhoto(a)), ownerOf), ownerOf)
   const photoGroups = sectionFiles(tripPhotos(t), ownerOf)
+  const shownDocs = docGroups.flatMap((g) => g.sections.flatMap((s) => s.items))
+  const shownPhotos = photoGroups.flatMap((g) => g.sections.flatMap((s) => s.items.slice(0, 3)))
+  const shown = view === 'documents' ? shownDocs : shownPhotos
+  const noun = view === 'documents' ? 'document' : 'photo'
+  const switchView = (next: Record<string, string>) => {
+    selection.stop()
+    setDeleted(undefined)
+    setParams(next, { replace: true })
+  }
   const states = t.attachments.map((a) => stateOf(a, files?.get(a.id)))
   const waiting = states.filter((s) => s === 'waiting').length
   const refused = states.filter((s) => s === 'refused').length
@@ -42,18 +54,34 @@ export function PhotosPage() {
       <AddAttachments choose />
 
       <div className="segmented" role="tablist" aria-label="View">
-        <button role="tab" aria-selected={view === 'documents'} className={view === 'documents' ? 'active' : ''} onClick={() => setParams({}, { replace: true })}>
+        <button role="tab" aria-selected={view === 'documents'} className={view === 'documents' ? 'active' : ''} onClick={() => switchView({})}>
           Documents
         </button>
         <button
           role="tab"
           aria-selected={view === 'photos'}
           className={view === 'photos' ? 'active' : ''}
-          onClick={() => setParams({ view: 'photos' }, { replace: true })}
+          onClick={() => switchView({ view: 'photos' })}
         >
           Photos
         </button>
       </div>
+
+      {shown.length > 0 && !selection.active && (
+        <div className="actions">
+          <button
+            type="button"
+            className="btn btn-small"
+            onClick={() => {
+              setDeleted(undefined)
+              selection.start()
+            }}
+          >
+            Select
+          </button>
+        </div>
+      )}
+      {deleted && <Notice kind="ok">{deleted}</Notice>}
 
       {view === 'documents' ? (
         <section className="stack">
@@ -73,7 +101,7 @@ export function PhotosPage() {
                   <ul className="list">
                     {s.items.map((a) => (
                       <li key={a.id}>
-                        <DocumentRow a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} />
+                        <DocumentRow a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} select={selectOf(selection, a.id)} />
                       </li>
                     ))}
                   </ul>
@@ -113,7 +141,7 @@ export function PhotosPage() {
                     )}
                     <div className="photo-grid photo-row">
                       {s.items.slice(0, 3).map((a) => (
-                        <PhotoTile key={a.id} a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} />
+                        <PhotoTile key={a.id} a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} select={selectOf(selection, a.id)} />
                       ))}
                     </div>
                   </div>
@@ -123,6 +151,8 @@ export function PhotosPage() {
           ))}
         </section>
       )}
+
+      {selection.active && <SelectBar shown={shown} noun={noun} selection={selection} onDeleted={(n) => setDeleted(`Deleted ${plural(n, noun)}.`)} />}
 
       {used > 0 && <p className="muted small">They take {fmtBytes(used)} on this phone.</p>}
     </>
