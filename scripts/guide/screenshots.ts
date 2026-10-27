@@ -115,6 +115,17 @@ await page.getByText(/^Added 1 photo/).waitFor()
 await page.locator('label', { hasText: 'Add documents' }).locator('input[type=file]').setInputFiles(eTicket)
 await page.getByRole('button', { name: 'Add', exact: true }).click()
 await page.getByText(/^Added 1 document/).waitFor()
+
+// Photos on two activities: Senso-ji gets two, teamLab one.
+for (const [activity, files] of [
+  [backup.activities[0], [photoFiles[1], photoFiles[2]]],
+  [backup.activities[1], [photoFiles[3]]],
+] as const) {
+  await go(`/trips/${tripId}/activities/${activity.id}`)
+  await page.locator('label', { hasText: 'Add photos' }).locator('input[type=file]').setInputFiles([...files])
+  await page.getByRole('button', { name: 'Add', exact: true }).click()
+  await page.getByText(/^Added \d photos?/).waitFor()
+}
 await go(`/trips/${tripId}/photos`)
 
 // In the app, not a reload: opening the app during a trip goes straight into it.
@@ -148,7 +159,16 @@ await shot('exchanges')
 await go(`/trips/${tripId}/photos`)
 await shot('documents')
 await go(`/trips/${tripId}/photos?view=photos`)
+// Scrolled to the Activities heading, so the item sections show.
+await page
+  .getByRole('heading', { name: 'Activities' })
+  .evaluate((el) => el.scrollIntoView({ block: 'start' }))
 await shot('photos')
+await page.evaluate('scrollTo(0, 0)')
+await page.getByRole('button', { name: 'Select', exact: true }).click()
+await page.locator('button.tile').nth(0).click()
+await page.locator('button.tile').nth(1).click()
+await shot('select')
 await go(`/trips/${tripId}/share`)
 await shot('share')
 await go('/settings')

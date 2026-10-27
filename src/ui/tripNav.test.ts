@@ -18,6 +18,7 @@ describe('topBarBack', () => {
     ['/trips/t1/exchanges/new', '/trips/t1/money'],
     ['/trips/t1/files/f1', '/trips/t1/photos'],
     ['/trips/t1/photos/activities', '/trips/t1/photos'],
+    ['/trips/t1/photos/activities/x', '/trips/t1/photos'],
     ['/trips/t1/share', '/trips/t1/trip'],
     ['/trips/t1/edit', '/trips/t1/trip'],
     ['/trips/t1/server', '/trips/t1/trip'],

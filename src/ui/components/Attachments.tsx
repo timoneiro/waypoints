@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { addAttachments, type AttachedTo } from '../../db/attachments'
+import { addAttachments, deleteAttachments, type AttachedTo } from '../../db/attachments'
 import type { AttachableTable, Attachment, AttachmentKind, StoredFile } from '../../db/types'
 import { FileProblem, prepareDocument, preparePhoto } from '../../lib/files'
 import {
@@ -31,39 +31,146 @@ import { tripPath, useTrip } from '../tripData'
 import { Notice } from './bits'
 import { Field } from './fields'
 
-export function PhotoTile({ a, file, state }: { a: Attachment; file?: StoredFile; state: FileState }) {
+export type Select = { on: boolean; toggle: () => void }
+
+export function PhotoTile({ a, file, state, select }: { a: Attachment; file?: StoredFile; state: FileState; select?: Select }) {
   const t = useTrip()
   const preview = file?.thumb ?? (isPhoto(a) ? file?.blob : undefined)
   const url = useObjectUrl(preview, `${a.id}:${file?.thumb ? 'thumb' : 'full'}`)
   const badge = stateBadge(state)
-  return (
-    <Link className="tile" to={tripPath(t.trip.id, 'files', a.id)} aria-label={a.caption || a.name}>
+  const inner = (
+    <>
       {url ? <img src={url} alt="" loading="lazy" /> : <span className="tile-icon">{isPhoto(a) ? '📷' : '📄'}</span>}
       {badge && <span className="tile-badge">{badge}</span>}
+      {select?.on && <span className="tile-check">✓</span>}
+    </>
+  )
+  if (select) {
+    return (
+      <button type="button" className={`tile${select.on ? ' selected' : ''}`} aria-pressed={select.on} aria-label={a.caption || a.name} onClick={select.toggle}>
+        {inner}
+      </button>
+    )
+  }
+  return (
+    <Link className="tile" to={tripPath(t.trip.id, 'files', a.id)} aria-label={a.caption || a.name}>
+      {inner}
     </Link>
   )
 }
 
 const docEmoji = (a: Attachment) => (a.type === 'application/pdf' ? '📄' : a.type.startsWith('image/') ? '🖼️' : a.type.includes('pkpass') ? '🎫' : '📎')
 
-export function DocumentRow({ a, file, state, item }: { a: Attachment; file?: StoredFile; state: FileState; item?: ItemRef }) {
+export function DocumentRow({ a, file, state, item, select }: { a: Attachment; file?: StoredFile; state: FileState; item?: ItemRef; select?: Select }) {
   const t = useTrip()
   const url = useObjectUrl(file?.thumb, `${a.id}:thumb`)
   const status = state === 'shared' || state === 'local' ? undefined : stateText(state, a, t)
-  return (
-    <Link className="list-row" to={tripPath(t.trip.id, 'files', a.id)}>
+  const inner = (
+    <>
+      {select?.on && <span className="row-check">✓</span>}
       {url ? <img className="list-thumb" src={url} alt="" /> : <span className="list-emoji">{docEmoji(a)}</span>}
       <span className="list-text">
         <strong>{a.name}</strong>
         <small className="muted">{[item ? `${item.emoji} ${item.title}` : undefined, a.caption, fmtBytes(a.size)].filter(Boolean).join(' · ')}</small>
         {status && <small className="muted">{status}</small>}
       </span>
+    </>
+  )
+  if (select) {
+    return (
+      <button type="button" className={`list-row${select.on ? ' selected' : ''}`} aria-pressed={select.on} onClick={select.toggle}>
+        {inner}
+      </button>
+    )
+  }
+  return (
+    <Link className="list-row" to={tripPath(t.trip.id, 'files', a.id)}>
+      {inner}
     </Link>
   )
 }
 
+export interface Selection {
+  active: boolean
+  ids: Set<string>
+  start: () => void
+  stop: () => void
+  toggle: (id: string) => void
+  setAll: (ids: string[]) => void
+}
+
+/** Select mode for deleting several files at once. */
+export function useSelection(): Selection {
+  const [active, setActive] = useState(false)
+  const [ids, setIds] = useState<Set<string>>(new Set())
+  return {
+    active,
+    ids,
+    start: () => {
+      setIds(new Set())
+      setActive(true)
+    },
+    stop: () => {
+      setIds(new Set())
+      setActive(false)
+    },
+    toggle: (id) =>
+      setIds((prev) => {
+        const next = new Set(prev)
+        if (!next.delete(id)) next.add(id)
+        return next
+      }),
+    setAll: (all) => setIds(new Set(all)),
+  }
+}
+
+/** The select mode's `select` prop for one file: only while selecting. */
+export const selectOf = (selection: Selection, id: string): Select | undefined =>
+  selection.active ? { on: selection.ids.has(id), toggle: () => selection.toggle(id) } : undefined
+
+/** The bar above the tab bar in select mode: how many are ticked, select all, delete, cancel. */
+export function SelectBar({
+  shown,
+  noun,
+  selection,
+  onDeleted,
+}: {
+  shown: Attachment[]
+  noun: string
+  selection: Selection
+  onDeleted: (n: number) => void
+}) {
+  const t = useTrip()
+  const ownerOf = ownerFinder(t)
+  const picked = shown.filter((a) => selection.ids.has(a.id))
+  const n = picked.length
+  const onDelete = async () => {
+    if (!n) return
+    const everyLeg = picked.some((a) => ownerOf(a)?.booking) ? ' Those of a whole booking go from every journey on it.' : ''
+    const forEveryone = t.server && picked.some((a) => !a.private) ? ' They will be deleted for everyone on the trip.' : ''
+    if (!confirm(`Delete ${plural(n, noun)}?${everyLeg}${forEveryone}`)) return
+    await deleteAttachments(picked.map((a) => a.id))
+    selection.stop()
+    onDeleted(n)
+  }
+  return (
+    <div className="select-bar">
+      <strong>{n} selected</strong>
+      <button type="button" className="btn btn-small" onClick={() => selection.setAll(shown.map((a) => a.id))}>
+        Select all
+      </button>
+      <button type="button" className="btn btn-small btn-danger" disabled={n === 0} onClick={() => void onDelete()}>
+        Delete
+      </button>
+      <button type="button" className="btn btn-small btn-ghost" onClick={selection.stop}>
+        Cancel
+      </button>
+    </div>
+  )
+}
+
 /** Photos under their days, each day a grid of tiles. */
-export function PhotosByDay({ photos }: { photos: Attachment[] }) {
+export function PhotosByDay({ photos, selection }: { photos: Attachment[]; selection?: Selection }) {
   const t = useTrip()
   const files = useTripFiles(t.trip.id)
   const stateOf = stateFinder(t)
@@ -79,7 +186,7 @@ export function PhotosByDay({ photos }: { photos: Attachment[] }) {
           <h4 className="small muted">{fmtDay(day)}</h4>
           <div className="photo-grid">
             {list.map((a) => (
-              <PhotoTile key={a.id} a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} />
+              <PhotoTile key={a.id} a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} select={selection && selectOf(selection, a.id)} />
             ))}
           </div>
         </div>

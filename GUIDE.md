@@ -197,13 +197,17 @@ owed. **+ Payment** records any other payment.
 ### Files tab
 
 The 📎 Files tab has a switch at the top: **Documents** (tickets, bookings, insurance) or **Photos**. Both
-group what's in them by what it belongs to, with the whole trip first, then stays, journeys, activities,
-places and expenses. Documents lists every document in each group. Photos shows the first 3 photos of each
-group; tap **See all** to see all of that group's photos, by day.
+have a heading for what the files belong to, with the whole trip first, then stays, journeys, activities,
+places and expenses. Each item has its own section under its kind. Photos show 3 per section; tap
+**See all** to see all of that item's photos, by day.
+
+To delete several, tap **Select**, tick them and tap **Delete**. **Select all** ticks everything shown.
 
 <img src="docs/guide/documents.png" alt="The Files tab on Documents, with the whole trip's documents above those of a journey" width="300">
 
-<img src="docs/guide/photos.png" alt="The Files tab on Photos, with a row of photos for the whole trip and a See all link, then one photo under Journeys" width="300">
+<img src="docs/guide/photos.png" alt="The Files tab on Photos, under the Activities heading, with a section for each item: the Senso-ji visit with two photos and teamLab with one" width="300">
+
+<img src="docs/guide/select.png" alt="The Files tab in select mode, with two photos ticked and a bar showing 2 selected" width="300">
 
 ## 6. After the trip
 

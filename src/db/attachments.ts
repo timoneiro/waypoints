@@ -89,13 +89,20 @@ export async function updateAttachment(id: string, changes: { name: string; capt
 
 /** Deletes it for everyone (a tombstone that syncs), and its file from this phone. */
 export async function deleteAttachment(id: string) {
+  await deleteAttachments([id])
+}
+
+/** Deletes several at once, in one transaction: a failure deletes none. Missing or deleted ones are skipped. */
+export async function deleteAttachments(ids: string[]) {
   await db.transaction('rw', db.attachments, db.files, db.outbox, async () => {
-    const existing = await db.attachments.get(id)
-    if (!existing || existing.deletedAt) return
-    const now = nowISO()
-    await db.attachments.put({ ...existing, deletedAt: now, updatedAt: now })
-    await db.files.delete(id)
-    await db.outbox.bulkPut(outboxFor(existing))
+    for (const id of ids) {
+      const existing = await db.attachments.get(id)
+      if (!existing || existing.deletedAt) continue
+      const now = nowISO()
+      await db.attachments.put({ ...existing, deletedAt: now, updatedAt: now })
+      await db.files.delete(id)
+      await db.outbox.bulkPut(outboxFor(existing))
+    }
   })
 }
 

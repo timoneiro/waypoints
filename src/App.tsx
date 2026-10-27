@@ -13,7 +13,7 @@ import { StayFormPage, StayPage } from './ui/items/stays'
 import { TransportFormPage, TransportPage } from './ui/items/transport'
 import { MoveToServerPage } from './ui/pages/MoveToServerPage'
 import { OpenPage } from './ui/pages/OpenPage'
-import { PhotoGroupPage } from './ui/pages/PhotoGroupPage'
+import { PhotoGroupPage, PhotoItemPage } from './ui/pages/PhotoGroupPage'
 import { PhotosPage } from './ui/pages/PhotosPage'
 import { PlanPage } from './ui/pages/PlanPage'
 import { ReportPage } from './ui/pages/ReportPage'
@@ -52,6 +52,7 @@ export default function App() {
           <Route path="money" element={<MoneyPage />} />
           <Route path="photos" element={<PhotosPage />} />
           <Route path="photos/:group" element={<PhotoGroupPage />} />
+          <Route path="photos/:group/:itemId" element={<PhotoItemPage />} />
           <Route path="reviews" element={<ReviewsPage />} />
           <Route path="report" element={<ReportPage />} />
           <Route path="trip" element={<TripInfoPage />} />

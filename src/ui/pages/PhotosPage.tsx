@@ -1,9 +1,9 @@
+import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import type { Attachment } from '../../db/types'
 import { isPhoto, ownerFinder, sortDocuments, stateFinder, tripPhotos, useTripFiles } from '../attachments'
 import { Notice } from '../components/bits'
-import { AddAttachments, DocumentRow, PhotoTile } from '../components/Attachments'
-import { groupFiles, type FileGroup } from '../fileGroups'
+import { AddAttachments, DocumentRow, PhotoTile, SelectBar, selectOf, useSelection } from '../components/Attachments'
+import { sectionFiles } from '../fileGroups'
 import { fmtBytes, plural } from '../format'
 import { tripPath, useTrip } from '../tripData'
 
@@ -14,10 +14,20 @@ export function PhotosPage() {
   const ownerOf = ownerFinder(t)
   const stateOf = stateFinder(t)
   const [params, setParams] = useSearchParams()
+  const selection = useSelection()
+  const [deleted, setDeleted] = useState<string>()
   const view = params.get('view') === 'photos' ? 'photos' : 'documents'
-  const groupOf = (a: Attachment): FileGroup => ownerOf(a)?.table ?? 'trip'
-  const docGroups = groupFiles(sortDocuments(t.attachments.filter((a) => !isPhoto(a)), ownerOf), groupOf)
-  const photoGroups = groupFiles(tripPhotos(t), groupOf)
+  const docGroups = sectionFiles(sortDocuments(t.attachments.filter((a) => !isPhoto(a)), ownerOf), ownerOf)
+  const photoGroups = sectionFiles(tripPhotos(t), ownerOf)
+  const shownDocs = docGroups.flatMap((g) => g.sections.flatMap((s) => s.items))
+  const shownPhotos = photoGroups.flatMap((g) => g.sections.flatMap((s) => s.items.slice(0, 3)))
+  const shown = view === 'documents' ? shownDocs : shownPhotos
+  const noun = view === 'documents' ? 'document' : 'photo'
+  const switchView = (next: Record<string, string>) => {
+    selection.stop()
+    setDeleted(undefined)
+    setParams(next, { replace: true })
+  }
   const states = t.attachments.map((a) => stateOf(a, files?.get(a.id)))
   const waiting = states.filter((s) => s === 'waiting').length
   const refused = states.filter((s) => s === 'refused').length
@@ -44,18 +54,34 @@ export function PhotosPage() {
       <AddAttachments choose />
 
       <div className="segmented" role="tablist" aria-label="View">
-        <button role="tab" aria-selected={view === 'documents'} className={view === 'documents' ? 'active' : ''} onClick={() => setParams({}, { replace: true })}>
+        <button role="tab" aria-selected={view === 'documents'} className={view === 'documents' ? 'active' : ''} onClick={() => switchView({})}>
           Documents
         </button>
         <button
           role="tab"
           aria-selected={view === 'photos'}
           className={view === 'photos' ? 'active' : ''}
-          onClick={() => setParams({ view: 'photos' }, { replace: true })}
+          onClick={() => switchView({ view: 'photos' })}
         >
           Photos
         </button>
       </div>
+
+      {shown.length > 0 && !selection.active && (
+        <div className="actions">
+          <button
+            type="button"
+            className="btn btn-small"
+            onClick={() => {
+              setDeleted(undefined)
+              selection.start()
+            }}
+          >
+            Select
+          </button>
+        </div>
+      )}
+      {deleted && <Notice kind="ok">{deleted}</Notice>}
 
       {view === 'documents' ? (
         <section className="stack">
@@ -63,13 +89,24 @@ export function PhotosPage() {
           {docGroups.map((g) => (
             <div key={g.group} className="stack" style={{ gap: 6 }}>
               <h3 className="group-title">{g.label}</h3>
-              <ul className="list">
-                {g.items.map((a) => (
-                  <li key={a.id}>
-                    <DocumentRow a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} item={ownerOf(a)} />
-                  </li>
-                ))}
-              </ul>
+              {g.sections.map((s) => (
+                <div key={s.key} className="stack" style={{ gap: 6 }}>
+                  {g.group !== 'trip' && (
+                    <div className="row spread">
+                      <h4>
+                        {s.emoji} {s.title}
+                      </h4>
+                    </div>
+                  )}
+                  <ul className="list">
+                    {s.items.map((a) => (
+                      <li key={a.id}>
+                        <DocumentRow a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} select={selectOf(selection, a.id)} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           ))}
         </section>
@@ -78,23 +115,44 @@ export function PhotosPage() {
           {photoGroups.length === 0 && <p className="muted small">Photos of the trip, by day. Add them here, or to a stay, an activity or a place.</p>}
           {photoGroups.map((g) => (
             <div key={g.group} className="stack" style={{ gap: 6 }}>
-              <div className="row spread">
-                <h3 className="group-title">{g.label}</h3>
-                {g.items.length > 3 && (
-                  <Link className="link small" to={tripPath(t.trip.id, 'photos', g.group)}>
-                    See all {g.items.length} ›
+              {g.sections.map((s) => {
+                const seeAll = s.items.length > 3 && (
+                  <Link className="link small" to={tripPath(t.trip.id, ...s.seeAll)}>
+                    See all {s.items.length} ›
                   </Link>
-                )}
-              </div>
-              <div className="photo-grid photo-row">
-                {g.items.slice(0, 3).map((a) => (
-                  <PhotoTile key={a.id} a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} />
-                ))}
-              </div>
+                )
+                return (
+                  <div key={s.key} className="stack" style={{ gap: 6 }}>
+                    {g.group === 'trip' ? (
+                      <div className="row spread">
+                        <h3 className="group-title">{g.label}</h3>
+                        {seeAll}
+                      </div>
+                    ) : (
+                      <>
+                        {s === g.sections[0] && <h3 className="group-title">{g.label}</h3>}
+                        <div className="row spread">
+                          <h4>
+                            {s.emoji} {s.title}
+                          </h4>
+                          {seeAll}
+                        </div>
+                      </>
+                    )}
+                    <div className="photo-grid photo-row">
+                      {s.items.slice(0, 3).map((a) => (
+                        <PhotoTile key={a.id} a={a} file={files?.get(a.id)} state={stateOf(a, files?.get(a.id))} select={selectOf(selection, a.id)} />
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           ))}
         </section>
       )}
+
+      {selection.active && <SelectBar shown={shown} noun={noun} selection={selection} onDeleted={(n) => setDeleted(`Deleted ${plural(n, noun)}.`)} />}
 
       {used > 0 && <p className="muted small">They take {fmtBytes(used)} on this phone.</p>}
     </>
