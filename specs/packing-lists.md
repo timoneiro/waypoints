@@ -1,6 +1,6 @@
 # Packing & to-do lists
 
-Status: ready
+Status: building
 Issue: https://github.com/waypoints-pwa/waypoints/issues/14
 Builds after: none
 
