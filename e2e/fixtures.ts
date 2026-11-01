@@ -66,7 +66,7 @@ export async function importDemoTrip(page: Page): Promise<Backup> {
   const backup = await demoBackup()
   const file = join(mkdtempSync(join(tmpdir(), 'waypoints-smoke-')), 'japan-in-spring.json')
   writeFileSync(file, JSON.stringify(backup))
-  await page.goto('open')
+  await page.goto('#/open')
   await page.locator('input[type=file]').setInputFiles(file)
   await page.waitForURL(new RegExp(`/trips/${backup.trips[0].id}`))
   await page.waitForLoadState('networkidle')
@@ -75,6 +75,6 @@ export async function importDemoTrip(page: Page): Promise<Backup> {
 
 /** Picks who this phone belongs to, on the trip's own tab. */
 export async function pickMe(page: Page, tripId: string, name: string) {
-  await page.goto(`trips/${tripId}/trip`)
+  await page.goto(`#/trips/${tripId}/trip`)
   await page.getByLabel('Which one are you?').selectOption({ label: name })
 }
