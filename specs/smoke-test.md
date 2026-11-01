@@ -1,6 +1,6 @@
 # Smoke test
 
-Status: ready
+Status: building
 Issue: https://github.com/waypoints-pwa/waypoints/issues/38
 Builds after: none
 
