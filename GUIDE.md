@@ -128,6 +128,10 @@ The 📍 Places tab keeps the places you'd like to visit, grouped by city.
 
 - Mark a place as **⭐ Must see**.
 - Tick **✅ Been there** when you've visited.
+- On a trip with two or more travellers, tap **🙋 I want to go** on a place (or the 🙋 button on its row) to
+  say you'd like to see it. The row shows how many want to go, and the place page shows who. Tap again to
+  take it back. Once any place has a vote, **Most wanted first** puts each city's most wanted places on top.
+  With a sync server, it needs updating to the latest server version to share the votes.
 - Tap **🗓️ Add to the plan** to turn a place into an activity on a day.
 - Paste a Google or Apple Maps link to open the place on the map again later.
 - With a sync server, a new place has a **Paste a Google Maps link** box: paste the link (in Google Maps,
