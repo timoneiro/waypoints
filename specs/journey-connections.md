@@ -1,6 +1,6 @@
 # Connections in the plan
 
-Status: ready
+Status: shipped (0.15.0)
 Issue: https://github.com/waypoints-pwa/waypoints/issues/18
 Builds after: none
 
@@ -82,7 +82,7 @@ Example: LIS 08:10 → FRA 10:40 and FRA 12:50 → NRT 07:30 next day: "LIS → 
      undefined; it can be negative. A pair is split when `layoverMinutes > 1440`, or, with it undefined,
      when `daysBetween(prev.arriveDate ?? prev.departDate, next.departDate) >= 2`. Each unsplit run of 2+
      legs is one `Connection`: `stops` is `legs.length - 1`, `joins` has `legs.length - 1` entries, `place`
-     is `stop(prev, prev.to)`. Leg numbers in warnings count within the run; the exact texts are under
+     is `stop(prev, prev.to)`, `key` is `legs[0].id`. Leg numbers in warnings count within the run; the exact texts are under
      Behavior, using `stop` for the places. Sort the result by first leg's departure.
    - Depends on: none
    - Done when: `npx vitest run src/domain/bookings.test.ts` passes, with existing tests unchanged and new
@@ -96,7 +96,7 @@ Example: LIS 08:10 → FRA 10:40 and FRA 12:50 → NRT 07:30 next day: "LIS → 
    - Executor: haiku
 2. **Connection card and group**
    - Change: new `src/ui/components/ConnectionCard.tsx`, props `{ connection: Connection; title: string }`:
-     a `section.card` with `<h3>{title}</h3>`, then the legs and joins as under Behavior. Legs link with
+     a `section.card` with `<h3>{title}</h3>`, then the legs and joins as under Behavior, each leg in a `div.stack`. Legs link with
      `tripPath(useTrip().trip.id, 'transport', leg.id)` and class `link`, the time in `muted small`, layover
      lines `muted small`, warnings `<p className="notice notice-warn small">`. Layover text is
      `fmtDuration(layoverMinutes * 60_000)`. In `Bookings` in `PlanPage.tsx`, above the Transport group,
@@ -175,3 +175,9 @@ Example: LIS 08:10 → FRA 10:40 and FRA 12:50 → NRT 07:30 next day: "LIS → 
 - The place check matches `route` on purpose, so title and warning always agree. A flight to
   "Frankfurt (FRA)" then a train from "Frankfurt" warns; accepted, as warnings are advisory.
 - The 24 h threshold is a heuristic; adjust in review.
+- As built:
+  - App 0.15.0; the server is unchanged.
+  - If a leg leaves before the previous one has even departed, `bookingLegs` swaps them, so the card lists
+    them in departure order and warns on that order ("FRA → NRT, LIS → FRA"). It follows the rule; raised for review in the PR.
+  - The browser checks were a throwaway script: the manual steps, all acceptance criteria and edge cases. The
+    smoke test does not open a connection card, so no automated check covers the rendered card.

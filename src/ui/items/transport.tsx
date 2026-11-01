@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useParams, useSearchParams } from 'react-router'
 import type { Transport, TransportMode } from '../../db/types'
+import { connections } from '../../domain/bookings'
 import { transportEvent } from '../../domain/calendar'
 import { transportDuration, tripPhase } from '../../domain/itinerary'
 import { mapQuery } from '../../domain/links'
 import { airportCode } from '../../domain/places'
 import { isDay, zoneCity, zonedInstant } from '../../domain/time'
 import { CopyCode, DetailHead } from '../components/bits'
+import { ConnectionCard } from '../components/ConnectionCard'
 import { ChoiceChips, DateTimeField, NotesField, TextField, ZoneField } from '../components/fields'
 import { AirportField, CityField } from '../components/PlaceFields'
 import { CalendarLinks, MapLinks, WebLink } from '../components/ItemLinks'
@@ -126,6 +128,7 @@ export function TransportPage() {
   const duration = transportDuration(r)
   const arriveZone = r.arriveTimeZone ?? r.departTimeZone
   const zones = r.departTimeZone === arriveZone ? [r.departTimeZone] : [r.departTimeZone, arriveZone]
+  const connection = connections(t.transports).find((c) => c.legs.some((l) => l.id === r.id))
   return (
     <article className="stack">
       <DetailHead emoji={mode.emoji} title={`${r.from} → ${r.to}`} subtitle={[mode.label, r.carrier, r.number].filter(Boolean).join(' · ')} />
@@ -167,6 +170,7 @@ export function TransportPage() {
           <WebLink url={r.link}>Booking page</WebLink>
         </div>
       </section>
+      {connection && <ConnectionCard connection={connection} title={`Part of a connection: ${connection.route}`} />}
       <section className="card">
         <h3>Getting there</h3>
         <p className="muted small">Directions to {r.from}.</p>

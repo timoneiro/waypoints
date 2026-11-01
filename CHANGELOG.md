@@ -8,6 +8,12 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.15.0 — 2026-11-01
+
+Journeys on one booking reference now show together under **Connections** in the Bookings view of the Plan tab, with the stops, the route and the layover in each place. Each journey in a connection shows the same card on its own page.
+
+If a journey leaves from another place than the one the previous journey arrives at, or leaves before it arrives, a warning shows. Journeys more than a day apart on one reference, like a flight there and back, stay separate.
+
 ## 0.14.0 — 2026-11-01
 
 Each trip has a **Packing & to-do** card on its Trip tab: one shared checklist for what to bring and what to do before leaving. Add items, tick them off, pick who's bringing each one, or start from a template (Beach, City, Hiking, Skiing).
