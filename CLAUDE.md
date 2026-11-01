@@ -70,6 +70,8 @@ Every user-facing change bumps `version` in `package.json` and adds a `## x.y.z 
 top of `CHANGELOG.md`, written for people who use the app (`src/domain/changelog.test.ts` fails CI if the
 entry is missing). The entry is the app's "What's new" card. Internal changes skip the bump.
 A user-facing change also updates `GUIDE.md`, and re-runs `npm run guide:screenshots` when a pictured screen changed.
+A new screen or link to another site adds to the smoke test (`e2e/`); specs write "`npm run smoke` passes"
+for what it covers instead of manual checks.
 
 ## Content-Security-Policy
 The built app ships a CSP `<meta>` (in `vite.config.ts`, build only) with `connect-src 'self' https:` (plus
@@ -113,7 +115,8 @@ another host (an exchange-rate API, map tiles) needs adding there, and must stay
   plain CSS tokens in `src/index.css` (light + dark).
 
 ## Commands
-`npm run dev` · `npm test` (app, server, app↔server) · `npm run lint` · `npm run typecheck` · `npm run build`.
+`npm run dev` · `npm test` (app, server, app↔server) · `npm run lint` · `npm run typecheck` · `npm run build` · `npm run smoke` (built app in Chromium; first run needs
+`npx playwright install chromium`).
 Server locally: `DATA_DIR=./server/data FILES_DIR=./server/files node server/src/main.ts`.
 
 On Windows Git Bash, set `MSYS_NO_PATHCONV=1` when passing `BASE_PATH=/waypoints/` to a local build.
