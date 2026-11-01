@@ -8,6 +8,12 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.14.0 — 2026-11-01
+
+Each trip has a **Packing & to-do** card on its Trip tab: one shared checklist for what to bring and what to do before leaving. Add items, tick them off, pick who's bringing each one, or start from a template (Beach, City, Hiking, Skiing).
+
+Sharing a trip with a sync server needs the server updated to 0.6.0 for the lists to be shared. Until then they stay on your phone, and links keep working.
+
 ## 0.13.0 — 2026-10-27
 
 In 📎 Files, each stay, journey, activity, place and expense has its own section under its kind, titled with its emoji and name. Whole trip stays first.
