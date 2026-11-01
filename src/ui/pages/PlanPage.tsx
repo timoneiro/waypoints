@@ -1,10 +1,12 @@
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import type { Day } from '../../db/types'
+import { connections } from '../../domain/bookings'
 import { buildPlan, nextUp, planEntries, tripPhase, type PlanDay, type PlanEntry } from '../../domain/itinerary'
 import { mapQuery } from '../../domain/links'
 import { daysBetween } from '../../domain/time'
 import { CopyCode } from '../components/bits'
+import { ConnectionCard } from '../components/ConnectionCard'
 import { MapLinks } from '../components/ItemLinks'
 import { UnsentNotice } from '../components/UnsentNotice'
 import { describeEntry } from '../entries'
@@ -223,10 +225,19 @@ function Bookings() {
   const t = useTrip()
   const id = t.trip.id
   const transports = [...t.transports].sort((a, b) => (a.departDate + (a.departTime ?? '')).localeCompare(b.departDate + (b.departTime ?? '')))
+  const links = connections(t.transports)
   const stays = [...t.stays].sort((a, b) => a.checkInDate.localeCompare(b.checkInDate))
   const activities = [...t.activities].sort((a, b) => (a.date + (a.startTime ?? '')).localeCompare(b.date + (b.startTime ?? '')))
   return (
     <>
+      {links.length > 0 && (
+        <section>
+          <h3 className="group-title">Connections</h3>
+          {links.map((c) => (
+            <ConnectionCard key={c.legs[0].id} connection={c} title={`${c.route} · ${plural(c.stops, 'stop')}`} />
+          ))}
+        </section>
+      )}
       <BookingGroup title="Transport" empty="No transport yet.">
         {transports.map((r) => (
           <BookingRow
