@@ -28,6 +28,8 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run smoke
       - run: npx vite build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
