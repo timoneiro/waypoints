@@ -176,6 +176,12 @@ const SPECS: { [T in RecordTable]: Record<string, { check: Check; required: bool
     note: optional(LONG),
     missed: optional(bool),
   },
+  packingItems: {
+    tripId: required(isId),
+    text: required(SHORT),
+    packed: optional(bool),
+    bringer: optional(isId),
+  },
   attachments: {
     tripId: required(isId),
     kind: required(WORD),
@@ -204,7 +210,7 @@ const SPECS: { [T in RecordTable]: Record<string, { check: Check; required: bool
 const MAX_FUTURE_MS = 24 * 60 * 60 * 1000
 
 export function checkRecord<T extends RecordTable>(table: T, raw: unknown, now = Date.now()): asserts raw is TableRecords[T] {
-  const invalid = () => new DataError(`It contains an invalid ${table.replace(/s$/, '')}.`)
+  const invalid = () => new DataError(`It contains an invalid ${table.replace(/s$/, '').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()}.`)
   if (!isObject(raw) || !isId(raw.id) || !isTimestamp(raw.createdAt) || !isTimestamp(raw.updatedAt)) throw invalid()
   if (raw.deletedAt !== undefined && !isTimestamp(raw.deletedAt)) throw invalid()
   if (Date.parse(raw.updatedAt) > now + MAX_FUTURE_MS || (typeof raw.linkedAt === 'string' && Date.parse(raw.linkedAt) > now + MAX_FUTURE_MS)) {

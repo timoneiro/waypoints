@@ -257,6 +257,14 @@ export interface Review extends TripRecord {
   missed?: boolean
 }
 
+/** One line of the trip's shared packing and to-do list. */
+export interface PackingItem extends TripRecord {
+  text: string
+  packed?: boolean
+  /** Traveller bringing it. */
+  bringer?: string
+}
+
 /**
  * The trip's report (spending, reviews, highlights), kept on the sync server once the trip is over,
  * so it's made once and everyone opens the same one. One per trip: its id comes from the trip's (see
@@ -279,7 +287,7 @@ export interface Report extends TripRecord {
  * open links that have them, leaving the reviews out. Attachments and reports travel only through
  * the sync server.
  */
-export const LINK_TABLES = ['travellers', 'stays', 'transports', 'activities', 'places', 'expenses', 'exchanges', 'reviews'] as const
+export const LINK_TABLES = ['travellers', 'stays', 'transports', 'activities', 'places', 'expenses', 'exchanges', 'reviews', 'packingItems'] as const
 export type LinkTable = (typeof LINK_TABLES)[number]
 export const TRIP_TABLES = [...LINK_TABLES, 'attachments', 'reports'] as const
 export type TripTable = (typeof TRIP_TABLES)[number]
@@ -296,6 +304,7 @@ export interface TableRecords {
   expenses: Expense
   exchanges: Exchange
   reviews: Review
+  packingItems: PackingItem
   attachments: Attachment
   reports: Report
 }
@@ -313,6 +322,7 @@ export const emptyTables = (): Tables => ({
   expenses: [],
   exchanges: [],
   reviews: [],
+  packingItems: [],
   attachments: [],
   reports: [],
 })
