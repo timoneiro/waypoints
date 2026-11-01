@@ -5,6 +5,7 @@ import type { Place, PlaceCategory } from '../../db/types'
 import { SETTINGS } from '../../db/db'
 import { isGoogleMapsUrl } from '../../domain/googleMaps'
 import { mapQuery, safeHttpUrl } from '../../domain/links'
+import { rankByVotes, votesOf, wantLabel } from '../../domain/votes'
 import { cityAt, reverseAddressOnline } from '../../lib/places'
 import { GOOGLE_UNREACHABLE, lookUpGoogleMaps } from '../../sync/googleMaps'
 import { DetailHead, EmptyState, Notice } from '../components/bits'
@@ -17,6 +18,7 @@ import { labelOf, PLACE_CATEGORIES } from '../labels'
 import { tripPath, useTrip } from '../tripData'
 import { AttachmentsCard } from '../components/Attachments'
 import { ReviewsCard } from '../components/Reviews'
+import { WantToGo } from '../components/Votes'
 import { ItemFooter, ItemForm, ItemGone } from './common'
 import { opt, useSave } from './save'
 
@@ -29,6 +31,8 @@ export function PlacesPage() {
   const city = params.get('city')
   const category = params.get('category')
   const hideVisited = params.get('visited') === 'hide'
+  const group = t.travellers.length > 1
+  const wanted = group && params.get('sort') === 'wanted'
   const setFilter = (key: string, value: string | null) =>
     setParams(
       (p) => {
@@ -106,16 +110,25 @@ export function PlacesPage() {
               <span>Hide the {plural(visited, 'place')} you've been to</span>
             </label>
           )}
+          {group && t.votes.length > 0 && (
+            <div className="chips">
+              <button className="toggle-chip" aria-pressed={wanted} onClick={() => setFilter('sort', wanted ? null : 'wanted')}>
+                Most wanted first
+              </button>
+            </div>
+          )}
           {cities
             .filter((c) => shown.some((p) => cityOf(p) === c))
             .map((c) => (
               <section key={c}>
                 {cities.length > 1 && <h3 className="group-title">{c || 'No city'}</h3>}
                 <ul className="list">
-                  {shown
-                    .filter((p) => cityOf(p) === c)
-                    .sort((a, b) => Number(Boolean(a.visited)) - Number(Boolean(b.visited)) || Number(Boolean(b.mustSee)) - Number(Boolean(a.mustSee)) || a.name.localeCompare(b.name))
-                    .map((p) => (
+                  {(() => {
+                    const ordered = shown
+                      .filter((p) => cityOf(p) === c)
+                      .sort((a, b) => Number(Boolean(a.visited)) - Number(Boolean(b.visited)) || Number(Boolean(b.mustSee)) - Number(Boolean(a.mustSee)) || a.name.localeCompare(b.name))
+                    return wanted ? rankByVotes(ordered, t.votes) : ordered
+                  })().map((p) => (
                       <PlaceRow key={p.id} place={p} />
                     ))}
                 </ul>
@@ -131,6 +144,7 @@ export function PlacesPage() {
 function PlaceRow({ place }: { place: Place }) {
   const t = useTrip()
   const category = labelOf(PLACE_CATEGORIES, place.category)
+  const wants = t.travellers.length > 1 ? votesOf(t.votes, place.id).length : 0
   return (
     <li className={`list-row${place.visited ? ' done' : ''}`}>
       <Link to={tripPath(t.trip.id, 'places', place.id)} className="row-link">
@@ -139,9 +153,10 @@ function PlaceRow({ place }: { place: Place }) {
         </span>
         <span className="list-text">
           <strong>{place.name}</strong>
-          <span className="muted small">{[place.mustSee && '⭐ Must see', place.notes?.split('\n')[0] || place.address || category.label].filter(Boolean).join(' · ')}</span>
+          <span className="muted small">{[place.mustSee && '⭐ Must see', wants > 0 && wantLabel(wants), place.notes?.split('\n')[0] || place.address || category.label].filter(Boolean).join(' · ')}</span>
         </span>
       </Link>
+      <WantToGo place={place} variant="row" />
       <button
         type="button"
         className="icon-btn"
@@ -298,6 +313,7 @@ export function PlacePage() {
   const category = labelOf(PLACE_CATEGORIES, place.category)
   const visits = t.activities.filter((a) => a.placeId === place.id).sort((a, b) => a.date.localeCompare(b.date))
   const link = safeHttpUrl(place.link)
+  const voters = t.travellers.length > 1 ? t.travellers.filter((x) => votesOf(t.votes, place.id).some((v) => v.by === x.id)).map((x) => x.name) : []
   return (
     <article className="stack">
       <DetailHead emoji={category.emoji} title={place.name} subtitle={[category.label, place.city].filter(Boolean).join(' · ')} />
@@ -308,7 +324,13 @@ export function PlacePage() {
         <button type="button" className="toggle-chip" aria-pressed={Boolean(place.visited)} onClick={() => void patchRecord('places', place.id, { visited: place.visited ? undefined : true })}>
           ✅ Been there
         </button>
+        <WantToGo place={place} variant="chip" />
       </div>
+      {voters.length > 0 && (
+        <p className="small">
+          {wantLabel(voters.length)}: {voters.join(', ')}
+        </p>
+      )}
       <section className="card">
         {place.address && <p className="prewrap">{place.address}</p>}
         <div className="actions">

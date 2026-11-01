@@ -45,12 +45,18 @@ function StarPicker({ value, onPick }: { value?: number; onPick: (stars: number)
 }
 
 /** Reviews are by a traveller, so a phone that hasn't said whose it is asks first. */
-export function WhoAreYou() {
+export function WhoAreYou({ hint, onPick }: { hint?: string; onPick?: (travellerId: string) => void }) {
   const t = useTrip()
   return (
     <label className="field">
       <span>Which one are you?</span>
-      <select className="input" value="" onChange={(e) => void setMe(t.trip.id, e.target.value || undefined)}>
+      <select className="input" value="" onChange={(e) => {
+          const id = e.target.value || undefined
+          void setMe(t.trip.id, id).then(() => {
+            if (id) onPick?.(id)
+          })
+        }}
+      >
         <option value="">Choose…</option>
         {t.travellers.map((x) => (
           <option key={x.id} value={x.id}>
@@ -58,7 +64,7 @@ export function WhoAreYou() {
           </option>
         ))}
       </select>
-      <small className="muted">So your reviews are yours. Only on this phone: you can change it in the Trip tab.</small>
+      <small className="muted">{hint ?? 'So your reviews are yours. Only on this phone: you can change it in the Trip tab.'}</small>
     </label>
   )
 }
