@@ -200,9 +200,9 @@ last line of `src/main.tsx`, run `npm run smoke`, see it fail naming `https://ex
   dark theme were offered and left out); a CLAUDE.md rule so future specs use the smoke test instead of
   manual checks.
 - As built:
-  - The app uses `HashRouter`, so the helpers go to `#/open` and `#/trips/<id>/trip` (review of task 2 fixed
-    what task 1 had).
+  - The app uses `HashRouter`, so the helpers go to `#/open` and `#/trips/<id>/trip` (task 2 corrected
+    the paths task 1 wrote).
   - `evaluate` calls in the e2e files use string expressions, because `tsconfig.node.json` has no DOM types.
   - Vitest listed 26 files when this was built, not the 21 in the first draft: `main` had moved on.
-  - Checked by the reviewer: the fetch guard check by hand, ten deliberate faults in scratch copies (each one
+  - Checked by the reviewer: the fetch guard check by hand, nine deliberate faults in scratch copies (each one
     caught), and the suite passing 15 of 15 with `--repeat-each=5`.
