@@ -12,7 +12,7 @@ export function ConnectionCard({ connection, title }: { connection: Connection; 
       {connection.legs.map((leg, i) => {
         const join = connection.joins[i - 1]
         return (
-          <div key={leg.id}>
+          <div key={leg.id} className="stack">
             {join && (
               <>
                 {(join.layoverMinutes === undefined || join.layoverMinutes >= 0) && (
