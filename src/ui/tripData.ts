@@ -1,11 +1,12 @@
 import { createContext, useContext } from 'react'
 import { db, getSetting, isLive, recordTable, SETTINGS } from '../db/db'
 import { getServerConfig } from '../db/serverState'
-import type { Activity, Attachment, Exchange, Expense, PackingItem, Place, Report, Review, ServerTrip, Stay, Transport, Traveller, Trip, TripTable } from '../db/types'
+import type { Activity, Attachment, Exchange, Expense, PackingItem, Place, Report, Review, ServerTrip, Stay, Transport, Traveller, Trip, TripTable, Vote } from '../db/types'
 import { bookingKey } from '../domain/bookings'
 import { rateFinder, type RateOf } from '../domain/expenses'
 import { fold } from '../domain/places'
 import type { MemberSummary } from '../domain/serverProtocol'
+import { currentVotes } from '../domain/votes'
 import { labelOf, PLACE_CATEGORIES, STAY_KINDS } from './labels'
 
 /** An address already in the trip, to suggest for another item there (an activity at the hotel). */
@@ -31,6 +32,8 @@ export interface TripData {
   reviews: Review[]
   /** The trip's shared packing and to-do items. */
   packingItems: PackingItem[]
+  /** The votes that count: not turned off, and by someone still on the trip (see currentVotes). */
+  votes: Vote[]
   /** Photos and documents (their records: the files are in db.files). */
   attachments: Attachment[]
   /** The trip's report, kept on the sync server once the trip is over, if someone has made it. */
@@ -79,7 +82,7 @@ export async function loadTrip(tripId: string): Promise<TripData | null> {
   const trip = await db.trips.get(tripId)
   if (!trip || trip.deletedAt) return null
   const ofTrip = <T extends TripTable>(table: T) => recordTable(table).where('tripId').equals(tripId).toArray()
-  const [allTravellers, stays, transports, activities, places, expenses, exchanges, reviews, packingItems, attachments, reports, meId, unsent, server, waiting, config, serverGone] = await Promise.all([
+  const [allTravellers, stays, transports, activities, places, expenses, exchanges, reviews, packingItems, votes, attachments, reports, meId, unsent, server, waiting, config, serverGone] = await Promise.all([
     ofTrip('travellers'),
     ofTrip('stays'),
     ofTrip('transports'),
@@ -89,6 +92,7 @@ export async function loadTrip(tripId: string): Promise<TripData | null> {
     ofTrip('exchanges'),
     ofTrip('reviews'),
     ofTrip('packingItems'),
+    ofTrip('votes'),
     ofTrip('attachments'),
     ofTrip('reports'),
     getSetting<string>(SETTINGS.me(tripId)),
@@ -145,6 +149,8 @@ export async function loadTrip(tripId: string): Promise<TripData | null> {
     trip,
     travellers,
     ...data,
+    // Removed travellers' votes are left out here, so no page has to remember to.
+    votes: currentVotes(votes, travellers),
     // One per trip (see reportId); the newest, should a crafted one have slipped in beside it.
     report: reports.filter(isLive).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0],
     bookings,
