@@ -1,6 +1,6 @@
 # Packing & to-do lists
 
-Status: building
+Status: shipped
 Issue: https://github.com/waypoints-pwa/waypoints/issues/14
 Builds after: none
 
@@ -12,7 +12,8 @@ no shared checklist, so nobody knows who is bringing the charger or the first-ai
 Each trip has one shared checklist of items, opened from a **Packing & to-do** card on the Trip tab.
 The card shows "2 of 9 packed", or "Nothing here yet" for an empty list.
 - Add an item (text, required, trimmed, up to 200 characters). Optionally set **Who's bringing it** to
-  one traveller of the trip. On a trip with one traveller, this field isn't shown. Typing text that's
+  one traveller of the trip. On a trip with one traveller, this field isn't shown, except when editing
+  an item that already has an assignee, so it can be seen and cleared. Typing text that's
   already on the list adds it anyway: two identical items can be intentional.
 - Anyone ticks or unticks an item with one tap. There is one shared packed state per item.
 - Items are shown unticked first, then ticked, each group in the order they were added. Items added
@@ -181,3 +182,12 @@ the charger is ticked.
 - Alphabetical order within a template, rather than spacing `addRecords` timestamps apart: it leaves
   the helper the Google list import uses alone, and every phone shows the same order.
 - `place-votes` builds after this spec and takes the Dexie version after this one.
+- As built:
+  - App 0.14.0, server 0.6.0, Dexie version 6.
+  - Long items cut off with an ellipsis on their row, and show in full in the edit row. A `button.list-text`
+    reset in `src/index.css` keeps a 200-character item inside a 320px screen (review of task 4 fixed this).
+  - The tap area of a row's checkbox is larger, through `.list-row > .check`. That rule also applies to the
+    Google list import rows, whose checkboxes should now be vertically centred (read from the CSS, not rendered).
+  - Domain helpers in `src/domain/packing.ts` also ignore tombstones, as a safety net: `TripData` only holds live items.
+  - The smoke test opens an empty list, so no automated check covers a filled row at phone width. The filled
+    list was checked with a throwaway browser script, including the two-profile flow under Verification.
