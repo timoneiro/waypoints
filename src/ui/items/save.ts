@@ -5,7 +5,7 @@ import type { LinkTable, TableRecords } from '../../db/types'
 import { tripPath, useTrip } from '../tripData'
 
 /** Route segment of each kind of item with a page of its own: /trips/<id>/<segment>/<itemId>. */
-export const SEGMENT: Record<Exclude<LinkTable, 'travellers' | 'reviews'>, string> = {
+export const SEGMENT: Record<Exclude<LinkTable, 'travellers' | 'reviews' | 'packingItems'>, string> = {
   stays: 'stays',
   transports: 'transport',
   activities: 'activities',

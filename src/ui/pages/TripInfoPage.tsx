@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router'
 import { removeTripFromPhone, setMe } from '../../db/actions'
 import { buildICS, tripEvents } from '../../domain/calendar'
 import { tripPhase } from '../../domain/itinerary'
+import { progress } from '../../domain/packing'
 import { daysBetween, timeZoneName, zoneCity } from '../../domain/time'
 import { downloadBlob, fileSlug } from '../../lib/download'
 import { leaveTrip } from '../../sync/account'
@@ -19,6 +20,7 @@ export function TripInfoPage() {
   const today = useToday()
   const { trip } = t
   const group = t.travellers.length > 1
+  const packing = progress(t.packingItems)
   const events = tripEvents(t.stays, t.transports, t.activities)
 
   const downloadCalendar = () =>
@@ -99,6 +101,14 @@ export function TripInfoPage() {
           {server && <ServerOffer t={t} />}
         </section>
       )}
+
+      <section className="card">
+        <h3>🎒 Packing & to-do</h3>
+        <p className="muted small">{packing.total ? `${packing.packed} of ${packing.total} packed` : 'Nothing here yet'}</p>
+        <Link className="btn" to={tripPath(trip.id, 'packing')}>
+          Open the list
+        </Link>
+      </section>
 
       <section className="card">
         <h3>📊 Trip report</h3>

@@ -136,6 +136,24 @@ The 📍 Places tab keeps the places you'd like to visit, grouped by city.
   (in Google Maps, open the list, tap Share → Copy link), tap **Look it up**, tick the places you want and
   tap **Add**.
 
+### Packing & to-do
+
+Each trip has one shared checklist for what to bring and what to do before leaving. On the 🧳 Trip tab,
+open the **🎒 Packing & to-do** card and tap **Open the list**. The card shows how many items are packed,
+like "2 of 9 packed".
+
+- Type in **Add an item** and tap **Add**. The same text can be added twice if you want two.
+- Tap the box next to an item to tick it as packed, and tap it again to untick. Everyone in the group sees
+  the same ticks. Unticked items are listed first.
+- On a trip with more than one traveller, pick **Who's bringing it** to say who has it, or leave it on
+  "Nobody yet".
+- Under **Add from a template**, tap Beach, City, Hiking or Skiing to add a ready-made set of
+  items. Items already on the list are skipped, and nothing is removed or changed.
+- Tap an item's text to edit it, then **Save**, **Cancel** or **Delete**. A deleted item disappears for
+  everyone in the group once you share the trip.
+- With a sync server, the server needs updating to share the lists. Until then they stay on your phone, and
+  links keep working.
+
 ### Calendar
 
 On the 🧳 Trip tab, **📅 Download calendar (.ics)** gives you one file with every stay, journey and activity.

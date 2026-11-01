@@ -5,6 +5,7 @@ import type {
   Exchange,
   Expense,
   OutboxEntry,
+  PackingItem,
   Place,
   RecordTable,
   Report,
@@ -31,6 +32,7 @@ export const db = new Dexie('waypoints') as Dexie & {
   expenses: EntityTable<Expense, 'id'>
   exchanges: EntityTable<Exchange, 'id'>
   reviews: EntityTable<Review, 'id'>
+  packingItems: EntityTable<PackingItem, 'id'>
   attachments: EntityTable<Attachment, 'id'>
   reports: EntityTable<Report, 'id'>
   files: EntityTable<StoredFile, 'id'>
@@ -108,6 +110,21 @@ db.version(4)
  */
 db.version(5)
   .stores({ reports: 'id, tripId' })
+  .upgrade((tx) =>
+    tx
+      .table('serverTrips')
+      .toCollection()
+      .modify((state: { cursor: number }) => {
+        state.cursor = 0
+      }),
+  )
+
+/**
+ * 0.14.0: packing & to-do lists. Phones on the previous version skipped the items the sync server sent them,
+ * so every trip on the server is pulled again in full, once (as in v3).
+ */
+db.version(6)
+  .stores({ packingItems: 'id, tripId' })
   .upgrade((tx) =>
     tx
       .table('serverTrips')

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Tables } from '../../src/db/types.ts'
+import type { PackingItem, Tables } from '../../src/db/types.ts'
 import type { SyncRequest } from '../../src/domain/serverProtocol.ts'
 import { ANA, attachment, BO, CY, place, report, review, stay, T0, T1, T2, traveller, trip } from '../../src/test/fixtures.ts'
 import { emptyData, type Member, type StoreData } from './store.ts'
@@ -216,6 +216,33 @@ describe('reviews on the server', () => {
     sync(data, ANA_M, send(lisbon()))
     const { response } = sync(data, ANA_M, send({ reviews: [review({ stars: 9 })] }, 5))
     expect(response.rejected).toMatchObject([{ table: 'reviews', id: 'rate0001', reason: 'It contains an invalid review.' }])
+  })
+})
+
+describe('packing items on the server', () => {
+  const item = (over: Partial<PackingItem> = {}): PackingItem => ({
+    id: 'pack0001',
+    createdAt: T0,
+    updatedAt: T1,
+    tripId: TRIP,
+    text: 'Charger',
+    ...over,
+  })
+
+  it('reach everyone on the trip', () => {
+    const data = server()
+    sync(data, ANA_M, send(lisbon()))
+    const charger = item({ packed: true, bringer: BO })
+    expect(sync(data, ANA_M, send({ packingItems: [charger] }, 5)).response.rejected).toEqual([])
+    expect(sync(data, BO_M, send({}, 5)).response.trips[0].records.packingItems).toEqual([charger])
+    expect(Object.keys(data.trips[TRIP].records.packingItems ?? {})).toEqual(['pack0001'])
+  })
+
+  it('are checked like any other record', () => {
+    const data = server()
+    sync(data, ANA_M, send(lisbon()))
+    const { response } = sync(data, ANA_M, send({ packingItems: [item({ text: 'x'.repeat(500) })] }, 5))
+    expect(response.rejected).toMatchObject([{ table: 'packingItems', id: 'pack0001', reason: 'It contains an invalid packing item.' }])
   })
 })
 

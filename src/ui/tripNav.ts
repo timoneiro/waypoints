@@ -15,7 +15,7 @@ export function tabOf(section: string | undefined, over: boolean): (typeof TABS)
   if (section === 'report') return over ? 'plan' : 'trip'
   if (section === 'money' || section === 'expenses' || section === 'exchanges') return 'money'
   if (section === 'photos' || section === 'files') return 'photos'
-  if (section === 'trip' || section === 'edit' || section === 'share' || section === 'server') return 'trip'
+  if (section === 'trip' || section === 'edit' || section === 'share' || section === 'server' || section === 'packing') return 'trip'
   return 'plan'
 }
 
