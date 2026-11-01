@@ -98,6 +98,10 @@ code { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
   cursor: pointer;
 }
 .icon-btn:hover { background: var(--accent-soft); }
+.vote-btn { opacity: 0.55; }
+.vote-btn[aria-pressed='true'] { opacity: 1; background: var(--accent-soft); }
+.list-row:has(> .vote-ask) { flex-wrap: wrap; }
+.vote-ask { flex-basis: 100%; order: 1; }
 .back { font-size: 1.9rem; line-height: 1; padding-bottom: 4px; }
 .dot { position: absolute; top: 8px; right: 8px; width: 9px; height: 9px; border-radius: 50%; background: var(--sun); border: 2px solid var(--bg); }
 

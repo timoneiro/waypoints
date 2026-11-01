@@ -1,6 +1,6 @@
 # Votes on places
 
-Status: ready
+Status: shipped (0.16.0)
 Issue: https://github.com/waypoints-pwa/waypoints/issues/20
 Builds after: packing-lists (shipped in 0.14.0; it took Dexie version 6, this spec takes 7)
 
@@ -176,3 +176,13 @@ on, the castle ("2 want to go") is above the market ("1 wants to go"), and place
   against the link's 300,000 limit. Tombstones stay in links too.
 - `list-row-stars` also edits `PlaceRow`, but they share no data, so it isn't in `Builds after:`. Whichever
   ships second adds to the row as it finds it.
+- As built:
+  - App 0.16.0, server 0.7.0; the server's only non-test change is `VERSION`.
+  - The row picker is `.vote-ask` (`flex-basis: 100%; order: 1`) in a wrapping row, so it sits under the whole row
+    and ✓ stays on the first line. While it is open, Tab goes 🙋, picker, then back up to ✓.
+  - On the place page, a phone that hasn't said who it is can show two "Which one are you?" pickers: the chip's,
+    which votes, and the Reviews card's, which doesn't. Both work; raised for review in the PR.
+  - **Most wanted first** shows when `t.votes` has any vote, so votes left on a deleted place keep it showing. It
+    doesn't affect the sort.
+  - The browser checks were throwaway scripts: the manual steps, the acceptance criteria and edge cases, and a real
+    version 6 database upgraded by the new build. No real sync server was run: an older server refusing votes is untested.

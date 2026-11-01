@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { RECORD_TABLES, type PackingItem, type RecordTable, type Tables } from '../db/types'
+import { RECORD_TABLES, type PackingItem, type RecordTable, type Tables, type Vote } from '../db/types'
 import { ANA, attachment, BO, exchange, expense, place, report, review, stay, T0, T1, T2, tables, traveller, trip } from '../test/fixtures'
 import { DataError } from './records'
 import { buildBackup, decodeLink, encodeLink, forSending, parseBackup, planMerge } from './sync'
@@ -12,6 +12,16 @@ const item = (over: Partial<PackingItem> = {}): PackingItem => ({
   updatedAt: T0,
   tripId: 'trip0001',
   text: 'Charger',
+  ...over,
+})
+
+const vote = (over: Partial<Vote> = {}): Vote => ({
+  id: 'vote0001',
+  createdAt: T0,
+  updatedAt: T0,
+  tripId: 'trip0001',
+  placeId: 'spot0001',
+  by: ANA,
   ...over,
 })
 
@@ -166,6 +176,18 @@ describe('trip links', () => {
     expect(decodeLink(older, NOW).tables).toEqual(lisbon)
   })
 
+  it('carry votes, in the version older apps read too', () => {
+    const voted = tables({ ...lisbon, votes: [vote()] })
+    const payload = encodeLink(voted, undefined, new Date(NOW))
+    expect(payload.v).toBe(1)
+    expect(decodeLink(json(payload), NOW).tables).toEqual(voted)
+    expect(forSending(voted).votes).toEqual([vote()])
+    // Links from before votes have none.
+    const older = json(payload) as Record<string, unknown>
+    delete older.votes
+    expect(decodeLink(older, NOW).tables).toEqual(lisbon)
+  })
+
   it('refuse links from a newer version, and broken ones', () => {
     expect(() => decodeLink({ v: 2, trip: {}, sentAt: '' }, NOW)).toThrow('newer version')
     expect(() => decodeLink({ hello: 1 }, NOW)).toThrow(DataError)
@@ -235,6 +257,35 @@ describe('planMerge and packing items', () => {
     const sunscreen = item({ id: 'pack0002', text: 'Sunscreen' })
     const plan = planMerge(local(tables({ packingItems: [charger] })), tables({ packingItems: [sunscreen] }))
     expect(plan.changes.packingItems).toEqual([sunscreen])
+    expect(plan.counts).toEqual({ added: 1, updated: 0, removed: 0 })
+  })
+})
+
+describe('planMerge and votes', () => {
+  it('keeps the newest copy of a vote', () => {
+    const on = vote({ updatedAt: T2 })
+    const older = vote({ updatedAt: T1, deletedAt: T1 })
+    expect(planMerge(local(tables({ votes: [on] })), tables({ votes: [older] })).changes.votes).toEqual([])
+    const plan = planMerge(local(tables({ votes: [older] })), tables({ votes: [on] }))
+    expect(plan.changes.votes).toEqual([on])
+    expect(plan.counts).toEqual({ added: 0, updated: 1, removed: 0 })
+  })
+
+  it('applies a newer tombstone, and keeps it against an older copy', () => {
+    const off = vote({ updatedAt: T2, deletedAt: T2 })
+    expect(planMerge(local(tables({ votes: [vote({ updatedAt: T1 })] })), tables({ votes: [off] })).counts).toEqual({
+      added: 0,
+      updated: 0,
+      removed: 1,
+    })
+    expect(planMerge(local(tables({ votes: [off] })), tables({ votes: [vote({ updatedAt: T1 })] })).changes.votes).toEqual([])
+  })
+
+  it("merges different travellers' votes to the union", () => {
+    const anas = vote()
+    const bos = vote({ id: 'vote0002', by: BO })
+    const plan = planMerge(local(tables({ votes: [anas] })), tables({ votes: [bos] }))
+    expect(plan.changes.votes).toEqual([bos])
     expect(plan.counts).toEqual({ added: 1, updated: 0, removed: 0 })
   })
 })

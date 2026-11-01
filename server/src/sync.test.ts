@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { PackingItem, Tables } from '../../src/db/types.ts'
+import type { PackingItem, Tables, Vote } from '../../src/db/types.ts'
 import type { SyncRequest } from '../../src/domain/serverProtocol.ts'
 import { ANA, attachment, BO, CY, place, report, review, stay, T0, T1, T2, traveller, trip } from '../../src/test/fixtures.ts'
 import { emptyData, type Member, type StoreData } from './store.ts'
@@ -243,6 +243,34 @@ describe('packing items on the server', () => {
     sync(data, ANA_M, send(lisbon()))
     const { response } = sync(data, ANA_M, send({ packingItems: [item({ text: 'x'.repeat(500) })] }, 5))
     expect(response.rejected).toMatchObject([{ table: 'packingItems', id: 'pack0001', reason: 'It contains an invalid packing item.' }])
+  })
+})
+
+describe('votes on the server', () => {
+  const vote = (over: Partial<Vote> = {}): Vote => ({
+    id: 'vote0001',
+    createdAt: T0,
+    updatedAt: T1,
+    tripId: TRIP,
+    placeId: 'spot0001',
+    by: ANA,
+    ...over,
+  })
+
+  it('reach everyone on the trip', () => {
+    const data = server()
+    sync(data, ANA_M, send(lisbon()))
+    const anas = vote()
+    expect(sync(data, ANA_M, send({ votes: [anas] }, 5)).response.rejected).toEqual([])
+    expect(sync(data, BO_M, send({}, 5)).response.trips[0].records.votes).toEqual([anas])
+    expect(Object.keys(data.trips[TRIP].records.votes ?? {})).toEqual(['vote0001'])
+  })
+
+  it('are checked like any other record', () => {
+    const data = server()
+    sync(data, ANA_M, send(lisbon()))
+    const { response } = sync(data, ANA_M, send({ votes: [{ ...vote(), by: undefined } as unknown as Vote] }, 5))
+    expect(response.rejected).toMatchObject([{ table: 'votes', id: 'vote0001', reason: 'It contains an invalid vote.' }])
   })
 })
 

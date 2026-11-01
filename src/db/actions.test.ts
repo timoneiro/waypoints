@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { emptyTables } from './types'
-import { addRecords, addTraveller, clearUnsent, createTrip, deleteRecord, moveTripToServer, patchRecord, removeTripFromPhone, saveRecord, saveReport, saveReview, updateTrip } from './actions'
+import { addRecords, addTraveller, clearUnsent, createTrip, deleteRecord, moveTripToServer, patchRecord, removeTripFromPhone, saveRecord, saveReport, saveReview, saveVote, updateTrip } from './actions'
 import { applyMerge, previewMerge, readTables } from './backupIO'
 import { db, getSetting, setSetting, SETTINGS } from './db'
 import { buildReport, readReport, reportId } from '../domain/report'
@@ -326,5 +326,64 @@ describe('the trip report', () => {
     await saveReport(tripId, await make(tripId), undefined)
     await removeTripFromPhone((await db.trips.get(tripId))!)
     expect(await db.reports.count()).toBe(0)
+  })
+})
+
+describe('votes', () => {
+  const setup = async () => {
+    const tripId = await createTrip(tripInput, people('Ana', 'Bo'))
+    const [ana, bo] = (await db.travellers.where('tripId').equals(tripId).sortBy('createdAt')).map((t) => t.id)
+    const placeId = await saveRecord('places', tripId, { name: 'Castle', category: 'sight' })
+    await clearUnsent(tripId)
+    await db.outbox.clear()
+    return { tripId, ana, bo, placeId }
+  }
+  const live = async () => (await db.votes.toArray()).filter((v) => !v.deletedAt)
+
+  it('toggle on, off and on again, keeping the same record', async () => {
+    const { tripId, ana, placeId } = await setup()
+    await saveVote(tripId, placeId, ana, true)
+    const first = (await db.votes.toArray())[0]
+    expect(first).toMatchObject({ tripId, placeId, by: ana })
+    expect(await unsentIds(tripId)).toEqual([first.id])
+    expect(await outboxIds(tripId)).toEqual([first.id])
+    await saveVote(tripId, placeId, ana, false)
+    expect(await live()).toEqual([])
+    expect((await db.votes.get(first.id))!.deletedAt).toBeTruthy()
+    await saveVote(tripId, placeId, ana, true)
+    const back = await db.votes.toArray()
+    expect(back).toHaveLength(1)
+    expect(back[0].deletedAt).toBeUndefined()
+    expect(back[0].createdAt).toBe(first.createdAt)
+  })
+
+  it('write nothing when they change nothing', async () => {
+    const { tripId, ana, placeId } = await setup()
+    await saveVote(tripId, placeId, ana, false)
+    expect(await db.votes.toArray()).toEqual([])
+    expect(await unsentIds(tripId)).toEqual([])
+    await saveVote(tripId, placeId, ana, true)
+    await clearUnsent(tripId)
+    await db.outbox.clear()
+    const before = await db.votes.toArray()
+    await saveVote(tripId, placeId, ana, true)
+    expect(await db.votes.toArray()).toEqual(before)
+    expect(await unsentIds(tripId)).toEqual([])
+    expect(await outboxIds(tripId)).toEqual([])
+  })
+
+  it('are one per traveller and place, whichever phone writes them', async () => {
+    const { tripId, ana, bo, placeId } = await setup()
+    await saveVote(tripId, placeId, ana, true)
+    await saveVote(tripId, placeId, bo, true)
+    expect(await live()).toHaveLength(2)
+
+    // Ana's other phone has a copy from before her vote, and votes too: the same record.
+    const sent = await readTables(tripId)
+    await db.delete()
+    await db.open()
+    await applyMerge({ ...sent, votes: [] }, 'test')
+    await saveVote(tripId, placeId, ana, true)
+    expect((await db.votes.toArray()).map((v) => v.id)).toEqual([sent.votes.find((v) => v.by === ana)!.id])
   })
 })

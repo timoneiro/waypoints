@@ -1,5 +1,6 @@
 import { reportId, type TripReport } from '../domain/report'
 import { reviewId } from '../domain/reviews'
+import { voteId } from '../domain/votes'
 import { canonicalJSON } from '../domain/sync'
 import { db, isLive, newId, nowISO, recordTable, setSetting, SETTINGS } from './db'
 import { takeSnapshot } from './snapshots'
@@ -14,6 +15,7 @@ import {
   type TableRecords,
   type Traveller,
   type Trip,
+  type Vote,
 } from './types'
 
 /*
@@ -128,6 +130,29 @@ export async function saveReview(tripId: string, item: { table: ReviewableTable;
       await db.reviews.put(next)
     }
     await markChanged('reviews', [id], tripId)
+  })
+}
+
+/**
+ * Says whether `by` wants to go to a place. Off makes a tombstone, on brings the vote back; a save
+ * that changes nothing writes nothing.
+ */
+export async function saveVote(tripId: string, placeId: string, by: string, want: boolean) {
+  const id = await voteId(tripId, placeId, by)
+  await db.transaction('rw', db.votes, db.unsent, db.outbox, async () => {
+    const existing = await db.votes.get(id)
+    const now = nowISO()
+    if (!want) {
+      if (!existing || existing.deletedAt) return
+      await db.votes.put({ ...existing, deletedAt: now, updatedAt: now })
+    } else {
+      const live: Partial<Vote> = { ...existing }
+      delete live.deletedAt
+      const next = compact({ ...live, id, tripId, placeId, by, createdAt: existing?.createdAt ?? now, updatedAt: now })
+      if (existing && sameContent(next, existing)) return
+      await db.votes.put(next)
+    }
+    await markChanged('votes', [id], tripId)
   })
 }
 

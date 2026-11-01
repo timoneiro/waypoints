@@ -44,3 +44,21 @@ describe('checkRecord packing items', () => {
     expect(() => checkRecord('packingItems', { ...item, text: 'a'.repeat(500) })).toThrow('It contains an invalid packing item.')
   })
 })
+
+describe('checkRecord votes', () => {
+  const vote = {
+    id: 'vote-0001',
+    tripId: 'trip-0001',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    placeId: 'plac-0001',
+    by: 'ana-0001',
+  }
+  it('accepts a valid vote', () => {
+    expect(() => checkRecord('votes', vote)).not.toThrow()
+  })
+  it('rejects a missing by', () => {
+    const { by: _by, ...without } = vote
+    expect(() => checkRecord('votes', without)).toThrow('It contains an invalid vote.')
+  })
+})
