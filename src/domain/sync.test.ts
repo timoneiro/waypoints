@@ -1,11 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { RECORD_TABLES, type RecordTable, type Tables } from '../db/types'
+import { RECORD_TABLES, type PackingItem, type RecordTable, type Tables } from '../db/types'
 import { ANA, attachment, BO, exchange, expense, place, report, review, stay, T0, T1, T2, tables, traveller, trip } from '../test/fixtures'
 import { DataError } from './records'
 import { buildBackup, decodeLink, encodeLink, forSending, parseBackup, planMerge } from './sync'
 
 const NOW = Date.parse('2026-10-08T12:00:00.000Z')
 const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as unknown
+const item = (over: Partial<PackingItem> = {}): PackingItem => ({
+  id: 'pack0001',
+  createdAt: T0,
+  updatedAt: T0,
+  tripId: 'trip0001',
+  text: 'Charger',
+  ...over,
+})
 
 const lisbon = tables({
   trips: [trip()],
@@ -146,6 +154,18 @@ describe('trip links', () => {
     expect(decodeLink(older, NOW).tables).toEqual(lisbon)
   })
 
+  it('carry packing items, in the version older apps read too', () => {
+    const packing = tables({ ...lisbon, packingItems: [item()] })
+    const payload = encodeLink(packing, undefined, new Date(NOW))
+    expect(payload.v).toBe(1)
+    expect(decodeLink(json(payload), NOW).tables).toEqual(packing)
+    expect(forSending(packing).packingItems).toEqual([item()])
+    // Links from before packing lists have none.
+    const older = json(payload) as Record<string, unknown>
+    delete older.packingItems
+    expect(decodeLink(older, NOW).tables).toEqual(lisbon)
+  })
+
   it('refuse links from a newer version, and broken ones', () => {
     expect(() => decodeLink({ v: 2, trip: {}, sentAt: '' }, NOW)).toThrow('newer version')
     expect(() => decodeLink({ hello: 1 }, NOW)).toThrow(DataError)
@@ -187,6 +207,35 @@ describe('planMerge', () => {
   it('never moves a record to another trip', () => {
     const plan = planMerge(local(tables({ stays: [stay()] })), tables({ stays: [stay({ tripId: 'trip0009', updatedAt: T2 })] }))
     expect(plan.changes.stays).toEqual([])
+  })
+})
+
+describe('planMerge and packing items', () => {
+  it('keeps the newest copy of an item', () => {
+    const mine = tables({ packingItems: [item({ packed: true, updatedAt: T2 })] })
+    const theirs = tables({ packingItems: [item({ packed: false, updatedAt: T1 })] })
+    expect(planMerge(local(mine), theirs).changes.packingItems).toEqual([])
+    const plan = planMerge(local(theirs), mine)
+    expect(plan.changes.packingItems).toEqual([item({ packed: true, updatedAt: T2 })])
+    expect(plan.counts).toEqual({ added: 0, updated: 1, removed: 0 })
+  })
+
+  it('applies a newer deletion, and keeps it against an older copy', () => {
+    const deleted = item({ updatedAt: T2, deletedAt: T2 })
+    expect(planMerge(local(tables({ packingItems: [item({ updatedAt: T1 })] })), tables({ packingItems: [deleted] })).counts).toEqual({
+      added: 0,
+      updated: 0,
+      removed: 1,
+    })
+    expect(planMerge(local(tables({ packingItems: [deleted] })), tables({ packingItems: [item({ updatedAt: T1 })] })).changes.packingItems).toEqual([])
+  })
+
+  it('merges different items to the union', () => {
+    const charger = item({ id: 'pack0001', text: 'Charger' })
+    const sunscreen = item({ id: 'pack0002', text: 'Sunscreen' })
+    const plan = planMerge(local(tables({ packingItems: [charger] })), tables({ packingItems: [sunscreen] }))
+    expect(plan.changes.packingItems).toEqual([sunscreen])
+    expect(plan.counts).toEqual({ added: 1, updated: 0, removed: 0 })
   })
 })
 
