@@ -30,7 +30,7 @@ Specced ideas live in their own files in this folder. Shipped features are in `C
 - Sharing: send only what changed since the last link (risky; keep the full link as default).
 - Sync server: "who changed what" history; admin view of all trips; renaming a member.
 - Quality: the browser check exists (`npm run smoke`, in the repo and CI) with two phones, share and merge;
-  calendar export is still to add; require a PR for every change to `main`; translations (Portuguese first?).
+  calendar export is still to add; translations (Portuguese first?).
 
 ### Manual checks, not features
 - `window.print()` in the iPhone Home Screen app (the file is the fallback).

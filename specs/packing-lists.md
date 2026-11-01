@@ -1,6 +1,6 @@
 # Packing & to-do lists
 
-Status: shipped
+Status: shipped (0.14.0)
 Issue: https://github.com/waypoints-pwa/waypoints/issues/14
 Builds after: none
 
