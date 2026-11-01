@@ -17,7 +17,7 @@ async function shareLink(page: Page, tripId: string): Promise<string> {
   await dismissNotices(page)
   await page.getByRole('button', { name: '🔗 Share trip link' }).click()
   await expect(page.getByText('✓ Link copied')).toBeVisible()
-  return page.evaluate(() => navigator.clipboard.readText())
+  return page.evaluate<string>('navigator.clipboard.readText()')
 }
 
 async function addPlace(page: Page, tripId: string, name: string) {
