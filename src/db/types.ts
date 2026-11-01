@@ -265,6 +265,13 @@ export interface PackingItem extends TripRecord {
   bringer?: string
 }
 
+/** One traveller's "I want to go" for a place. Its id comes from the trip, the place and the traveller (see voteId in src/domain/votes.ts). Turning it off is a tombstone. */
+export interface Vote extends TripRecord {
+  placeId: string
+  /** Traveller whose vote it is. */
+  by: string
+}
+
 /**
  * The trip's report (spending, reviews, highlights), kept on the sync server once the trip is over,
  * so it's made once and everyone opens the same one. One per trip: its id comes from the trip's (see
@@ -287,7 +294,7 @@ export interface Report extends TripRecord {
  * open links that have them, leaving the reviews out. Attachments and reports travel only through
  * the sync server.
  */
-export const LINK_TABLES = ['travellers', 'stays', 'transports', 'activities', 'places', 'expenses', 'exchanges', 'reviews', 'packingItems'] as const
+export const LINK_TABLES = ['travellers', 'stays', 'transports', 'activities', 'places', 'expenses', 'exchanges', 'reviews', 'packingItems', 'votes'] as const
 export type LinkTable = (typeof LINK_TABLES)[number]
 export const TRIP_TABLES = [...LINK_TABLES, 'attachments', 'reports'] as const
 export type TripTable = (typeof TRIP_TABLES)[number]
@@ -305,6 +312,7 @@ export interface TableRecords {
   exchanges: Exchange
   reviews: Review
   packingItems: PackingItem
+  votes: Vote
   attachments: Attachment
   reports: Report
 }
@@ -323,6 +331,7 @@ export const emptyTables = (): Tables => ({
   exchanges: [],
   reviews: [],
   packingItems: [],
+  votes: [],
   attachments: [],
   reports: [],
 })

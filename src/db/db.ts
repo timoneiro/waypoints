@@ -20,6 +20,7 @@ import type {
   Traveller,
   Trip,
   UnsentEntry,
+  Vote,
 } from './types'
 
 export const db = new Dexie('waypoints') as Dexie & {
@@ -33,6 +34,7 @@ export const db = new Dexie('waypoints') as Dexie & {
   exchanges: EntityTable<Exchange, 'id'>
   reviews: EntityTable<Review, 'id'>
   packingItems: EntityTable<PackingItem, 'id'>
+  votes: EntityTable<Vote, 'id'>
   attachments: EntityTable<Attachment, 'id'>
   reports: EntityTable<Report, 'id'>
   files: EntityTable<StoredFile, 'id'>
@@ -125,6 +127,21 @@ db.version(5)
  */
 db.version(6)
   .stores({ packingItems: 'id, tripId' })
+  .upgrade((tx) =>
+    tx
+      .table('serverTrips')
+      .toCollection()
+      .modify((state: { cursor: number }) => {
+        state.cursor = 0
+      }),
+  )
+
+/**
+ * 0.16.0: votes on places. Phones on the previous version skipped the votes the sync server sent them,
+ * so every trip on the server is pulled again in full, once (as in v3).
+ */
+db.version(7)
+  .stores({ votes: 'id, tripId' })
   .upgrade((tx) =>
     tx
       .table('serverTrips')

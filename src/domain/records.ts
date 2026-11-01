@@ -182,6 +182,11 @@ const SPECS: { [T in RecordTable]: Record<string, { check: Check; required: bool
     packed: optional(bool),
     bringer: optional(isId),
   },
+  votes: {
+    tripId: required(isId),
+    placeId: required(isId),
+    by: required(isId),
+  },
   attachments: {
     tripId: required(isId),
     kind: required(WORD),

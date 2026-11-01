@@ -210,3 +210,46 @@ it('opening a 0.9.0 database pulls every trip on the server again, once', async 
   expect(await db.reviews.toArray()).toEqual([review()])
   db.close()
 })
+
+it('opening a version 6 database keeps every record and pulls every trip on the server again, once', async () => {
+  await Dexie.delete('waypoints')
+  const v6 = new Dexie('waypoints')
+  v6.version(1).stores({
+    trips: 'id',
+    travellers: 'id, tripId',
+    stays: 'id, tripId',
+    transports: 'id, tripId',
+    activities: 'id, tripId',
+    places: 'id, tripId',
+    expenses: 'id, tripId',
+    exchanges: 'id, tripId',
+    unsent: '[table+id], tripId',
+    settings: 'key',
+    snapshots: '++id, createdAt',
+  })
+  v6.version(2).stores({ outbox: '[table+id], tripId', serverTrips: 'tripId' })
+  v6.version(3).stores({ attachments: 'id, tripId', files: 'id, tripId' })
+  v6.version(4).stores({ reviews: 'id, tripId' })
+  v6.version(5).stores({ reports: 'id, tripId' })
+  v6.version(6).stores({ packingItems: 'id, tripId' })
+  await v6.open()
+  await v6.table('trips').add(trip())
+  await v6.table('activities').add(activity())
+  await v6.table('reviews').add(review())
+  await v6.table('serverTrips').add({ tripId: 'trip0001', cursor: 50, uploaded: true, files: [] })
+  await v6.table('outbox').add({ table: 'reviews', id: 'rate0001', tripId: 'trip0001' })
+  v6.close()
+
+  const { db } = await import('./db')
+  await db.open()
+
+  // v7: votes start empty. The previous version skipped the ones the server sent, so the trip is pulled
+  // again from the start; what's waiting to go up stays waiting, and nothing else changes.
+  expect(await db.votes.count()).toBe(0)
+  expect(await db.serverTrips.toArray()).toEqual([{ tripId: 'trip0001', cursor: 0, uploaded: true, files: [] }])
+  expect(await db.outbox.count()).toBe(1)
+  expect(await db.trips.toArray()).toEqual([trip()])
+  expect(await db.activities.toArray()).toEqual([activity()])
+  expect(await db.reviews.toArray()).toEqual([review()])
+  db.close()
+})
