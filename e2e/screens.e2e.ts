@@ -30,6 +30,7 @@ test('every main screen opens, fits a small phone and opens outside links in a n
     [`/trips/${trip}/trip`, undefined],
     [`/trips/${trip}/share`, undefined],
     [`/trips/${trip}/reviews`, undefined],
+    [`/trips/${trip}/packing`, undefined],
     [`/trips/${trip}/report`, undefined],
     [`/trips/${trip}/edit`, undefined],
     [`/trips/${trip}/server`, 'Connect this phone to a sync server first.'],
@@ -45,7 +46,7 @@ test('every main screen opens, fits a small phone and opens outside links in a n
     [`/trips/${trip}/expenses/new`, undefined],
     [`/trips/${trip}/exchanges/new`, undefined],
   ]
-  expect(routes).toHaveLength(27)
+  expect(routes).toHaveLength(28)
 
   for (const [route, text] of routes) {
     await page.goto(`#${route}`)

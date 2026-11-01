@@ -17,6 +17,7 @@ import { PhotoGroupPage, PhotoItemPage } from './ui/pages/PhotoGroupPage'
 import { PhotosPage } from './ui/pages/PhotosPage'
 import { PlanPage } from './ui/pages/PlanPage'
 import { ReportPage } from './ui/pages/ReportPage'
+import { PackingPage } from './ui/pages/PackingPage'
 import { ReviewsPage } from './ui/pages/ReviewsPage'
 import { ServerPage } from './ui/pages/ServerPage'
 import { SettingsPage } from './ui/pages/SettingsPage'
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="photos/:group" element={<PhotoGroupPage />} />
           <Route path="photos/:group/:itemId" element={<PhotoItemPage />} />
           <Route path="reviews" element={<ReviewsPage />} />
+          <Route path="packing" element={<PackingPage />} />
           <Route path="report" element={<ReportPage />} />
           <Route path="trip" element={<TripInfoPage />} />
           <Route path="edit" element={<TripFormPage />} />

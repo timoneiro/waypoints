@@ -12,6 +12,7 @@ describe('topBarBack', () => {
     ['/trips/t1/stays/s1', '/trips/t1'],
     ['/trips/t1/transport/r1/edit', '/trips/t1'],
     ['/trips/t1/reviews', '/trips/t1'],
+    ['/trips/t1/packing', '/trips/t1/trip'],
     ['/trips/t1/places/p1', '/trips/t1/places'],
     ['/trips/t1/places/new', '/trips/t1/places'],
     ['/trips/t1/expenses/e1', '/trips/t1/money'],
