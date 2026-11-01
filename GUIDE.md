@@ -176,6 +176,9 @@ reservation with its booking reference, so you can find one fast.
 
 <img src="docs/guide/bookings.png" alt="The Bookings view listing every stay and journey with its booking reference" width="300">
 
+Journeys on one booking reference show together under **Connections**, with the layover between them and a
+warning if they don't connect. Journeys more than a day apart, like a flight there and back, stay separate.
+
 ### Expenses
 
 On the 💶 Money tab, add an expense: what it was, how much, in which currency, who paid and who shares it.
