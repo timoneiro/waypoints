@@ -1,6 +1,6 @@
 # Cash visibility on the Money tab
 
-Status: building
+Status: shipped (0.9.1)
 Issue: https://github.com/waypoints-pwa/waypoints/issues/16
 Builds after: none
 
