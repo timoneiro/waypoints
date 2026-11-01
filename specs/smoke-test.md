@@ -1,6 +1,6 @@
 # Smoke test
 
-Status: building
+Status: shipped
 Issue: https://github.com/waypoints-pwa/waypoints/issues/38
 Builds after: none
 
@@ -101,8 +101,8 @@ States:
      `target="_blank"`. Add `e2e` and `playwright.config.ts` to `tsconfig.node.json` `include`; add
      `test-results/` and `playwright-report/` to `.gitignore`.
    - Depends on: none
-   - Done when: `npm run smoke` passes (1 test); `npx vitest list --filesOnly` still lists 21 files and
-     none under `e2e/`; `npm test`, `npm run typecheck` and `npm run lint` pass.
+   - Done when: `npm run smoke` passes (1 test); `npx vitest list --filesOnly` lists the same files as
+     before and none under `e2e/`; `npm test`, `npm run typecheck` and `npm run lint` pass.
    - Executor: sonnet
 
 2. **Screens test**
@@ -117,7 +117,8 @@ States:
      `activities/<id>`, `places/<id>`, `expenses/<id>`, and `new` for `stays`, `transport`,
      `activities`, `places`, `expenses`, `exchanges`. Expected text: on item pages the record's
      title as the detail page shows it (stays and places: `name`; activities and expenses: `title`;
-     transport: `` `${from} → ${to}` ``, `DetailHead` in `src/ui/items/transport.tsx`); elsewhere a
+     transport: `` `${from} → ${to}` ``, `DetailHead` in `src/ui/items/transport.tsx`); on `/trips/<id>/server`
+     with no server connected, "Connect this phone to a sync server first." (it has no heading); elsewhere a
      visible heading. On every route, "There's nothing here." and "This isn't in the trip any more."
      are absent.
    - Depends on: task 1
@@ -198,3 +199,10 @@ last line of `src/main.tsx`, run `npm run smoke`, see it fail naming `https://ex
 - Chosen with the user: CI on every PR; the extra check is share and merge (calendar export, offline and
   dark theme were offered and left out); a CLAUDE.md rule so future specs use the smoke test instead of
   manual checks.
+- As built:
+  - The app uses `HashRouter`, so the helpers go to `#/open` and `#/trips/<id>/trip` (review of task 2 fixed
+    what task 1 had).
+  - `evaluate` calls in the e2e files use string expressions, because `tsconfig.node.json` has no DOM types.
+  - Vitest listed 26 files when this was built, not the 21 in the first draft: `main` had moved on.
+  - Checked by the reviewer: the fetch guard check by hand, ten deliberate faults in scratch copies (each one
+    caught), and the suite passing 15 of 15 with `--repeat-each=5`.
