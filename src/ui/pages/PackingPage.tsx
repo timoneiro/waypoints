@@ -62,7 +62,7 @@ export function PackingPage() {
 
       {total === 0 ? (
         <EmptyState>
-          <p className="big-emoji">🧳</p>
+          <p className="big-emoji">🎒</p>
           <p>Nothing here yet</p>
         </EmptyState>
       ) : (
@@ -75,7 +75,7 @@ export function PackingPage() {
               editing === item.id ? (
                 <EditRow key={item.id} item={item} t={t} group={group} onDone={() => setEditing(undefined)} />
               ) : (
-                <li key={item.id} className="list-row">
+                <li key={item.id} className={item.packed ? 'list-row done' : 'list-row'}>
                   <label className="check">
                     <input
                       type="checkbox"
@@ -84,8 +84,8 @@ export function PackingPage() {
                       onChange={(e) => void patchRecord('packingItems', item.id, { packed: e.target.checked })}
                     />
                   </label>
-                  <button className="list-text" style={{ all: 'unset', cursor: 'pointer', flex: 1 }} onClick={() => setEditing(item.id)}>
-                    <strong style={item.packed ? { textDecoration: 'line-through' } : undefined}>{item.text}</strong>
+                  <button type="button" className="list-text" onClick={() => setEditing(item.id)}>
+                    <strong>{item.text}</strong>
                     {item.bringer && <span className="muted small"> · {nameOf(t, item.bringer)}</span>}
                   </button>
                 </li>

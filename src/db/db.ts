@@ -120,7 +120,7 @@ db.version(5)
   )
 
 /**
- * Packing & to-do lists. Phones on the previous version skipped the items the sync server sent them,
+ * 0.14.0: packing & to-do lists. Phones on the previous version skipped the items the sync server sent them,
  * so every trip on the server is pulled again in full, once (as in v3).
  */
 db.version(6)
