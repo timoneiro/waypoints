@@ -8,6 +8,14 @@ Heading: "## x.y.z — YYYY-MM-DD". Body: short paragraphs and "- " bullets; inl
 Write for people who use the app, not for developers.
 -->
 
+## 0.16.0 — 2026-11-01
+
+On a trip with two or more travellers, each place has a 🙋 **I want to go** button in the Places list and a chip on its page. Tap it to say you'd like to see the place. The list shows how many want to go, and the place page names them.
+
+**Most wanted first** sorts each city's places that aren't visited yet by how many want to go, then the visited ones. If this phone hasn't said which traveller it is yet, the app asks when you vote.
+
+Sharing a trip with a sync server needs the server updated to 0.7.0 for the votes to be shared. Until then they wait on your phone, and links keep working.
+
 ## 0.15.0 — 2026-11-01
 
 Journeys on one booking reference now show together under **Connections** in the Bookings view of the Plan tab, with the stops, the route and the layover in each place. Each journey in a connection shows the same card on its own page.
