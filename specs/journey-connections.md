@@ -1,6 +1,6 @@
 # Connections in the plan
 
-Status: ready
+Status: building
 Issue: https://github.com/waypoints-pwa/waypoints/issues/18
 Builds after: none
 
