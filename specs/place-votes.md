@@ -1,6 +1,6 @@
 # Votes on places
 
-Status: ready
+Status: building
 Issue: https://github.com/waypoints-pwa/waypoints/issues/20
 Builds after: packing-lists (shipped in 0.14.0; it took Dexie version 6, this spec takes 7)
 
