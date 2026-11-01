@@ -44,6 +44,7 @@ npm test           # unit tests, the sync server's tests, app↔server tests (Vi
 npm run lint       # oxlint
 npm run typecheck
 npm run build      # production build into dist/
+npm run smoke         # builds the app and checks it in a real browser (Playwright)
 npm run guide:screenshots  # with `npm run dev` running: remakes docs/guide/*.png, run it when a pictured screen changes
 ```
 

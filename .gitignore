@@ -20,3 +20,7 @@ dist-ssr
 # Sync server data when run locally
 server/data
 server/files
+
+# Playwright
+test-results/
+playwright-report/
